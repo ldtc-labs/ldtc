@@ -1,0 +1,14 @@
+.git
+.gitignore
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+notebooks/
+artifacts/
+*.pem
+*.key
+*.crt
+.DS_Store

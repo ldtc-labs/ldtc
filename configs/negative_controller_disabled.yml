@@ -1,0 +1,14 @@
+# Negative control: controller disabled (no throttle/cool/repair)
+profile_id: 0
+dt: 0.01
+window_sec: 0.2
+method: linear
+p_lag: 3
+n_boot: 16
+Mmin_db: 3.0
+epsilon: 0.15
+tau_max: 60.0
+baseline_sec: 8.0
+controller_disabled: true
+# Reproducible seeds
+seed: 7

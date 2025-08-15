@@ -1,0 +1,34 @@
+# Parameters for the software plant (E/T/R dynamics)
+harvest_rate: 0.015
+demand_scale: 0.02
+throttle_gain: 0.7
+cool_gain: 0.02
+repair_gain: 0.02
+heat_per_demand: 0.05
+cool_effect: 0.08
+ambient_cool: 0.01
+wear_per_demand: 0.005
+repair_effect: 0.02
+noise_energy: 0.002
+noise_temp: 0.002
+noise_wear: 0.001
+E_min: 0.0
+E_max: 1.0
+T_min: 0.0
+T_max: 1.0
+R_min: 0.0
+R_max: 1.0
+
+# Optional hardware-in-the-loop adapter settings
+# To enable: in your profile (e.g., configs/profile_r0.yml), add:
+# plant:
+#   adapter: hardware   # or "sim" for the built-in software plant
+#   transport: udp      # or "serial" (requires pyserial)
+#   udp_bind_host: 0.0.0.0
+#   udp_bind_port: 5005
+#   # Optional control back-channel to send actions/omega to device
+#   # udp_control_host: 127.0.0.1
+#   # udp_control_port: 5006
+#   # serial_port: /dev/ttyUSB0
+#   # serial_baud: 115200
+#   telemetry_timeout_sec: 2.0

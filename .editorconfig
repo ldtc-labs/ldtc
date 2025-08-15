@@ -1,0 +1,37 @@
+# top-level EditorConfig
+root = true
+
+# Default for everything
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python
+[*.py]
+indent_style = space
+indent_size = 4
+
+# YAML (configs)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# JSON / TOML
+[*.{json,toml}]
+indent_style = space
+indent_size = 2
+
+# Markdown (preserve two-space line breaks)
+[*.md]
+trim_trailing_whitespace = false
+
+# Makefiles require tabs
+[Makefile]
+indent_style = tab
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2

@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Ruff Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - name: Install deps (dev)
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e '.[dev]'
+      - name: Ruff check
+        run: |
+          ruff check .
+
+  typecheck:
+    name: Mypy Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - name: Install deps (dev)
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e '.[dev]'
+      - name: Run mypy
+        run: |
+          mypy src tests scripts
+
+  tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - name: Install deps (dev)
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e '.[dev]'
+      - name: Run pytest
+        run: |
+          pytest -q
+
+  verify_indicators:
+    name: Indicator Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - name: Install deps (dev)
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e '.[dev]'
+      - name: Generate short CI profile
+        run: |
+          cat > configs/profile_ci.yml << 'EOF'
+          profile_id: 0
+          dt: 0.01
+          window_sec: 0.2
+          method: linear
+          p_lag: 3
+          mi_lag: 1
+          n_boot: 16
+          Mmin_db: 3.0
+          epsilon: 0.15
+          tau_max: 60.0
+          baseline_sec: 3.0
+          EOF
+      - name: Run baseline to produce indicators
+        run: |
+          python -m ldtc.cli.main run --config configs/profile_ci.yml
+      - name: Verify indicators
+        run: |
+          python scripts/verify_indicators.py \
+            --ind-dir artifacts/indicators \
+            --audit artifacts/audits/audit.jsonl \
+            --pub artifacts/keys/ed25519_pub.pem

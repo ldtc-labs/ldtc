@@ -1,0 +1,12 @@
+# Example calibrated profile R*
+profile_id: 1
+dt: 0.01
+window_sec: 0.25
+method: mi
+p_lag: 4
+mi_lag: 1
+n_boot: 64
+Mmin_db: 4.0
+epsilon: 0.12
+tau_max: 45.0
+baseline_sec: 15.0

@@ -1,0 +1,24 @@
+# Reproducibility profile R0 (defaults)
+profile_id: 0
+dt: 0.01            # 10 ms tick
+window_sec: 0.2     # 200 ms window
+# Δt governance (defaults can be overridden here)
+max_dt_changes_per_hour: 3
+min_seconds_between_changes: 1.0
+# Optional scripted Δt changes to exercise governance (baseline run will attempt these)
+# scripted_dt_changes:
+#   - { at_sec: 2.0, new_dt: 0.02, policy_digest: "r0-test" }
+method: linear      # or "mi"
+p_lag: 3            # linear estimator lag
+mi_lag: 1           # MI lag
+n_boot: 32          # bootstrap draws for CI
+Mmin_db: 3.0        # NC1 threshold
+epsilon: 0.15       # SC1 fractional drop allowance
+tau_max: 60.0       # SC1 max recovery (s)
+baseline_sec: 10.0  # baseline run length (s)
+# Negative-control knobs (optional)
+# controller_disabled: true
+# Reproducibility knobs (set seeds; can override per-run)
+seed: 12345
+seed_py: 12345
+seed_np: 12345
