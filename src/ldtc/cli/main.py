@@ -145,6 +145,7 @@ def run_baseline(args: argparse.Namespace) -> None:
         audit,
         {
             "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
             "dt": dt,
             "window_sec": window_sec,
             "method": method,
@@ -478,6 +479,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         audit,
         {
             "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
             "dt": dt,
             "window_sec": window_sec,
             "method": method,
@@ -883,6 +885,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
         audit,
         {
             "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
             "dt": dt,
             "window_sec": window_sec,
             "method": method,
@@ -1252,6 +1255,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
         audit,
         {
             "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
             "dt": dt,
             "window_sec": window_sec,
             "method": method,
@@ -1429,6 +1433,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
         audit,
         {
             "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
             "dt": dt,
             "window_sec": window_sec,
             "method": method,

@@ -39,6 +39,7 @@ def _extract_header(recs: List[dict]) -> Tuple[Dict[str, Any], int]:
             {
                 "profile_id": int(d.get("profile_id", 0)),
                 "profile": "R*" if int(d.get("profile_id", 0)) == 1 else "R0",
+                "config_path": d.get("config_path", None),
                 "dt": float(d.get("dt", 0.0)),
                 "window_sec": float(d.get("window_sec", 0.0)),
                 "method": str(d.get("method", "")),
@@ -140,11 +141,12 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
         table_path = os.path.join(artifact_dir, f"sc1_table_{eta}_{stamp}.csv")
         write_sc1_table(sc1_rows, table_path)
 
-    # 3) Manifest JSON
+    # 3) Manifest JSON (include config path and policy note; lock files read-only)
     manifest = {
         "version": 1,
         "profile_id": int(header.get("profile_id", 0)),
         "profile": header.get("profile", "R0"),
+        "config_path": header.get("config_path", None),
         "dt": float(header.get("dt", 0.0)),
         "window_sec": float(header.get("window_sec", 0.0)),
         "method": header.get("method", ""),
@@ -168,19 +170,66 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
         "pubkey_sha256": _pubkey_hash_or_none(
             os.path.join("artifacts", "keys", "ed25519_pub.pem")
         ),
+        # Policy note required by manuscript/patent: raw LREG never leaves enclave
+        "policy_note": "No raw LREG values or CI bounds are exported; figures derive only from M(dB) and audit events.",
         "artifacts": {
             "timeline_png": tpaths.get("png", ""),
             "timeline_svg": tpaths.get("svg", ""),
             "sc1_table_csv": table_path or None,
         },
     }
+    # 3a) Snapshot the YAML config used (exact profile passed to CLI)
+    cfg_snap_path = None
+    try:
+        cfg_src = header.get("config_path")
+        if isinstance(cfg_src, str) and os.path.exists(cfg_src):
+            base_name = os.path.basename(cfg_src)
+            cfg_snap_path = os.path.join(
+                artifact_dir, f"config_snapshot_{eta}_{stamp}_{base_name}"
+            )
+            # Copy without bringing along permissions
+            with open(cfg_src, "r", encoding="utf-8") as f_in, open(
+                cfg_snap_path, "w", encoding="utf-8"
+            ) as f_out:
+                f_out.write(f_in.read())
+    except Exception:
+        cfg_snap_path = None
+
+    # 3b) Write manifest
     manifest_path = os.path.join(artifact_dir, f"manifest_{eta}_{stamp}.json")
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
+    # 3c) Policy notice file
+    notice_path = os.path.join(artifact_dir, f"NOTICE_{eta}_{stamp}.txt")
+    try:
+        with open(notice_path, "w", encoding="utf-8") as nf:
+            nf.write(
+                "This repository enforces a derived-indicators-only policy: raw LREG values and CI bounds never leave the enclave.\n"
+            )
+    except Exception:
+        notice_path = None
+
+    # Lock generated artifacts as read-only to "freeze" demo outputs
+    try:
+        for p in [
+            tpaths.get("png", ""),
+            tpaths.get("svg", ""),
+            table_path,
+            manifest_path,
+            cfg_snap_path,
+            notice_path,
+        ]:
+            if p:
+                os.chmod(p, 0o444)
+    except Exception:
+        # Best-effort on non-POSIX or restricted FS
+        pass
 
     return {
         "timeline_png": tpaths.get("png", ""),
         "timeline_svg": tpaths.get("svg", ""),
         "sc1_table": table_path,
         "manifest": manifest_path,
+        "config_snapshot": cfg_snap_path or "",
+        "notice": notice_path or "",
     }
