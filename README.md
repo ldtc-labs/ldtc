@@ -90,6 +90,15 @@ The table maps config keys to the manuscript symbols and shows the R₀ defaults
 
 Where R* is loaded: pass an R* profile to any CLI via `--config configs/profile_rstar.yml`. The CLI reads these keys directly and indicators carry `profile_id`.
 
+### Estimators and lags (recommended defaults)
+
+- `method` selects the predictive‑dependence estimator used to compute 𝓛loop and 𝓛exchange:
+  - `linear`: lagged linear/Granger‑like path with order `p_lag` (recommend p in [1..8]; start at 3). Heuristic: keep the VAR N/T ratio > ~1.5 (logged in audit); reduce `p_lag` or increase `window_sec` if marginal.
+  - `mi`: mutual‑information path with `mi_lag` (recommend 1 by default; increase for slower couplings).
+- `n_boot`: bootstrap draws for per‑window CI bounds (32–64 typical; use 32 for speed, 64 for tighter CIs).
+
+Citation (paper §4.1): 𝓛 is computed using “one or more consistent estimators of predictive dependence among state variables,” including Granger/VAR and Kraskov MI; this repo exposes the estimator choice and lags via config to satisfy that requirement.
+
 ### Calibration rules (quoted from the paper; see Methods §8.6)
 
 Use the provided script to derive calibrated thresholds R* from baseline + Ω trials ([scripts/calibrate_rstar.py](scripts/calibrate_rstar.py)):

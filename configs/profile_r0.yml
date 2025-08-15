@@ -1,4 +1,14 @@
 # Reproducibility profile R0 (defaults)
+#
+# Estimator knobs (recommended defaults)
+# - method: "linear" (lagged linear/Granger-like) or "mi" (mutual information)
+# - p_lag (linear): choose p in [1..8]; start at 3. Heuristic: keep VAR N/T ratio > ~1.5.
+# - mi_lag (MI): 1 is a good default; increase if your plant exhibits slower coupling.
+# - n_boot: 32–64 bootstrap draws for CI; 32 for speed, 64 for tighter intervals.
+#
+# Rationale/citation: per manuscript §4.1, 𝓛 can be computed using one or more
+# consistent estimators of predictive dependence (e.g., VAR‑Granger and Kraskov MI).
+# These knobs select among and tune those estimators.
 profile_id: 0
 dt: 0.01            # 10 ms tick
 window_sec: 0.2     # 200 ms window
