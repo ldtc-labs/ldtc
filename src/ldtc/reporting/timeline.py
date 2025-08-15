@@ -115,6 +115,8 @@ def render_paper_timeline(
     show: bool = False,
     min_tick_spacing_s: float = 0.75,
     use_log_L: bool = True,
+    footer_profile: Optional[str] = None,
+    footer_audit_head: Optional[str] = None,
 ) -> Dict[str, str]:
     """
     Render a paper-style timeline plotting L_loop, L_exchange, and M(dB) with Ω shading and audit ticks.
@@ -224,6 +226,33 @@ def render_paper_timeline(
         hi = 120.0 if m_max <= 120.0 else m_max + 5.0
         ax_m.set_ylim(lo, hi)
     except Exception:
+        pass
+
+    # Footer with profile badge and audit hash head (provenance)
+    try:
+        # If not explicitly provided, try to infer from audit header in this segment
+        if footer_profile is None or footer_audit_head is None:
+            recs = _read_audit(audit_path)
+            prof = None
+            for r in recs:
+                if r.get("event") == "run_header":
+                    d = r.get("details", {}) or {}
+                    pid = int(d.get("profile_id", 0))
+                    prof = "R*" if pid == 1 else "R0"
+                    break
+            footer_profile = footer_profile or (prof or "R0")
+            # Use the last record's hash as a best-effort head within this segment
+            if footer_audit_head is None and recs:
+                footer_audit_head = str(recs[-1].get("hash", ""))
+        # Compose footer string
+        if footer_profile or footer_audit_head:
+            head_short = (footer_audit_head or "")[:12]
+            footer_txt = f"Profile: {footer_profile or ''}    Audit head: {head_short}"
+            # Add extra bottom margin for footer text
+            fig.subplots_adjust(bottom=0.22)
+            fig.text(0.01, 0.02, footer_txt, ha="left", va="bottom", fontsize=8, color="#444444")
+    except Exception:
+        # Footer is best-effort; ignore failures
         pass
 
     fig.tight_layout()

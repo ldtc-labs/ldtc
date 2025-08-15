@@ -120,7 +120,12 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
                 f.write(json.dumps(r, sort_keys=True) + "\n")
         base = os.path.join(artifact_dir, f"timeline_{eta}_{stamp}")
         tpaths = render_paper_timeline(
-            seg_path, out_base_path=base, sidecar_csv=None, show=False
+            seg_path,
+            out_base_path=base,
+            sidecar_csv=None,
+            show=False,
+            footer_profile=str(header.get("profile", "R0")),
+            footer_audit_head=_audit_hash_head(recs),
         )
     finally:
         try:

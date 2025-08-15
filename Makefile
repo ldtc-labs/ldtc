@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-controller neg-ingress neg-subsidy neg-cc docker-build docker-run
+.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-controller neg-ingress neg-subsidy neg-cc docker-build docker-run figures
 
 help:
 	@echo "Targets:"
@@ -31,6 +31,7 @@ help:
 	@echo "  clean-artifacts- remove runtime artifacts (audits/indicators/figures)"
 	@echo "  docker-build   - build Docker image"
 	@echo "  docker-run     - run baseline in Docker with artifacts volume"
+	@echo "  figures        - run baseline + Ω battery and emit timeline PNG/SVG, SC1 CSV, and manifest into artifacts/figures"
 
 install:
 	$(PIP) install -U pip
@@ -116,7 +117,6 @@ clean:
 clean-artifacts:
 	rm -rf artifacts
 
-
 docker-build:
 	docker build -t ldtc-hello-world:latest .
 
@@ -124,3 +124,11 @@ docker-run:
 	docker run --rm \
 	  -v $(PWD)/artifacts:/app/artifacts \
 	  ldtc-hello-world:latest run --config configs/profile_r0.yml
+
+figures:
+	# Run baseline, power sag (Ω), ingress flood (Ω), and command conflict (Ω)
+	$(PY) -m ldtc.cli.main run --config configs/profile_r0.yml
+	$(PY) -m ldtc.cli.main omega-power-sag --config configs/profile_r0.yml --drop 0.35 --duration 8
+	$(PY) -m ldtc.cli.main omega-ingress-flood --config configs/profile_r0.yml --mult 3.0 --duration 5
+	$(PY) -m ldtc.cli.main omega-command-conflict --config configs/profile_r0.yml --observe 2
+	@echo "Figures and tables (if any) are in artifacts/figures; provenance manifest includes profile badge and audit head."

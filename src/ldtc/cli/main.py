@@ -432,6 +432,28 @@ def run_baseline(args: argparse.Namespace) -> None:
     print(f"Audit: {os.path.join(dirs['audits'], 'audit.jsonl')}")
     print(f"Indicators dir: {dirs['indicators']}")
 
+    # Build verification bundle (timeline, optional SC1 table if present, manifest)
+    try:
+        out = build_verification_bundle(dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl"))
+        audit.append(
+            "report_generated",
+            {
+                "timeline_png": os.path.basename(out.get("timeline_png", "")),
+                "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
+                "table": (
+                    os.path.basename(out.get("sc1_table", ""))
+                    if out.get("sc1_table")
+                    else None
+                ),
+                "manifest": os.path.basename(out.get("manifest", "")),
+            },
+        )
+        print(
+            f"Bundle: timeline={out.get('timeline_png','')}, table={out.get('sc1_table','')}, manifest={out.get('manifest','')}"
+        )
+    except Exception:
+        pass
+
 
 def omega_power_sag(args: argparse.Namespace) -> None:
     prof = _load_yaml(args.config)
