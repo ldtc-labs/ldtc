@@ -74,6 +74,54 @@ Key fields:
 - `epsilon`, `tau_max`: SC1 thresholds
 - `baseline_sec`: duration for the baseline CLI command
 
+### Parameters ↔ paper symbols (R₀ defaults and R* overrides)
+
+The table maps config keys to the manuscript symbols and shows the R₀ defaults. R* overrides are loaded from a calibrated profile (see below).
+
+| Config key | Paper symbol | Meaning | R₀ default | R* source |
+| --- | --- | --- | --- | --- |
+| `dt` | Δt | Scheduler tick / sampling interval | `0.01` (10 ms) | `configs/profile_rstar.yml` |
+| `window_sec` | — (window length) | Per-interval estimation window | `0.2` s | `configs/profile_rstar.yml` |
+| `Mmin_db` | Mmin (dB) | NC1 loop-dominance threshold | `3.0` dB | `configs/profile_rstar.yml` |
+| `epsilon` | ε | Max fractional loop-power drop (SC1) | `0.15` | `configs/profile_rstar.yml` |
+| `tau_max` | τmax | Max recovery time (SC1) | `60.0` s | `configs/profile_rstar.yml` |
+| `sigma` | σ | Additive margin Lloop ≥ Lex + σ | — (R₀ uses Mmin) | `configs/profile_rstar.yml` (calibrated) |
+| `profile_id` | — | 0 = R₀ (defaults), 1 = R* (calibrated) | `0` | set by calibrated profile |
+
+Where R* is loaded: pass an R* profile to any CLI via `--config configs/profile_rstar.yml`. The CLI reads these keys directly and indicators carry `profile_id`.
+
+### Calibration rules (quoted from the paper; see Methods §8.6)
+
+Use the provided script to derive calibrated thresholds R* from baseline + Ω trials ([scripts/calibrate_rstar.py](scripts/calibrate_rstar.py)):
+
+```bash
+python scripts/calibrate_rstar.py \
+  --dt 0.01 --window-sec 0.25 --baseline-sec 15 \
+  --omega-trials 6 --out configs/profile_rstar.yml \
+  --summary artifacts/calibration/rstar_summary.json
+```
+
+Rules implemented (manuscript Methods §8.6):
+
+> Mmin: choose the smallest Mmin such that the one-sided 95% lower bound of M during compliant baseline is > 0 dB (floor 1 dB).
+>
+> ε: set ε* = max(Q90(δ) + 0.02, 0.10), capped at 0.25, where Q90 is the 90th percentile of δ over Ω.
+>
+> τmax: set τ*max to the 95th percentile of measured τrec plus a latency cushion max(3·Δt, 5 s).
+>
+> σ: choose an additive margin consistent with Mmin relative to typical Lexchange (derived from baseline statistics).
+
+These calibrated values are written to `configs/profile_rstar.yml` and a summary JSON at `artifacts/calibration/rstar_summary.json`. See also [`docs/METHODS.md`](docs/METHODS.md).
+
+### Note on Mmin_db vs σ
+
+Both encode a margin between Lloop and Lexchange:
+
+- `Mmin_db` (dB, multiplicative): requires Lloop ≥ Lexchange × 10^(Mmin_db/10).
+- `sigma` (additive): requires Lloop ≥ Lexchange + σ.
+
+They relate via σ = (10^(Mmin_db/10) − 1) × Lexchange. This repo enforces NC1 using `Mmin_db`; the calibrator derives `sigma` consistently from `Mmin_db` and typical Lexchange. `sigma` is optional for R₀ runs.
+
 ## CLI
 
 ```bash

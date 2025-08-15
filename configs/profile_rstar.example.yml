@@ -9,4 +9,5 @@ n_boot: 64
 Mmin_db: 4.0
 epsilon: 0.12
 tau_max: 45.0
+sigma: 0.05
 baseline_sec: 15.0
