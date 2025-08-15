@@ -154,6 +154,20 @@ BREAKING CHANGE: Default NC1 threshold raised to 3 dB; update configs.
 - Comma-separate scopes without spaces: `type(scope1,scope2): ...`
 - Prefer a single scope when possible; use multiple only when the change genuinely spans tightly related areas.
 
+Scope ordering (house style):
+
+- Put the most impacted scope first (e.g., `repo`), then any secondary scopes.
+- For extra consistency, alphabetize the remaining scopes after the primary.
+- Keep it to 1–3 scopes max.
+
+Example:
+
+```text
+feat(reporting,cli): add SC1 figure bundle; CLI wires new subcommand
+```
+
+Primary = `reporting` (new figure generation and bundling). Secondary = `cli` (exposes/wires the subcommand).
+
 Examples:
 
 ```text
