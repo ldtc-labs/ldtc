@@ -247,6 +247,25 @@ def run_baseline(args: argparse.Namespace) -> None:
                         "var_marginal": bool(var_marginal),
                     },
                 )
+                # Surface a measurement-unstable warning when using linear estimator
+                if method == "linear":
+                    reasons = []
+                    if var_marginal:
+                        reasons.append("var_nt_ratio_low")
+                    if float(stn.adf_nonstationary_frac) > 0.5:
+                        reasons.append("adf_nonstationary_high")
+                    if float(stn.kpss_nonstationary_frac) > 0.5:
+                        reasons.append("kpss_nonstationary_high")
+                    if reasons:
+                        audit.append(
+                            "measurement_unstable",
+                            {
+                                "reasons": reasons,
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "var_nt_ratio": round(float(vratio), 3),
+                            },
+                        )
             except Exception:
                 pass
             M = m_db(res.L_loop, res.L_ex)
@@ -567,6 +586,24 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                         "var_marginal": bool(vratio < 1.5),
                     },
                 )
+                if method == "linear":
+                    reasons = []
+                    if (vratio < 1.5):
+                        reasons.append("var_nt_ratio_low")
+                    if float(stn.adf_nonstationary_frac) > 0.5:
+                        reasons.append("adf_nonstationary_high")
+                    if float(stn.kpss_nonstationary_frac) > 0.5:
+                        reasons.append("kpss_nonstationary_high")
+                    if reasons:
+                        audit.append(
+                            "measurement_unstable",
+                            {
+                                "reasons": reasons,
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "var_nt_ratio": round(float(vratio), 3),
+                            },
+                        )
             except Exception:
                 pass
             M = m_db(res.L_loop, res.L_ex)
@@ -970,6 +1007,24 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                         "var_marginal": bool(vratio < 1.5),
                     },
                 )
+                if method == "linear":
+                    reasons = []
+                    if (vratio < 1.5):
+                        reasons.append("var_nt_ratio_low")
+                    if float(stn.adf_nonstationary_frac) > 0.5:
+                        reasons.append("adf_nonstationary_high")
+                    if float(stn.kpss_nonstationary_frac) > 0.5:
+                        reasons.append("kpss_nonstationary_high")
+                    if reasons:
+                        audit.append(
+                            "measurement_unstable",
+                            {
+                                "reasons": reasons,
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "var_nt_ratio": round(float(vratio), 3),
+                            },
+                        )
             except Exception:
                 pass
             M = m_db(res.L_loop, res.L_ex)
@@ -1314,6 +1369,24 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                         "var_marginal": bool(vratio < 1.5),
                     },
                 )
+                if method == "linear":
+                    reasons = []
+                    if (vratio < 1.5):
+                        reasons.append("var_nt_ratio_low")
+                    if float(stn.adf_nonstationary_frac) > 0.5:
+                        reasons.append("adf_nonstationary_high")
+                    if float(stn.kpss_nonstationary_frac) > 0.5:
+                        reasons.append("kpss_nonstationary_high")
+                    if reasons:
+                        audit.append(
+                            "measurement_unstable",
+                            {
+                                "reasons": reasons,
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "var_nt_ratio": round(float(vratio), 3),
+                            },
+                        )
             except Exception:
                 pass
             M = m_db(res.L_loop, res.L_ex)
@@ -1493,6 +1566,24 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                         "var_marginal": bool(vratio < 1.5),
                     },
                 )
+                if method == "linear":
+                    reasons = []
+                    if (vratio < 1.5):
+                        reasons.append("var_nt_ratio_low")
+                    if float(stn.adf_nonstationary_frac) > 0.5:
+                        reasons.append("adf_nonstationary_high")
+                    if float(stn.kpss_nonstationary_frac) > 0.5:
+                        reasons.append("kpss_nonstationary_high")
+                    if reasons:
+                        audit.append(
+                            "measurement_unstable",
+                            {
+                                "reasons": reasons,
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "var_nt_ratio": round(float(vratio), 3),
+                            },
+                        )
             except Exception:
                 pass
             M = m_db(res.L_loop, res.L_ex)
