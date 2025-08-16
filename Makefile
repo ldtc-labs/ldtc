@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures
+.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean
 
 help:
 	@echo "Targets:"
@@ -32,6 +32,9 @@ help:
 	@echo "  docker-build   - build Docker image"
 	@echo "  docker-run     - run baseline in Docker with artifacts volume"
 	@echo "  figures        - run baseline + Ω battery and emit timeline PNG/SVG, SC1 CSV, and manifest into artifacts/figures"
+	@echo "  paper          - build the LaTeX paper (delegates to paper/Makefile)"
+	@echo "  paper-figs     - generate paper figures only"
+	@echo "  paper-clean    - clean LaTeX build artifacts"
 
 install:
 	$(PIP) install -U pip
@@ -57,10 +60,10 @@ lint:
 	-ruff check .
 
 typecheck:
-	-mypy src tests scripts
+	-mypy src tests scripts paper/scripts
 
 fmt:
-	-black src tests examples scripts
+	-black src tests examples scripts paper/scripts
 
 run:
 	$(PY) -m ldtc.cli.main run --config configs/profile_r0.yml
@@ -134,3 +137,12 @@ figures:
 	$(PY) -m ldtc.cli.main omega-command-conflict --config configs/profile_r0.yml --observe 2
 	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_r0.yml --delta 0.2 --zero-harvest --duration 3
 	@echo "Figures and tables (if any) are in artifacts/figures; provenance manifest includes profile badge and audit head."
+
+paper:
+	$(MAKE) -C paper all
+
+paper-figs:
+	$(MAKE) -C paper figs
+
+paper-clean:
+	$(MAKE) -C paper clean

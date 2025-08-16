@@ -1,0 +1,42 @@
+name: build-paper
+
+on:
+  push:
+    paths:
+      - 'paper/**'
+      - '.github/workflows/build-paper.yml'
+  pull_request:
+    paths:
+      - 'paper/**'
+      - '.github/workflows/build-paper.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install project dependencies
+        run: pip install -e .
+
+      - name: Generate figures
+        run: make -C paper figs
+
+      - name: Compile LaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: paper
+          latexmk_use_xelatex: false
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ldtc-paper-pdf
+          path: paper/main.pdf

@@ -1,0 +1,6 @@
+$pdf_mode = 1;              # build PDF
+$interaction = 'nonstopmode';
+$bibtex_use = 1;            # run bibtex automatically
+
+# Ignore version stamp for dependency hash to avoid spurious rebuilds
+$hash_calc_ignore_pattern{'tex'} = '^(\\newcommand\\{\\gitversion\\}\\{.*?\\})';

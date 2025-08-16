@@ -115,6 +115,7 @@ Recommended scopes (choose the smallest, most accurate unit; prefer module/direc
   - `examples` – example scripts and minimal demos under `examples/`
   - `makefile` – `Makefile` targets and build helpers
   - `notebooks` – Jupyter notebooks under `notebooks/`
+  - `paper` – LaTeX manuscript sources under `paper/` (e.g., `main.tex`, `macros.tex`, `refs.bib`, `Makefile`, `scripts/`)
   - `pyproject` – `pyproject.toml` packaging/build metadata and tool config
   - `repo` – repository metadata and top-level files (e.g., `README.md`, `CONTRIBUTING.md`, `LICENSE`, `CITATION.cff`, `.gitignore`); also docs assets like images under `docs/assets/`
   - `scripts` – utility/CLI scripts under `scripts/`

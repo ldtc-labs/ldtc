@@ -43,7 +43,7 @@ jobs:
           python -m pip install -e '.[dev]'
       - name: Run mypy
         run: |
-          mypy src tests scripts
+          mypy src tests scripts paper/scripts
 
   tests:
     name: Unit Tests

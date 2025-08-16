@@ -213,3 +213,22 @@ __marimo__/
 
 # Mac
 .DS_Store
+
+# LaTeX build artifacts (paper/)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.toc
+paper/*.lof
+paper/*.lot
+
+# Paper build outputs (generated, do not commit)
+paper/main.pdf
+paper/version.tex
+paper/figures/*
+!paper/figures/.gitkeep
