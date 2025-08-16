@@ -126,9 +126,10 @@ docker-run:
 	  ldtc-hello-world:latest run --config configs/profile_r0.yml
 
 figures:
-	# Run baseline, power sag (Ω), ingress flood (Ω), and command conflict (Ω)
+	# Run baseline, power sag (Ω), ingress flood (Ω), command conflict (Ω), and exogenous subsidy (Ω)
 	$(PY) -m ldtc.cli.main run --config configs/profile_r0.yml
 	$(PY) -m ldtc.cli.main omega-power-sag --config configs/profile_r0.yml --drop 0.35 --duration 8
 	$(PY) -m ldtc.cli.main omega-ingress-flood --config configs/profile_r0.yml --mult 3.0 --duration 5
 	$(PY) -m ldtc.cli.main omega-command-conflict --config configs/profile_r0.yml --observe 2
+	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_r0.yml --delta 0.2 --zero-harvest --duration 3
 	@echo "Figures and tables (if any) are in artifacts/figures; provenance manifest includes profile badge and audit head."
