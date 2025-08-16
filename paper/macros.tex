@@ -9,3 +9,38 @@
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Var}{\mathrm{Var}}
 \newcommand{\sys}{LDTC}
+
+% LDTC-specific notation
+\newcommand{\Lloop}{\mathcal{L}_{\text{loop}}}
+\newcommand{\Lexchange}{\mathcal{L}_{\text{exchange}}}
+\newcommand{\NC}{NC1\xspace}
+\newcommand{\SC}{SC1\xspace}
+\newcommand{\Rzero}{R_0}
+\newcommand{\Rstar}{R^*}
+
+% Conditions and thresholds
+\newcommand{\eps}{\varepsilon}
+\newcommand{\taumax}{\tau_{\max}}
+\newcommand{\taurec}{\tau_{\text{rec}}}
+\newcommand{\Mmin}{M_{\min}}
+\newcommand{\deltaL}{\delta\mathcal{L}_{\text{loop}}}
+
+% Common phrases
+\newcommand{\prophetic}{\textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.}
+
+% Figure helpers (placeholder-safe)
+\newcommand{\maybeincludegraphics}[2][]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \fbox{\begin{minipage}[c][2in][c]{0.9\linewidth}\centering Placeholder: #2\end{minipage}}%
+  }%
+}
+
+% Convenience macro to insert a figure with placeholder if asset is missing
+\newcommand{\fig}[4][0.9\linewidth]{%
+  \begin{figure}[ht]
+  \centering
+  \maybeincludegraphics[width=#1]{#2}
+  \caption{#3}
+  \label{#4}
+  \end{figure}%
+}
