@@ -634,8 +634,6 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
     mi_k = int(prof.get("mi_k", 5))
-    mi_k = int(prof.get("mi_k", 5))
-    mi_k = int(prof.get("mi_k", 5))
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
@@ -1106,6 +1104,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
+    mi_k = int(prof.get("mi_k", 5))
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
@@ -1186,7 +1185,14 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             X = np.asarray(sw.get_matrix())
             part = pm.get()
             res = estimate_L(
-                X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot, mi_k=mi_k
+                X,
+                part.C,
+                part.Ex,
+                method=method,
+                p=p_lag,
+                lag_mi=mi_lag,
+                n_boot=n_boot,
+                mi_k=mi_k,
             )
             # Diagnostics per window
             try:
@@ -1705,6 +1711,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
+    mi_k = int(prof.get("mi_k", 5))
 
     dirs = _ensure_dirs()
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
@@ -1760,7 +1767,14 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
             )
             if method.startswith("mi"):
                 res = estimate_L(
-                    X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot, mi_k=mi_k
+                    X,
+                    part.C,
+                    part.Ex,
+                    method=method,
+                    p=p_lag,
+                    lag_mi=mi_lag,
+                    n_boot=n_boot,
+                    mi_k=mi_k,
                 )
             # Diagnostics per window
             try:

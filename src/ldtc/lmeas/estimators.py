@@ -8,6 +8,7 @@ from sklearn.feature_selection import mutual_info_regression
 from scipy.spatial import cKDTree
 from scipy.special import digamma
 import importlib
+import importlib.util
 from ldtc.runtime.windows import block_bootstrap_indices
 from .diagnostics import var_nt_ratio
 
@@ -171,8 +172,14 @@ def _mi_ksg(x: np.ndarray, y: np.ndarray, k: int = 5) -> float:
     # Marginal counts within Chebyshev radius rk
     tree_x = cKDTree(x, leafsize=32)
     tree_y = cKDTree(y, leafsize=32)
-    nx = np.fromiter((len(tree_x.query_ball_point(x[i], rk[i], p=np.inf)) - 1 for i in range(n)), dtype=int)
-    ny = np.fromiter((len(tree_y.query_ball_point(y[i], rk[i], p=np.inf)) - 1 for i in range(n)), dtype=int)
+    nx = np.fromiter(
+        (len(tree_x.query_ball_point(x[i], rk[i], p=np.inf)) - 1 for i in range(n)),
+        dtype=int,
+    )
+    ny = np.fromiter(
+        (len(tree_y.query_ball_point(y[i], rk[i], p=np.inf)) - 1 for i in range(n)),
+        dtype=int,
+    )
     # Guard against degenerate neighborhoods (clip to >=0)
     nx = np.clip(nx, 0, None)
     ny = np.clip(ny, 0, None)
@@ -205,7 +212,9 @@ def _dir_influence_mi_kraskov(
     return float(np.mean(vals)) if vals else 0.0
 
 
-def _maybe_te_backend() -> Callable[[np.ndarray, Sequence[int], Sequence[int], int], float] | None:
+def _maybe_te_backend() -> (
+    Callable[[np.ndarray, Sequence[int], Sequence[int], int], float] | None
+):
     """
     Try to load an optional transfer entropy backend. Returns a function
     te(arr, sources, targets, lag) -> float if available, else None.
@@ -219,11 +228,13 @@ def _maybe_te_backend() -> Callable[[np.ndarray, Sequence[int], Sequence[int], i
         if importlib.util.find_spec("tigramite") is None:
             return None
         # Defer heavy imports until used
-        from tigramite.independence_tests import ParCorr  # type: ignore
-        from tigramite import data_processing as pp  # type: ignore
-        from tigramite import pcmci as pcmci_mod  # type: ignore
+        from tigramite.independence_tests import ParCorr
+        from tigramite import data_processing as pp
+        from tigramite import pcmci as pcmci_mod
 
-        def te_fn(arr: np.ndarray, sources: Sequence[int], targets: Sequence[int], lag: int) -> float:
+        def te_fn(
+            arr: np.ndarray, sources: Sequence[int], targets: Sequence[int], lag: int
+        ) -> float:
             # Compute average TE from sources->targets at given lag using PCMCI+ParCorr proxy.
             # Note: This is a linearized TE proxy. For full TE, users should configure IDTxl.
             if arr.ndim != 2:
@@ -255,7 +266,9 @@ def _maybe_te_backend() -> Callable[[np.ndarray, Sequence[int], Sequence[int], i
         return None
 
 
-def _maybe_di_backend() -> Callable[[np.ndarray, Sequence[int], Sequence[int], int], float] | None:
+def _maybe_di_backend() -> (
+    Callable[[np.ndarray, Sequence[int], Sequence[int], int], float] | None
+):
     """
     Try to load an optional directed information backend. Returns a function
     di(arr, sources, targets, lag) -> float if available, else None.
@@ -264,6 +277,7 @@ def _maybe_di_backend() -> Callable[[np.ndarray, Sequence[int], Sequence[int], i
     """
     # No lightweight DI backend by default; return None to trigger fallback.
     return None
+
 
 def _bootstrap(
     x: np.ndarray,
@@ -306,7 +320,13 @@ def estimate_L(
     Ex : indices for "exchange" partition
     method : one of {"linear", "mi", "mi_kraskov", "transfer_entropy", "directed_information"}
     """
-    if method not in ("linear", "mi", "mi_kraskov", "transfer_entropy", "directed_information"):
+    if method not in (
+        "linear",
+        "mi",
+        "mi_kraskov",
+        "transfer_entropy",
+        "directed_information",
+    ):
         raise ValueError(
             "method must be 'linear', 'mi', 'mi_kraskov', 'transfer_entropy', or 'directed_information'"
         )
@@ -339,10 +359,14 @@ def estimate_L(
     elif method == "mi_kraskov":
 
         def Lloop_fn(arr: np.ndarray) -> float:
-            return _dir_influence_mi_kraskov(arr, sources=C, targets=C, lag=lag_mi, k=mi_k)
+            return _dir_influence_mi_kraskov(
+                arr, sources=C, targets=C, lag=lag_mi, k=mi_k
+            )
 
         def Lex_fn(arr: np.ndarray) -> float:
-            return _dir_influence_mi_kraskov(arr, sources=Ex, targets=C, lag=lag_mi, k=mi_k)
+            return _dir_influence_mi_kraskov(
+                arr, sources=Ex, targets=C, lag=lag_mi, k=mi_k
+            )
 
     else:
         # Optional TE/DI plugin backends with graceful fallback to MI proxy
@@ -350,7 +374,9 @@ def estimate_L(
         di_backend = _maybe_di_backend() if method == "directed_information" else None
 
         def _proxy(arr: np.ndarray, src: Sequence[int], tgt: Sequence[int]) -> float:
-            return _dir_influence_mi_kraskov(arr, sources=src, targets=tgt, lag=max(1, lag_mi), k=mi_k)
+            return _dir_influence_mi_kraskov(
+                arr, sources=src, targets=tgt, lag=max(1, lag_mi), k=mi_k
+            )
 
         def Lloop_fn(arr: np.ndarray) -> float:
             if method == "transfer_entropy" and te_backend is not None:
