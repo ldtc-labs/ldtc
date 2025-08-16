@@ -79,6 +79,74 @@ def _print_and_audit_header(audit: AuditLog, header: Dict) -> None:
     audit.append("run_header", header)
 
 
+def _human_invalidation_reason(reason: str, details: Dict) -> str:
+    # Best-effort humanization used across CLI pathways
+    try:
+        if reason == "ci_inflation":
+            hwL = 0.5 * abs((details.get("ci_loop", (0, 0))[1]) - (details.get("ci_loop", (0, 0))[0])) if "ci_loop" in details else None
+            hwE = 0.5 * abs((details.get("ci_ex", (0, 0))[1]) - (details.get("ci_ex", (0, 0))[0])) if "ci_ex" in details else None
+            mx = max([v for v in (hwL, hwE) if v is not None] or [None])
+            return f"CI half-width exceeded 0.30 (max≈{mx:.2f})"
+        if reason == "ci_history_inflation":
+            med_loop = details.get("median_hw_loop")
+            med_ex = details.get("median_hw_ex")
+            base_loop = details.get("baseline_hw_loop")
+            base_ex = details.get("baseline_hw_ex")
+            return (
+                f"CI medians over lookback exceeded limits (loop≈{med_loop:.2f}, ex≈{med_ex:.2f}; baseline loop≈{base_loop:.2f}, ex≈{base_ex:.2f}; max=0.30, inflate≥2.0×)"
+            )
+        if reason == "partition_flapping":
+            rate = details.get("flips_per_hour")
+            flips = details.get("flips")
+            return f"Partition flapping: {flips} flips (~{rate:.1f}/hr) > limit (2/hr)"
+        if reason == "partition_flip_during_omega":
+            return "Partition flipped during Ω window (forbidden)"
+        if reason == "dt_change_rate_limit":
+            ch = details.get("changes_this_hour")
+            min_gap = details.get("min_gap_s")
+            return f"Δt edit rate exceeded (changes this hour={ch}, min gap={min_gap}s; limit=3/hr)"
+        if reason == "dt_jitter_excess":
+            rel = details.get("jitter_p95_rel")
+            return f"Scheduler jitter p95 exceeded 0.25×Δt (rel≈{rel:.2f})"
+        if reason == "audit_chain_broken":
+            return "Audit chain broken (counter/hash/timestamp check failed)"
+        if reason == "raw_lreg_breach":
+            return "Raw LREG fields appeared in audit (policy breach)"
+        if reason == "exogenous_subsidy_red_flag":
+            return "Exogenous subsidy red-flag (M rising with high I/O or SoC rising without harvest)"
+    except Exception:
+        pass
+    # Fallback
+    return reason
+
+
+def _append_invalidation(audit: AuditLog, reason: str, details: Dict, _sink: Dict) -> None:
+    # Mutates details to include reason_human, appends to audit, and records last message in _sink
+    rh = _human_invalidation_reason(reason, details)
+    det = {"reason": reason, **details, "reason_human": rh}
+    audit.append("run_invalidated", det)
+    _sink["last_invalidation_human"] = rh
+
+
+def _print_invalidation_footer(audit_path: str) -> None:
+    try:
+        import json as _json
+        last = None
+        with open(audit_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                obj = _json.loads(line)
+                if obj.get("event") == "run_invalidated":
+                    last = obj
+        if last is not None:
+            det = last.get("details", {}) or {}
+            human = det.get("reason_human") or _human_invalidation_reason(det.get("reason", ""), det)
+            print(f"Run invalidated: {human}")
+    except Exception:
+        pass
+
+
 def _ensure_dirs() -> Dict[str, str]:
     artifacts = os.path.join("artifacts")
     audits = os.path.join(artifacts, "audits")
@@ -294,12 +362,45 @@ def run_baseline(args: argparse.Namespace) -> None:
             # Smell tests
             if invalid_by_ci(res.ci_loop, res.ci_ex, cfg_smell):
                 lreg.invalidate("ci_inflation")
-                audit.append("run_invalidated", {"reason": "ci_inflation"})
+                try:
+                    hwL = 0.5 * abs(res.ci_loop[1] - res.ci_loop[0])
+                    hwE = 0.5 * abs(res.ci_ex[1] - res.ci_ex[0])
+                except Exception:
+                    hwL, hwE = None, None
+                _append_invalidation(
+                    audit,
+                    "ci_inflation",
+                    {"halfwidth_loop": hwL, "halfwidth_ex": hwE, "max_allowed": cfg_smell.max_ci_halfwidth},
+                    _sink={}
+                )
             if invalid_by_ci_history(
                 ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
             ):
                 lreg.invalidate("ci_history_inflation")
-                audit.append("run_invalidated", {"reason": "ci_history_inflation"})
+                try:
+                    n = cfg_smell.ci_lookback_windows
+                    rL = ci_loop_hist[-n:]
+                    rE = ci_ex_hist[-n:]
+                    hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                    hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                    med_loop = hwL[n // 2]
+                    med_ex = hwE[n // 2]
+                    b_loop, b_ex = baseline_hw_medians if baseline_hw_medians else (None, None)
+                except Exception:
+                    med_loop = med_ex = b_loop = b_ex = None
+                _append_invalidation(
+                    audit,
+                    "ci_history_inflation",
+                    {
+                        "median_hw_loop": med_loop,
+                        "median_hw_ex": med_ex,
+                        "baseline_hw_loop": b_loop,
+                        "baseline_hw_ex": b_ex,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                        "inflate_factor": cfg_smell.ci_inflate_factor,
+                    },
+                    _sink={}
+                )
             # Δt governance invalidation propagated from guard
             if dt_guard.invalidated and not lreg.invalidated:
                 lreg.invalidate("dt_change_rate_limit")
@@ -308,19 +409,21 @@ def run_baseline(args: argparse.Namespace) -> None:
             elapsed = max(1e-6, time.perf_counter() - start_time)
             if invalid_by_partition_flips(pm.get().flips, elapsed, cfg_smell):
                 lreg.invalidate("partition_flapping")
-                audit.append(
-                    "run_invalidated",
-                    {
-                        "reason": "partition_flapping",
-                        "flips": pm.get().flips,
-                        "elapsed_sec": elapsed,
-                    },
+                rate = 3600.0 * (float(pm.get().flips) / max(1e-6, float(elapsed)))
+                _append_invalidation(
+                    audit,
+                    "partition_flapping",
+                    {"flips": pm.get().flips, "elapsed_sec": elapsed, "flips_per_hour": rate, "limit_per_hour": cfg_smell.max_partition_flips_per_hour},
+                    _sink={}
                 )
             # Exogenous subsidy red flags (heuristic)
             if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
                 lreg.invalidate("exogenous_subsidy")
-                audit.append(
-                    "run_invalidated", {"reason": "exogenous_subsidy_red_flag"}
+                _append_invalidation(
+                    audit,
+                    "exogenous_subsidy_red_flag",
+                    {},
+                    _sink={}
                 )
             idx = lreg.write(
                 LEntry(
@@ -429,27 +532,29 @@ def run_baseline(args: argparse.Namespace) -> None:
         # Δt jitter smell-test: invalidate if p95(|jitter|)/dt exceeds threshold
         if (stats.jitter_p95_abs / max(1e-9, dt)) > SmellConfig().jitter_p95_rel_max:
             lreg.invalidate("dt_jitter_excess")
-            audit.append(
-                "run_invalidated",
+            _append_invalidation(
+                audit,
+                "dt_jitter_excess",
                 {
-                    "reason": "dt_jitter_excess",
                     "jitter_p95_abs": stats.jitter_p95_abs,
                     "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
                     "dt": dt,
                 },
+                _sink={}
             )
         # Audit-chain integrity check
         audit_path = os.path.join(dirs["audits"], "audit.jsonl")
         if audit_chain_broken(audit_path):
             lreg.invalidate("audit_chain_broken")
-            audit.append("run_invalidated", {"reason": "audit_chain_broken"})
+            _append_invalidation(audit, "audit_chain_broken", {}, _sink={})
         # LREG/raw export breach check: audit must not contain raw LREG values
         if audit_contains_raw_lreg_values(audit_path):
             lreg.invalidate("raw_lreg_breach")
-            audit.append("run_invalidated", {"reason": "raw_lreg_breach"})
+            _append_invalidation(audit, "raw_lreg_breach", {}, _sink={})
 
     print("Baseline done.")
     print(f"Audit: {os.path.join(dirs['audits'], 'audit.jsonl')}")
+    _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
     print(f"Indicators dir: {dirs['indicators']}")
 
     # Build verification bundle (timeline, optional SC1 table if present, manifest)
@@ -673,23 +778,48 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
             ):
                 lreg.invalidate("ci_history_inflation")
-                audit.append("run_invalidated", {"reason": "ci_history_inflation"})
+                try:
+                    n = cfg_smell.ci_lookback_windows
+                    rL = ci_loop_hist[-n:]
+                    rE = ci_ex_hist[-n:]
+                    hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                    hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                    med_loop = hwL[n // 2]
+                    med_ex = hwE[n // 2]
+                    b_loop, b_ex = baseline_hw_medians if baseline_hw_medians else (None, None)
+                except Exception:
+                    med_loop = med_ex = b_loop = b_ex = None
+                _append_invalidation(
+                    audit,
+                    "ci_history_inflation",
+                    {
+                        "median_hw_loop": med_loop,
+                        "median_hw_ex": med_ex,
+                        "baseline_hw_loop": b_loop,
+                        "baseline_hw_ex": b_ex,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                        "inflate_factor": cfg_smell.ci_inflate_factor,
+                    },
+                    _sink={}
+                )
             # During Ω, the partition must be frozen; ensure flip-rate is still checked
             elapsed = max(1e-6, time.perf_counter() - start_time)
             if invalid_by_partition_flips(pm.get().flips, elapsed, cfg_smell):
                 lreg.invalidate("partition_flapping")
-                audit.append(
-                    "run_invalidated",
-                    {
-                        "reason": "partition_flapping",
-                        "flips": pm.get().flips,
-                        "elapsed_sec": elapsed,
-                    },
+                rate = 3600.0 * (float(pm.get().flips) / max(1e-6, float(elapsed)))
+                _append_invalidation(
+                    audit,
+                    "partition_flapping",
+                    {"flips": pm.get().flips, "elapsed_sec": elapsed, "flips_per_hour": rate, "limit_per_hour": cfg_smell.max_partition_flips_per_hour},
+                    _sink={}
                 )
             if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
                 lreg.invalidate("exogenous_subsidy")
-                audit.append(
-                    "run_invalidated", {"reason": "exogenous_subsidy_red_flag"}
+                _append_invalidation(
+                    audit,
+                    "exogenous_subsidy_red_flag",
+                    {},
+                    _sink={}
                 )
             # Deterministic growth cadence outside the sag phase and when not frozen
             window_idx += 1
@@ -811,24 +941,25 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         audit.append("omega_power_sag_stop", {})
         if (stats.jitter_p95_abs / max(1e-9, dt)) > SmellConfig().jitter_p95_rel_max:
             lreg.invalidate("dt_jitter_excess")
-            audit.append(
-                "run_invalidated",
+            _append_invalidation(
+                audit,
+                "dt_jitter_excess",
                 {
-                    "reason": "dt_jitter_excess",
                     "jitter_p95_abs": stats.jitter_p95_abs,
                     "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
                     "dt": dt,
                 },
+                _sink={}
             )
 
     # Post-run audit checks
     audit_path = os.path.join(dirs["audits"], "audit.jsonl")
     if audit_chain_broken(audit_path):
         lreg.invalidate("audit_chain_broken")
-        audit.append("run_invalidated", {"reason": "audit_chain_broken"})
+        _append_invalidation(audit, "audit_chain_broken", {}, _sink={})
     if audit_contains_raw_lreg_values(audit_path):
         lreg.invalidate("raw_lreg_breach")
-        audit.append("run_invalidated", {"reason": "raw_lreg_breach"})
+        _append_invalidation(audit, "raw_lreg_breach", {}, _sink={})
 
     # Compute SC1 pass/fail (hello-world: simple thresholds)
     if (
@@ -876,6 +1007,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     print(
         f"SC1 pass: {passed} (delta={sc1_stats.delta:.3f}, tau={sc1_stats.tau_rec:.3f}s, M_post={sc1_stats.M_post:.2f} dB)"
     )
+    _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
 
     # Build single verification bundle (timeline, SC1 table, manifest)
     try:
@@ -1266,6 +1398,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     else:
         print("Not enough data for SC1 evaluation.")
     print("Ingress flood done.")
+    _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
 
     # Build single verification bundle (timeline, SC1 table, manifest)
     try:

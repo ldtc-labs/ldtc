@@ -65,6 +65,7 @@ class DeltaTGuard:
                     "reason": "dt_change_rate_limit",
                     "changes_this_hour": self._changes_in_window,
                     "min_gap_s": self.cfg.min_seconds_between_changes,
+                    "reason_human": "Δt edit rate exceeded (limit 3/hour and min spacing enforced)",
                 },
             )
             self._invalidated = True
