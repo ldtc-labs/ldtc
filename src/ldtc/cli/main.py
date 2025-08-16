@@ -905,7 +905,6 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                         n_boot=max(8, n_boot // 4),
                         mi_k=mi_k,
                     )
-                    )
                     M2 = m_db(res2.L_loop, res2.L_ex)
                     gain = M2 - M
                     if gain > best_gain:

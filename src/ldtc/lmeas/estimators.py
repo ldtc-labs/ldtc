@@ -167,12 +167,15 @@ def _mi_ksg(x: np.ndarray, y: np.ndarray, k: int = 5) -> float:
     # Use a tiny epsilon to ensure strictly inside counts on marginals
     eps = 1e-10
     dists, _ = tree_joint.query(joint, k=k + 1, p=np.inf)
-    rk = dists[:, -1] - eps
+    rk = np.maximum(dists[:, -1] - eps, 0.0)
     # Marginal counts within Chebyshev radius rk
     tree_x = cKDTree(x, leafsize=32)
     tree_y = cKDTree(y, leafsize=32)
     nx = np.fromiter((len(tree_x.query_ball_point(x[i], rk[i], p=np.inf)) - 1 for i in range(n)), dtype=int)
     ny = np.fromiter((len(tree_y.query_ball_point(y[i], rk[i], p=np.inf)) - 1 for i in range(n)), dtype=int)
+    # Guard against degenerate neighborhoods (clip to >=0)
+    nx = np.clip(nx, 0, None)
+    ny = np.clip(ny, 0, None)
     # KSG I estimator
     val = digamma(k) + digamma(n) - np.mean(digamma(nx + 1) + digamma(ny + 1))
     return float(max(0.0, val))
