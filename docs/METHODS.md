@@ -27,5 +27,5 @@ Reporting:
 Notes:
 
 - Calibration runs on the synthetic plant with `seed_C=[E,T,R]` matching the demo. For other plants/settings, re-run calibration.
-- The baseline and Ω trials reuse the same estimators used in the CLI, including block bootstrap CIs.
+- The baseline and Ω trials reuse the same estimators used in the CLI, including block bootstrap CIs. Estimator options include a VAR/linear path and mutual information paths (sklearn MI and Kraskov k‑NN/KSG). Optional TE/DI plugin hooks are provided; if no backend is installed, the methods fall back to MI (KSG) as a conservative proxy.
 

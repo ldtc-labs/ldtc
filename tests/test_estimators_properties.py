@@ -31,7 +31,12 @@ def _gen_var2_with_exchange(
 
 
 def _compute_M_db(X: np.ndarray, method: str) -> float:
-    res = estimate_L(X, C=[0, 1], Ex=[2], method=method, p=2, n_boot=32)
+    kwargs = {"p": 2, "n_boot": 32}
+    if method.startswith("mi"):
+        kwargs.update({"lag_mi": 1})
+        if method == "mi_kraskov":
+            kwargs.update({"mi_k": 5})
+    res = estimate_L(X, C=[0, 1], Ex=[2], method=method, **kwargs)
     return m_db(res.L_loop, res.L_ex)
 
 
@@ -67,15 +72,19 @@ def test_mi_and_linear_estimators_agree_on_linear_system():
     ks = [0.1, 0.4, 0.7]
     Ms_lin = []
     Ms_mi = []
+    Ms_ksg = []
     for k in ks:
         X = _gen_var2_with_exchange(T=2000, c_intra=k, k_ex=0.2, seed=99)
         Ms_lin.append(_compute_M_db(X, method="linear"))
         Ms_mi.append(_compute_M_db(X, method="mi"))
+        Ms_ksg.append(_compute_M_db(X, method="mi_kraskov"))
     # Monotonic non-decreasing for both
     for a, b in zip(Ms_lin, Ms_lin[1:]):
         assert b >= a - 1e-3, f"Linear M not monotonic: {Ms_lin}"
     for a, b in zip(Ms_mi, Ms_mi[1:]):
         assert b >= a - 1e-3, f"MI M not monotonic: {Ms_mi}"
+    for a, b in zip(Ms_ksg, Ms_ksg[1:]):
+        assert b >= a - 1e-3, f"KSG MI M not monotonic: {Ms_ksg}"
     # And the direction of change (delta between endpoints) matches
     assert (Ms_lin[-1] - Ms_lin[0]) >= 0.0
     assert (Ms_mi[-1] - Ms_mi[0]) >= 0.0

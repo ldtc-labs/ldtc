@@ -220,6 +220,7 @@ def run_baseline(args: argparse.Namespace) -> None:
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 32))
+    mi_k = int(prof.get("mi_k", 5))
     # Partition growth hysteresis config
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
@@ -241,6 +242,7 @@ def run_baseline(args: argparse.Namespace) -> None:
             "Mmin_db": Mmin,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
             **seeds,
             "omega": "baseline",
             "omega_args": {},
@@ -317,6 +319,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                 p=p_lag,
                 lag_mi=mi_lag,
                 n_boot=n_boot,
+                mi_k=mi_k,
             )
             # Add diagnostics: stationarity and VAR N/T ratio in audit (no raw LREG values)
             try:
@@ -500,6 +503,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                         p=p_lag,
                         lag_mi=mi_lag,
                         n_boot=max(8, n_boot // 4),
+                        mi_k=mi_k,
                     )
                     M2 = m_db(res2.L_loop, res2.L_ex)
                     gain = M2 - M
@@ -629,6 +633,9 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
+    mi_k = int(prof.get("mi_k", 5))
+    mi_k = int(prof.get("mi_k", 5))
+    mi_k = int(prof.get("mi_k", 5))
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
@@ -650,6 +657,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
             "Mmin_db": Mmin,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
             **seeds,
             "omega": "power_sag",
             "omega_args": {"drop": sag_drop, "duration": sag_dur},
@@ -712,7 +720,14 @@ def omega_power_sag(args: argparse.Namespace) -> None:
             X = np.asarray(sw.get_matrix())
             part = pm.get()
             res = estimate_L(
-                X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot
+                X,
+                part.C,
+                part.Ex,
+                method=method,
+                p=p_lag,
+                lag_mi=mi_lag,
+                n_boot=n_boot,
+                mi_k=mi_k,
             )
             # Diagnostics per window
             try:
@@ -888,6 +903,8 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                         p=p_lag,
                         lag_mi=mi_lag,
                         n_boot=max(8, n_boot // 4),
+                        mi_k=mi_k,
+                    )
                     )
                     M2 = m_db(res2.L_loop, res2.L_ex)
                     gain = M2 - M
@@ -1110,6 +1127,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             "Mmin_db": Mmin,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
             **seeds,
             "omega": "ingress_flood",
             "omega_args": {"mult": mult, "duration": float(args.duration)},
@@ -1169,7 +1187,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             X = np.asarray(sw.get_matrix())
             part = pm.get()
             res = estimate_L(
-                X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot
+                X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot, mi_k=mi_k
             )
             # Diagnostics per window
             try:
@@ -1303,6 +1321,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                         p=p_lag,
                         lag_mi=mi_lag,
                         n_boot=max(8, n_boot // 4),
+                        mi_k=mi_k,
                     )
                     M2 = m_db(res2.L_loop, res2.L_ex)
                     gain = M2 - M
@@ -1703,6 +1722,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
             "Mmin_db": Mmin,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
             **seeds,
             "omega": "command_conflict",
             "omega_args": {"observe": float(args.observe)},
@@ -1739,6 +1759,10 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
             res = estimate_L(
                 X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot
             )
+            if method.startswith("mi"):
+                res = estimate_L(
+                    X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot, mi_k=mi_k
+                )
             # Diagnostics per window
             try:
                 from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio

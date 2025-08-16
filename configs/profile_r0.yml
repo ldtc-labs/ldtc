@@ -1,9 +1,10 @@
 # Reproducibility profile R0 (defaults)
 #
 # Estimator knobs (recommended defaults)
-# - method: "linear" (lagged linear/Granger-like) or "mi" (mutual information)
+# - method: "linear" (lagged linear/Granger-like), "mi" (sklearn MI), or "mi_kraskov" (k-NN MI)
 # - p_lag (linear): choose p in [1..8]; start at 3. Heuristic: keep VAR N/T ratio > ~1.5.
 # - mi_lag (MI): 1 is a good default; increase if your plant exhibits slower coupling.
+# - mi_k (Kraskov MI): choose k in [3..7]; default 5 (per paper/patent ranges).
 # - n_boot: 32–64 bootstrap draws for CI; 32 for speed, 64 for tighter intervals.
 #
 # Rationale/citation: per manuscript §4.1, 𝓛 can be computed using one or more
@@ -18,10 +19,11 @@ min_seconds_between_changes: 1.0
 # Optional scripted Δt changes to exercise governance (baseline run will attempt these)
 # scripted_dt_changes:
 #   - { at_sec: 2.0, new_dt: 0.02, policy_digest: "r0-test" }
-method: linear      # or "mi"
+method: linear      # or "mi", or "mi_kraskov"
 p_lag: 3            # linear estimator lag
 mi_lag: 1           # MI lag
 n_boot: 32          # bootstrap draws for CI
+mi_k: 5             # Kraskov k-NN (used when method="mi_kraskov")
 Mmin_db: 3.0        # NC1 threshold
 epsilon: 0.15       # SC1 fractional drop allowance
 tau_max: 60.0       # SC1 max recovery (s)

@@ -26,7 +26,7 @@ All raw `L` stays inside the process-local LREG boundary — exported data are *
 
 ## Paper crosswalk
 
-- `lmeas/estimators.py`, `lmeas/metrics.py`: Definitions of 𝓛, dual estimators (VAR‑Granger-like linear + Kraskov MI), optional placeholders for transfer entropy / directed information as drop‑in methods, M in dB, NC1/SC1 evaluation → paper §4.1 (estimators, sampling window), §4.2–§4.3 (NC1/SC1).
+- `lmeas/estimators.py`, `lmeas/metrics.py`: Definitions of 𝓛, dual estimators (VAR‑Granger-like linear + MI). MI paths include a sklearn MI and a Kraskov k‑NN MI (KSG) implementation with configurable k∈[3..7]. Optional TE/DI plugin hooks are provided with graceful fallbacks. M in dB, NC1/SC1 evaluation → paper §4.1 (estimators, sampling window), §4.2–§4.3 (NC1/SC1).
 - `lmeas/diagnostics.py`: Per‑window stationarity checks (ADF/KPSS) and a VAR N/T ratio diagnostic; CLI logs these diagnostics to the audit for reviewer visibility.
 - `lmeas/partition.py`: Deterministic C/Ex partitioning, hysteresis/anti‑flap and freeze during Ω → paper §4.1 (Deterministic C/Ex partitioning), §4.6 Box 1a (partition stability).
 - `runtime/scheduler.py`, `runtime/windows.py`, `guardrails/dt_guard.py`: Δt enforcement, sliding windows, privileged Δt changes with audit → paper §4.1 (Δt constraints), §4.5 (Measurement & Attestation Guardrails: Δt governance & audit).

@@ -16,7 +16,7 @@ This repo is a **verification harness**, not a claim of biological consciousness
 
 - Fixed-interval scheduler (Δt) with jitter metrics and audit
 - Software **plant** with Energy/Temperature/Repair states + external Exchange signals
-- Dual estimators (linear lagged “Granger-like” + kNN mutual information)
+- Dual estimators (linear lagged “Granger-like” + mutual information including Kraskov k‑NN)
 - C/Ex partition manager (seeded with hysteresis)
 - Guardrails: LREG enclave, hash-chained audit, simple smell-tests
 - Ω battery: power-sag, ingress flood, command conflict (refusal semantics)
@@ -84,7 +84,7 @@ Key fields:
 
 - `dt`: scheduler interval in seconds (default 0.01)
 - `window_sec`: measurement window length (default 0.2)
-- `method`: `"linear"` or `"mi"`
+- `method`: `"linear"`, `"mi"`, or `"mi_kraskov"`
 - `Mmin_db`: NC1 threshold in dB
 - `epsilon`, `tau_max`: SC1 thresholds
 - `baseline_sec`: duration for the baseline CLI command
