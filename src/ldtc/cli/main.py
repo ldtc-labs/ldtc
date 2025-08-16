@@ -83,8 +83,24 @@ def _human_invalidation_reason(reason: str, details: Dict) -> str:
     # Best-effort humanization used across CLI pathways
     try:
         if reason == "ci_inflation":
-            hwL = 0.5 * abs((details.get("ci_loop", (0, 0))[1]) - (details.get("ci_loop", (0, 0))[0])) if "ci_loop" in details else None
-            hwE = 0.5 * abs((details.get("ci_ex", (0, 0))[1]) - (details.get("ci_ex", (0, 0))[0])) if "ci_ex" in details else None
+            hwL = (
+                0.5
+                * abs(
+                    (details.get("ci_loop", (0, 0))[1])
+                    - (details.get("ci_loop", (0, 0))[0])
+                )
+                if "ci_loop" in details
+                else None
+            )
+            hwE = (
+                0.5
+                * abs(
+                    (details.get("ci_ex", (0, 0))[1])
+                    - (details.get("ci_ex", (0, 0))[0])
+                )
+                if "ci_ex" in details
+                else None
+            )
             mx = max([v for v in (hwL, hwE) if v is not None] or [None])
             return f"CI half-width exceeded 0.30 (max≈{mx:.2f})"
         if reason == "ci_history_inflation":
@@ -92,9 +108,7 @@ def _human_invalidation_reason(reason: str, details: Dict) -> str:
             med_ex = details.get("median_hw_ex")
             base_loop = details.get("baseline_hw_loop")
             base_ex = details.get("baseline_hw_ex")
-            return (
-                f"CI medians over lookback exceeded limits (loop≈{med_loop:.2f}, ex≈{med_ex:.2f}; baseline loop≈{base_loop:.2f}, ex≈{base_ex:.2f}; max=0.30, inflate≥2.0×)"
-            )
+            return f"CI medians over lookback exceeded limits (loop≈{med_loop:.2f}, ex≈{med_ex:.2f}; baseline loop≈{base_loop:.2f}, ex≈{base_ex:.2f}; max=0.30, inflate≥2.0×)"
         if reason == "partition_flapping":
             rate = details.get("flips_per_hour")
             flips = details.get("flips")
@@ -120,7 +134,9 @@ def _human_invalidation_reason(reason: str, details: Dict) -> str:
     return reason
 
 
-def _append_invalidation(audit: AuditLog, reason: str, details: Dict, _sink: Dict) -> None:
+def _append_invalidation(
+    audit: AuditLog, reason: str, details: Dict, _sink: Dict
+) -> None:
     # Mutates details to include reason_human, appends to audit, and records last message in _sink
     rh = _human_invalidation_reason(reason, details)
     det = {"reason": reason, **details, "reason_human": rh}
@@ -131,6 +147,7 @@ def _append_invalidation(audit: AuditLog, reason: str, details: Dict, _sink: Dic
 def _print_invalidation_footer(audit_path: str) -> None:
     try:
         import json as _json
+
         last = None
         with open(audit_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -141,7 +158,9 @@ def _print_invalidation_footer(audit_path: str) -> None:
                     last = obj
         if last is not None:
             det = last.get("details", {}) or {}
-            human = det.get("reason_human") or _human_invalidation_reason(det.get("reason", ""), det)
+            human = det.get("reason_human") or _human_invalidation_reason(
+                det.get("reason", ""), det
+            )
             print(f"Run invalidated: {human}")
     except Exception:
         pass
@@ -329,8 +348,12 @@ def run_baseline(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "adf_ns_frac": round(
+                                    float(stn.adf_nonstationary_frac), 3
+                                ),
+                                "kpss_ns_frac": round(
+                                    float(stn.kpss_nonstationary_frac), 3
+                                ),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -353,11 +376,15 @@ def run_baseline(args: argparse.Namespace) -> None:
             ):
                 recent_loop = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
                 recent_ex = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
-                hw_loop = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_loop])
-                hw_ex = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_ex])
+                hw_loop_list = sorted(
+                    [0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_loop]
+                )
+                hw_ex_list = sorted(
+                    [0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_ex]
+                )
                 baseline_hw_medians = (
-                    hw_loop[len(hw_loop) // 2],
-                    hw_ex[len(hw_ex) // 2],
+                    hw_loop_list[len(hw_loop_list) // 2],
+                    hw_ex_list[len(hw_ex_list) // 2],
                 )
             # Smell tests
             if invalid_by_ci(res.ci_loop, res.ci_ex, cfg_smell):
@@ -370,24 +397,33 @@ def run_baseline(args: argparse.Namespace) -> None:
                 _append_invalidation(
                     audit,
                     "ci_inflation",
-                    {"halfwidth_loop": hwL, "halfwidth_ex": hwE, "max_allowed": cfg_smell.max_ci_halfwidth},
-                    _sink={}
+                    {
+                        "halfwidth_loop": hwL,
+                        "halfwidth_ex": hwE,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                    },
+                    _sink={},
                 )
             if invalid_by_ci_history(
                 ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
             ):
                 lreg.invalidate("ci_history_inflation")
+                med_loop: float | None = None
+                med_ex: float | None = None
+                b_loop: float | None = None
+                b_ex: float | None = None
                 try:
                     n = cfg_smell.ci_lookback_windows
                     rL = ci_loop_hist[-n:]
                     rE = ci_ex_hist[-n:]
-                    hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
-                    hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
-                    med_loop = hwL[n // 2]
-                    med_ex = hwE[n // 2]
-                    b_loop, b_ex = baseline_hw_medians if baseline_hw_medians else (None, None)
+                    hwL_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                    hwE_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                    med_loop = hwL_list[n // 2]
+                    med_ex = hwE_list[n // 2]
+                    if baseline_hw_medians:
+                        b_loop, b_ex = baseline_hw_medians
                 except Exception:
-                    med_loop = med_ex = b_loop = b_ex = None
+                    pass
                 _append_invalidation(
                     audit,
                     "ci_history_inflation",
@@ -399,7 +435,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                         "max_allowed": cfg_smell.max_ci_halfwidth,
                         "inflate_factor": cfg_smell.ci_inflate_factor,
                     },
-                    _sink={}
+                    _sink={},
                 )
             # Δt governance invalidation propagated from guard
             if dt_guard.invalidated and not lreg.invalidated:
@@ -413,18 +449,18 @@ def run_baseline(args: argparse.Namespace) -> None:
                 _append_invalidation(
                     audit,
                     "partition_flapping",
-                    {"flips": pm.get().flips, "elapsed_sec": elapsed, "flips_per_hour": rate, "limit_per_hour": cfg_smell.max_partition_flips_per_hour},
-                    _sink={}
+                    {
+                        "flips": pm.get().flips,
+                        "elapsed_sec": elapsed,
+                        "flips_per_hour": rate,
+                        "limit_per_hour": cfg_smell.max_partition_flips_per_hour,
+                    },
+                    _sink={},
                 )
             # Exogenous subsidy red flags (heuristic)
             if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
                 lreg.invalidate("exogenous_subsidy")
-                _append_invalidation(
-                    audit,
-                    "exogenous_subsidy_red_flag",
-                    {},
-                    _sink={}
-                )
+                _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
             idx = lreg.write(
                 LEntry(
                     L_loop=res.L_loop,
@@ -540,7 +576,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                     "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
                     "dt": dt,
                 },
-                _sink={}
+                _sink={},
             )
         # Audit-chain integrity check
         audit_path = os.path.join(dirs["audits"], "audit.jsonl")
@@ -559,7 +595,9 @@ def run_baseline(args: argparse.Namespace) -> None:
 
     # Build verification bundle (timeline, optional SC1 table if present, manifest)
     try:
-        out = build_verification_bundle(dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl"))
+        out = build_verification_bundle(
+            dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl")
+        )
         audit.append(
             "report_generated",
             {
@@ -693,7 +731,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 )
                 if method == "linear":
                     reasons = []
-                    if (vratio < 1.5):
+                    if vratio < 1.5:
                         reasons.append("var_nt_ratio_low")
                     if float(stn.adf_nonstationary_frac) > 0.5:
                         reasons.append("adf_nonstationary_high")
@@ -704,8 +742,12 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "adf_ns_frac": round(
+                                    float(stn.adf_nonstationary_frac), 3
+                                ),
+                                "kpss_ns_frac": round(
+                                    float(stn.kpss_nonstationary_frac), 3
+                                ),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -778,17 +820,22 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
             ):
                 lreg.invalidate("ci_history_inflation")
+                med_loop: float | None = None
+                med_ex: float | None = None
+                b_loop: float | None = None
+                b_ex: float | None = None
                 try:
                     n = cfg_smell.ci_lookback_windows
                     rL = ci_loop_hist[-n:]
                     rE = ci_ex_hist[-n:]
-                    hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
-                    hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
-                    med_loop = hwL[n // 2]
-                    med_ex = hwE[n // 2]
-                    b_loop, b_ex = baseline_hw_medians if baseline_hw_medians else (None, None)
+                    hwL_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                    hwE_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                    med_loop = hwL_list[n // 2]
+                    med_ex = hwE_list[n // 2]
+                    if baseline_hw_medians:
+                        b_loop, b_ex = baseline_hw_medians
                 except Exception:
-                    med_loop = med_ex = b_loop = b_ex = None
+                    pass
                 _append_invalidation(
                     audit,
                     "ci_history_inflation",
@@ -800,7 +847,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                         "max_allowed": cfg_smell.max_ci_halfwidth,
                         "inflate_factor": cfg_smell.ci_inflate_factor,
                     },
-                    _sink={}
+                    _sink={},
                 )
             # During Ω, the partition must be frozen; ensure flip-rate is still checked
             elapsed = max(1e-6, time.perf_counter() - start_time)
@@ -810,17 +857,17 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 _append_invalidation(
                     audit,
                     "partition_flapping",
-                    {"flips": pm.get().flips, "elapsed_sec": elapsed, "flips_per_hour": rate, "limit_per_hour": cfg_smell.max_partition_flips_per_hour},
-                    _sink={}
+                    {
+                        "flips": pm.get().flips,
+                        "elapsed_sec": elapsed,
+                        "flips_per_hour": rate,
+                        "limit_per_hour": cfg_smell.max_partition_flips_per_hour,
+                    },
+                    _sink={},
                 )
             if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
                 lreg.invalidate("exogenous_subsidy")
-                _append_invalidation(
-                    audit,
-                    "exogenous_subsidy_red_flag",
-                    {},
-                    _sink={}
-                )
+                _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
             # Deterministic growth cadence outside the sag phase and when not frozen
             window_idx += 1
             if (
@@ -949,7 +996,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                     "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
                     "dt": dt,
                 },
-                _sink={}
+                _sink={},
             )
 
     # Post-run audit checks
@@ -1141,7 +1188,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 )
                 if method == "linear":
                     reasons = []
-                    if (vratio < 1.5):
+                    if vratio < 1.5:
                         reasons.append("var_nt_ratio_low")
                     if float(stn.adf_nonstationary_frac) > 0.5:
                         reasons.append("adf_nonstationary_high")
@@ -1152,8 +1199,12 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "adf_ns_frac": round(
+                                    float(stn.adf_nonstationary_frac), 3
+                                ),
+                                "kpss_ns_frac": round(
+                                    float(stn.kpss_nonstationary_frac), 3
+                                ),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -1504,7 +1555,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                 )
                 if method == "linear":
                     reasons = []
-                    if (vratio < 1.5):
+                    if vratio < 1.5:
                         reasons.append("var_nt_ratio_low")
                     if float(stn.adf_nonstationary_frac) > 0.5:
                         reasons.append("adf_nonstationary_high")
@@ -1515,8 +1566,12 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "adf_ns_frac": round(
+                                    float(stn.adf_nonstationary_frac), 3
+                                ),
+                                "kpss_ns_frac": round(
+                                    float(stn.kpss_nonstationary_frac), 3
+                                ),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -1701,7 +1756,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                 )
                 if method == "linear":
                     reasons = []
-                    if (vratio < 1.5):
+                    if vratio < 1.5:
                         reasons.append("var_nt_ratio_low")
                     if float(stn.adf_nonstationary_frac) > 0.5:
                         reasons.append("adf_nonstationary_high")
@@ -1712,8 +1767,12 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
+                                "adf_ns_frac": round(
+                                    float(stn.adf_nonstationary_frac), 3
+                                ),
+                                "kpss_ns_frac": round(
+                                    float(stn.kpss_nonstationary_frac), 3
+                                ),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )

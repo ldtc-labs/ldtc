@@ -250,7 +250,15 @@ def render_paper_timeline(
             footer_txt = f"Profile: {footer_profile or ''}    Audit head: {head_short}"
             # Add extra bottom margin for footer text
             fig.subplots_adjust(bottom=0.22)
-            fig.text(0.01, 0.02, footer_txt, ha="left", va="bottom", fontsize=8, color="#444444")
+            fig.text(
+                0.01,
+                0.02,
+                footer_txt,
+                ha="left",
+                va="bottom",
+                fontsize=8,
+                color="#444444",
+            )
     except Exception:
         # Footer is best-effort; ignore failures
         pass

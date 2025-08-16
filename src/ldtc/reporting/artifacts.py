@@ -188,9 +188,10 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
                 artifact_dir, f"config_snapshot_{eta}_{stamp}_{base_name}"
             )
             # Copy without bringing along permissions
-            with open(cfg_src, "r", encoding="utf-8") as f_in, open(
-                cfg_snap_path, "w", encoding="utf-8"
-            ) as f_out:
+            with (
+                open(cfg_src, "r", encoding="utf-8") as f_in,
+                open(cfg_snap_path, "w", encoding="utf-8") as f_out,
+            ):
                 f_out.write(f_in.read())
     except Exception:
         cfg_snap_path = None
@@ -207,7 +208,7 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
                 "This repository enforces a derived-indicators-only policy: raw LREG values and CI bounds never leave the enclave.\n"
             )
     except Exception:
-        notice_path = None
+        notice_path = ""
 
     # Lock generated artifacts as read-only to "freeze" demo outputs
     try:
