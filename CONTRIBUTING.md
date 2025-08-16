@@ -69,6 +69,18 @@ This project uses Conventional Commits. Use the form:
 [optional footer(s)]
 ```
 
+### Commit message character set
+
+- Encoding: UTF‑8 is allowed and preferred across subjects and bodies.
+- Subjects may include UTF‑8 symbols (e.g., Δ, 𝓛, λ/θ/κ) when they add clarity; keep the subject ≤ 72 chars and avoid emoji.
+- If maximum legacy compatibility is needed, prefer ASCII in the subject and use UTF‑8 in the body.
+
+Example (UTF‑8 subject):
+
+```
+feat(lmeas,cli): implement greedy Δ𝓛 loop-gain partitioning with hysteresis; add λ/θ/κ knobs
+```
+
 Accepted types (stick to the standard):
 
 - `build` – build system or external dependencies (e.g., requirements, packaging)
