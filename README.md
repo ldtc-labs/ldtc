@@ -8,9 +8,14 @@
 
 ![DOI](https://img.shields.io/badge/DOI-pending-blue)
 
-A single-machine, real-time “digital boundary organism” that exercises the **Loop-Dominance** NC1/SC1 pipeline with Δt governance, partitioning, Ω perturbations, refusal semantics, an enclave-like LREG, and device-signed indicators.
+## Overview
 
-This repo is a **verification harness**, not a claim of biological consciousness. It validates the **measurement & attestation path** that your paper/patent specifies.
+- **Purpose (big picture)**: A minimal, substrate‑agnostic “hello‑world” stack for LDTC. It measures loop‑dominance (Lloop vs Lexchange), enforces guardrails (LREG/audit/Δt governance), runs Ω‑perturbations, evaluates NC1/SC1, logs/attests results, and demonstrates command refusal.
+- **Software plant vs hardware plant**:
+  - **Software plant**: an in‑process discrete‑time model with energy E, temperature T, repair/health R, demand, io, and harvest H, plus built‑in Ω stressors.
+  - **Hardware plant**: an optional adapter that ingests real telemetry over UDP or Serial and exposes the same interface, so measurement, arbitration, indicators, and CLI work unchanged.
+- **What this is not**: a conscious alter under LDTC. This repo does not implement, simulate, or claim phenomenology. It is a small, testable scaffold—measurement + guardrails + demo controller + refusal semantics + CLI battery—that you can extend (plant/telemetry schema/refusal criteria/controller).
+- **To attempt an LDTC‑candidate alter** (high‑level): you will need a real, embodied “hardware plant” with on‑board energy conversion/storage and a gated boundary, a self‑referential control hierarchy whose top‑level policy prioritizes NC1/SC1, secure measurement/attestation, and verified refusal semantics. The provided hardware adapter is only an interface; you must supply the physical plant and complete the architecture (energetic autonomy, self‑referential control, adaptive encapsulation) outside this repo.
 
 ## Features
 
