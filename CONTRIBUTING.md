@@ -21,7 +21,7 @@ make fmt
 
 # smoke runs
 make run          # baseline NC1
-make omega        # Ω power-sag demo
+make omega-power-sag   # Ω power-sag demo
 ```
 
 ## Project layout (high-level)

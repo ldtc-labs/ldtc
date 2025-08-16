@@ -10,6 +10,8 @@ epsilon: 0.15
 tau_max: 60.0
 baseline_sec: 6.0
 # Run:
-#   python -m ldtc.cli.main omega-exogenous-subsidy --config configs/negative_exogenous_soc.yml --delta 0.2 --zero-harvest --duration 3
+#   python -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_negative_exogenous_soc.yml --delta 0.2 --zero-harvest --duration 3
 # Reproducible seeds
 seed: 13
+
+

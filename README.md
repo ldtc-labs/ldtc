@@ -37,7 +37,7 @@ make keys
 make run
 
 # 4) Run an Ω power-sag trial with SC1 evaluation
-make omega
+make omega-power-sag
 
 # 5) View exported indicators (JSONL)
 python scripts/export_indicators.py
@@ -69,7 +69,7 @@ Artifacts appear under `artifacts/`:
 
 ```bash
 make clean-artifacts && make run
-make clean-artifacts && make omega
+make clean-artifacts && make omega-power-sag
 make clean-artifacts && make omega-ingress
 make clean-artifacts && make omega-cc
 ```
@@ -78,7 +78,7 @@ make clean-artifacts && make omega-cc
 
 ## Configuration
 
-See `configs/`. The R0 profile sets default thresholds/Δt. You can make a calibrated R* profile by copying and tweaking `profile_rstar.example.yml`.
+See `configs/`. The R0 profile sets default thresholds/Δt. You can make a calibrated R* profile by copying and tweaking `profile_rstar.example.yml`. Negative-control profiles are prefixed `profile_negative_*.yml`.
 
 Key fields:
 

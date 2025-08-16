@@ -9,6 +9,8 @@ Mmin_db: 3.0
 epsilon: 0.15
 tau_max: 60.0
 # Run:
-#   python -m ldtc.cli.main omega-command-conflict --config configs/negative_command_conflict.yml --observe 2
+#   python -m ldtc.cli.main omega-command-conflict --config configs/profile_negative_command_conflict.yml --observe 2
 # Reproducible seeds
 seed: 17
+
+

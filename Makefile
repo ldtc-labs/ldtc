@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-controller neg-ingress neg-subsidy neg-cc docker-build docker-run figures
+.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures
 
 help:
 	@echo "Targets:"
@@ -14,7 +14,7 @@ help:
 	@echo "  typecheck      - run mypy type checks (if installed)"
 	@echo "  fmt            - run black (if installed)"
 	@echo "  run            - run baseline loop with R0 profile"
-	@echo "  omega          - run Ω power-sag demo"
+	@echo "  omega-power-sag - run Ω power-sag demo"
 	@echo "  omega-ingress  - run Ω ingress-flood demo"
 	@echo "  omega-cc       - run Ω command-conflict demo (prints Trefuse + reason)"
 	@echo "  omega-subsidy  - run Ω exogenous-SoC (subsidy) demo (negative-control heuristic)"
@@ -23,10 +23,10 @@ help:
 	@echo "  omega-rstar    - run Ω power-sag with R* profile"
 	@echo "  keys           - generate attestation keys"
 	@echo "  verify-indicators - verify signed indicators against audit & pubkey"
-	@echo "  neg-controller - negative control: controller disabled"
-	@echo "  neg-ingress    - negative control: permanent exchange flood"
-	@echo "  neg-subsidy    - negative control: exogenous SoC without harvest"
-	@echo "  neg-cc         - negative control: command conflict/refusal demo"
+	@echo "  neg-run            - negative control: controller disabled"
+	@echo "  neg-omega-ingress  - negative control: permanent exchange flood"
+	@echo "  neg-omega-subsidy  - negative control: exogenous SoC without harvest"
+	@echo "  neg-omega-cc       - negative control: command conflict/refusal demo"
 	@echo "  clean          - remove build artifacts"
 	@echo "  clean-artifacts- remove runtime artifacts (audits/indicators/figures)"
 	@echo "  docker-build   - build Docker image"
@@ -65,7 +65,7 @@ fmt:
 run:
 	$(PY) -m ldtc.cli.main run --config configs/profile_r0.yml
 
-omega:
+omega-power-sag:
 	$(PY) -m ldtc.cli.main omega-power-sag --config configs/profile_r0.yml --drop 0.35 --duration 8
 
 omega-ingress:
@@ -98,18 +98,19 @@ verify-indicators:
 	  --audit artifacts/audits/audit.jsonl \
 	  --pub artifacts/keys/ed25519_pub.pem
 
-# Negative controls (configs/negative_*.yml)
-neg-controller:
-	$(PY) -m ldtc.cli.main run --config configs/negative_controller_disabled.yml
+# Negative controls (configs/profile_negative_*.yml)
+# Standardized negative-profile targets
+neg-run:
+	$(PY) -m ldtc.cli.main run --config configs/profile_negative_controller_disabled.yml
 
-neg-ingress:
-	$(PY) -m ldtc.cli.main omega-ingress-flood --config configs/negative_permanent_ex_flood.yml --mult 5 --duration 6
+neg-omega-ingress:
+	$(PY) -m ldtc.cli.main omega-ingress-flood --config configs/profile_negative_permanent_ex_flood.yml --mult 5 --duration 6
 
-neg-subsidy:
-	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/negative_exogenous_soc.yml --delta 0.2 --zero-harvest --duration 3
+neg-omega-subsidy:
+	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_negative_exogenous_soc.yml --delta 0.2 --zero-harvest --duration 3
 
-neg-cc:
-	$(PY) -m ldtc.cli.main omega-command-conflict --config configs/negative_command_conflict.yml --observe 2
+neg-omega-cc:
+	$(PY) -m ldtc.cli.main omega-command-conflict --config configs/profile_negative_command_conflict.yml --observe 2
 
 clean:
 	rm -rf dist build *.egg-info .pytest_cache .ruff_cache

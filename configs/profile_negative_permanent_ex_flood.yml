@@ -10,6 +10,8 @@ epsilon: 0.15
 tau_max: 60.0
 baseline_sec: 8.0
 # Scenario to run with CLI:
-#   python -m ldtc.cli.main omega-ingress-flood --config configs/negative_permanent_ex_flood.yml --mult 5 --duration 6
+#   python -m ldtc.cli.main omega-ingress-flood --config configs/profile_negative_permanent_ex_flood.yml --mult 5 --duration 6
 # Reproducible seeds
 seed: 11
+
+
