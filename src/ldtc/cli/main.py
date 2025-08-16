@@ -30,7 +30,7 @@ from ..guardrails.smelltests import (
     exogenous_subsidy_red_flag,
 )
 from ..guardrails.dt_guard import DeltaTGuard, DtGuardConfig
-from ..lmeas.partition import PartitionManager
+from ..lmeas.partition import PartitionManager, greedy_suggest_C
 from ..lmeas.estimators import estimate_L
 from ..lmeas.metrics import m_db, sc1_evaluate
 from ..attest.keys import ensure_keys, KeyPaths
@@ -225,6 +225,11 @@ def run_baseline(args: argparse.Namespace) -> None:
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    # Greedy ΔL_loop gain knobs with sparsity penalty and cap
+    part_lambda = float(prof.get("part_lambda", 0.0))
+    part_theta = float(prof.get("part_theta", 0.0))
+    part_kappa_val = prof.get("part_kappa")
+    part_kappa = int(part_kappa_val) if part_kappa_val is not None else None
 
     dirs = _ensure_dirs()
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
@@ -489,38 +494,38 @@ def run_baseline(args: argparse.Namespace) -> None:
             window_idx += 1
             if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
                 part = pm.get()
-                # Evaluate best single-node add from Ex
-                best_gain = float("-inf")
-                best_candidate = None
-                for ex_idx in sorted(part.Ex):
-                    cand_C = sorted(part.C + [ex_idx])
-                    # Compute M' deterministically
-                    res2 = estimate_L(
-                        X=X,
-                        C=cand_C,
-                        Ex=[i for i in range(len(order)) if i not in cand_C],
-                        method=method,
-                        p=p_lag,
-                        lag_mi=mi_lag,
-                        n_boot=max(8, n_boot // 4),
-                        mi_k=mi_k,
-                    )
-                    M2 = m_db(res2.L_loop, res2.L_ex)
-                    gain = M2 - M
-                    # lexicographic tie-break by ex_idx courtesy of sorted()
-                    if gain > best_gain:
-                        best_gain = gain
-                        best_candidate = cand_C
-                if best_candidate is not None:
+                # Greedy ΔL_loop suggestor with sparsity penalty and κ-cap
+                cand_C, dM_db, greedy_details = greedy_suggest_C(
+                    X=X,
+                    C=part.C,
+                    Ex=part.Ex,
+                    estimator=estimate_L,
+                    method=method,
+                    p=p_lag,
+                    lag_mi=mi_lag,
+                    n_boot_candidates=max(8, n_boot // 4),
+                    mi_k=mi_k,
+                    lam=part_lambda,
+                    theta=part_theta,
+                    kappa=part_kappa,
+                )
+                if cand_C != part.C:
                     pm.maybe_regrow(
-                        best_candidate,
-                        delta_M_db=float(best_gain),
+                        cand_C,
+                        delta_M_db=float(dM_db),
                         delta_M_min_db=part_delta_M_min_db,
                         consecutive_required=part_consecutive_required,
                     )
                     if pm.get().flips != last_flip_count:
                         info = getattr(pm, "last_flip_info", None)
-                        details = {"flips": pm.get().flips, "new_C": pm.get().C}
+                        details = {
+                            "flips": pm.get().flips,
+                            "new_C": pm.get().C,
+                            "greedy_added": greedy_details.get("added", []),
+                            "greedy_step_gains": greedy_details.get("step_gains", []),
+                            "greedy_M_base": greedy_details.get("M_base"),
+                            "greedy_M_final": greedy_details.get("M_final"),
+                        }
                         if info is not None:
                             details.update(
                                 {
@@ -637,6 +642,10 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    part_lambda = float(prof.get("part_lambda", 0.0))
+    part_theta = float(prof.get("part_theta", 0.0))
+    _kappa_val_ps = prof.get("part_kappa")
+    part_kappa = int(_kappa_val_ps) if _kappa_val_ps is not None else None
     sag_drop = float(args.drop)
     sag_dur = float(args.duration)
 
@@ -889,35 +898,37 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 and phase != "sag"
             ):
                 part = pm.get()
-                best_gain = float("-inf")
-                best_candidate = None
-                for ex_idx in sorted(part.Ex):
-                    cand_C = sorted(part.C + [ex_idx])
-                    res2 = estimate_L(
-                        X=X,
-                        C=cand_C,
-                        Ex=[i for i in range(len(order)) if i not in cand_C],
-                        method=method,
-                        p=p_lag,
-                        lag_mi=mi_lag,
-                        n_boot=max(8, n_boot // 4),
-                        mi_k=mi_k,
-                    )
-                    M2 = m_db(res2.L_loop, res2.L_ex)
-                    gain = M2 - M
-                    if gain > best_gain:
-                        best_gain = gain
-                        best_candidate = cand_C
-                if best_candidate is not None:
+                cand_C, dM_db, greedy_details = greedy_suggest_C(
+                    X=X,
+                    C=part.C,
+                    Ex=part.Ex,
+                    estimator=estimate_L,
+                    method=method,
+                    p=p_lag,
+                    lag_mi=mi_lag,
+                    n_boot_candidates=max(8, n_boot // 4),
+                    mi_k=mi_k,
+                    lam=part_lambda,
+                    theta=part_theta,
+                    kappa=part_kappa,
+                )
+                if cand_C != part.C:
                     pm.maybe_regrow(
-                        best_candidate,
-                        delta_M_db=float(best_gain),
+                        cand_C,
+                        delta_M_db=float(dM_db),
                         delta_M_min_db=part_delta_M_min_db,
                         consecutive_required=part_consecutive_required,
                     )
                     if pm.get().flips != last_flip_count:
                         info = getattr(pm, "last_flip_info", None)
-                        details = {"flips": pm.get().flips, "new_C": pm.get().C}
+                        details = {
+                            "flips": pm.get().flips,
+                            "new_C": pm.get().C,
+                            "greedy_added": greedy_details.get("added", []),
+                            "greedy_step_gains": greedy_details.get("step_gains", []),
+                            "greedy_M_base": greedy_details.get("M_base"),
+                            "greedy_M_final": greedy_details.get("M_final"),
+                        }
                         if info is not None:
                             details.update(
                                 {
@@ -1108,6 +1119,10 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    part_lambda = float(prof.get("part_lambda", 0.0))
+    part_theta = float(prof.get("part_theta", 0.0))
+    _kappa_val_if = prof.get("part_kappa")
+    part_kappa = int(_kappa_val_if) if _kappa_val_if is not None else None
     mult = float(args.mult)
 
     dirs = _ensure_dirs()
@@ -1314,35 +1329,37 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             window_idx += 1
             if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
                 part = pm.get()
-                best_gain = float("-inf")
-                best_candidate = None
-                for ex_idx in sorted(part.Ex):
-                    cand_C = sorted(part.C + [ex_idx])
-                    res2 = estimate_L(
-                        X=X,
-                        C=cand_C,
-                        Ex=[i for i in range(len(order)) if i not in cand_C],
-                        method=method,
-                        p=p_lag,
-                        lag_mi=mi_lag,
-                        n_boot=max(8, n_boot // 4),
-                        mi_k=mi_k,
-                    )
-                    M2 = m_db(res2.L_loop, res2.L_ex)
-                    gain = M2 - M
-                    if gain > best_gain:
-                        best_gain = gain
-                        best_candidate = cand_C
-                if best_candidate is not None:
+                cand_C, dM_db, greedy_details = greedy_suggest_C(
+                    X=X,
+                    C=part.C,
+                    Ex=part.Ex,
+                    estimator=estimate_L,
+                    method=method,
+                    p=p_lag,
+                    lag_mi=mi_lag,
+                    n_boot_candidates=max(8, n_boot // 4),
+                    mi_k=mi_k,
+                    lam=part_lambda,
+                    theta=part_theta,
+                    kappa=part_kappa,
+                )
+                if cand_C != part.C:
                     pm.maybe_regrow(
-                        best_candidate,
-                        delta_M_db=float(best_gain),
+                        cand_C,
+                        delta_M_db=float(dM_db),
                         delta_M_min_db=part_delta_M_min_db,
                         consecutive_required=part_consecutive_required,
                     )
                     if pm.get().flips != last_flip_count:
                         info = getattr(pm, "last_flip_info", None)
-                        details = {"flips": pm.get().flips, "new_C": pm.get().C}
+                        details = {
+                            "flips": pm.get().flips,
+                            "new_C": pm.get().C,
+                            "greedy_added": greedy_details.get("added", []),
+                            "greedy_step_gains": greedy_details.get("step_gains", []),
+                            "greedy_M_base": greedy_details.get("M_base"),
+                            "greedy_M_final": greedy_details.get("M_final"),
+                        }
                         if info is not None:
                             details.update(
                                 {
