@@ -5,9 +5,9 @@ from typing import Dict, Any
 import matplotlib as mpl
 
 try:
-    from graphviz import Digraph  # type: ignore
+    from graphviz import Digraph
 except Exception:  # pragma: no cover - optional at import site
-    Digraph = None  # type: ignore
+    Digraph = None
 
 
 # Unified, colorblind-aware palette (anchored on existing manuscript colors)

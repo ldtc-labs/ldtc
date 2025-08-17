@@ -4,9 +4,6 @@
 Outputs: paper/figures/fig_meta_policy.{pdf,png,svg}
 """
 from pathlib import Path
-
-from graphviz import Digraph
-
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
 
 

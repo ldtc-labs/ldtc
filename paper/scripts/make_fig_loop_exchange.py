@@ -4,9 +4,6 @@
 Outputs: paper/figures/fig_loop_exchange.{pdf,png,svg}
 """
 from pathlib import Path
-
-from graphviz import Digraph
-
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
 
 
@@ -15,7 +12,6 @@ def main() -> None:
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    green_fill = COLORS["green_light"]
     green_edge = COLORS["green"]
     yellow_fill = COLORS["yellow_light"]
     yellow_edge = COLORS["yellow"]
