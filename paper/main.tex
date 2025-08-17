@@ -2,6 +2,10 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,mathtools}
 \usepackage{graphicx}
+% Font encoding + scalable fonts (required for microtype expansion)
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage[numbers]{natbib}
@@ -11,7 +15,26 @@
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable,skins,theorems}
 % Allow tcolorbox to span pages and avoid forced page breaks
-\tcbset{breakable,enhanced jigsaw,before skip=10pt,after skip=10pt}
+% Standardize vertical spacing before/after boxes to match floats/lists
+\tcbset{breakable,enhanced jigsaw,before skip=12pt plus 2pt minus 2pt,after skip=12pt plus 2pt minus 2pt}
+
+% Consistent caption style and spacing
+\usepackage[font=small,labelfont=bf]{caption}
+\captionsetup{skip=6pt}
+
+% Standardize float spacing (figures/tables in floats)
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\floatsep}{12pt plus 2pt minus 2pt}
+\setlength{\intextsep}{12pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{12pt plus 2pt minus 2pt}
+
+% Standardize spacing around longtables
+\setlength{\LTpre}{12pt plus 2pt minus 2pt}
+\setlength{\LTpost}{12pt plus 2pt minus 2pt}
+
+% List spacing (itemize/enumerate) for consistent top/bottom gaps
+\usepackage{enumitem}
+\setlist{topsep=8pt plus 2pt minus 2pt,itemsep=2pt plus 1pt minus 1pt,parsep=0pt}
 
 \input{macros}
 % Provide \gitversion from version.tex if present, otherwise default to "dev"
