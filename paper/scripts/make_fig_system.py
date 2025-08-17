@@ -7,37 +7,36 @@ from pathlib import Path
 
 from graphviz import Digraph
 
+from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
+
 
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    blue_fill = "#D6EAF8"
-    blue_edge = "#2874A6"
-    green_fill = "#D1F2EB"
-    green_edge = "#138D75"
-    yellow_fill = "#FEF9E7"
-    yellow_edge = "#D4AC0D"
-    gray_fill = "#F2F3F4"
-    gray_edge = "#7F8C8D"
+    blue_fill = COLORS["blue_light"]
+    blue_edge = COLORS["blue"]
+    green_fill = COLORS["green_light"]
+    green_edge = COLORS["green"]
+    yellow_fill = COLORS["yellow_light"]
+    yellow_edge = COLORS["yellow"]
+    gray_fill = COLORS["gray_light"]
+    gray_edge = COLORS["gray"]
 
     arrow_energy = blue_edge
     arrow_control = green_edge
     arrow_gated = gray_edge
 
-    dot = Digraph("fig_system", engine="dot")
-    dot.attr(
+    dot = new_graph("fig_system", rankdir="LR", engine="dot")
+    # Override defaults for this figure (labels on edges are fine)
+    apply_graphviz_theme(
+        dot,
         rankdir="LR",
-        splines="spline",
-        nodesep="0.6",
-        ranksep="0.8",
-        margin="0.25",
-        pad="0.2",
-        dpi="300",
+        overrides={
+            "edge": {"color": gray_edge, "penwidth": "2.0"},
+        },
     )
-    dot.attr("node", fontname="Helvetica", fontsize="10")
-    dot.attr("edge", fontname="Helvetica", fontsize="10")
 
     dot.node(
         "EAM",

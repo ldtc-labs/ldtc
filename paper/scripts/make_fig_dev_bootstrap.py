@@ -7,27 +7,19 @@ from pathlib import Path
 
 from graphviz import Digraph
 
+from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
+
 
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    purple_fill = "#E8DAEF"
-    purple_edge = "#8E44AD"
+    purple_fill = COLORS["purple_light"]
+    purple_edge = COLORS["purple"]
 
-    dot = Digraph("fig_dev_bootstrap", engine="dot")
-    dot.attr(
-        rankdir="LR",
-        splines="spline",
-        nodesep="0.6",
-        ranksep="0.8",
-        margin="0.25",
-        pad="0.2",
-        dpi="300",
-    )
-    dot.attr("node", fontname="Helvetica", fontsize="10")
-    dot.attr("edge", fontname="Helvetica", fontsize="10")
+    dot = new_graph("fig_dev_bootstrap", rankdir="LR", engine="dot")
+    apply_graphviz_theme(dot, rankdir="LR")
 
     dot.node(
         "SA",

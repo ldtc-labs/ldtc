@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Tuple, Mapping
 import numpy as np
 import yaml
 import matplotlib.pyplot as plt
+from ldtc.reporting.style import apply_matplotlib_theme, COLORS
 
 from ldtc.runtime.windows import SlidingWindow
 from ldtc.lmeas.partition import PartitionManager
@@ -308,12 +309,13 @@ def _write_compare_figure(
 
     x = np.arange(len(params))
     width = 0.38
+    apply_matplotlib_theme("paper")
     plt.figure(figsize=(6.4, 3.2))
     # Plot R0; skip NaNs by replacing with zeros but masking in labels
     r0_plot = [v if np.isfinite(v) else 0.0 for v in r0_vals]
     rstar_plot = rstar_vals
-    plt.bar(x - width / 2, r0_plot, width=width, label="R0", color="#9ecae1")
-    plt.bar(x + width / 2, rstar_plot, width=width, label="R*", color="#3182bd")
+    plt.bar(x - width / 2, r0_plot, width=width, label="R0", color=COLORS["blue_light"])
+    plt.bar(x + width / 2, rstar_plot, width=width, label="R*", color=COLORS["blue"])
     plt.xticks(x, params)
     plt.ylabel("Value")
     plt.title("R0 vs R* thresholds")

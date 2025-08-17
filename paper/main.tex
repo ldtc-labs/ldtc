@@ -367,7 +367,7 @@ The system's highest-priority objective is to maintain \NC and \SC. This can be 
 
 Crucially, task-oriented software runs subordinate to this hierarchy and can be pre-empted whenever it jeopardizes $\Lloop$. \Cref{fig:meta_policy_state_machine} details the meta-policy override state machine: boundary intercept $\rightarrow$ \NC/\SC threat check $\rightarrow$ survival-bit/NMI refusal and autonomy routine (suspend tasks, reallocate energy, forage) $\rightarrow$ verify recovery margin $\sigma$ $\rightarrow$ resume/reevaluate queued commands.
 
-\fig[0.5\linewidth]{figures/fig_meta_policy.pdf}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
+\fig[0.9\linewidth]{figures/fig_meta_policy.pdf}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
 
 \subsubsection{Threat Model \& Refusal Path (\NC/\SC-aware arbitration)}
 \label{sec:threat_model}

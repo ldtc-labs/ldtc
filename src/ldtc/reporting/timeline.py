@@ -5,6 +5,7 @@ import os
 from typing import Dict, List, Tuple, Optional
 
 import matplotlib.pyplot as plt
+from .style import apply_matplotlib_theme, COLORS
 
 
 def _read_audit(path: str) -> List[dict]:
@@ -161,23 +162,19 @@ def render_paper_timeline(
         l_ex = [1.0 for _ in m_db_series]
         l_loop = [10.0 ** (m / 10.0) for m in m_db_series]
 
-    # Matplotlib aesthetics for paper-ready look
-    plt.rcParams.update(
-        {
-            "axes.spines.top": False,
-            "axes.spines.right": False,
-            "axes.grid": False,
-            "font.size": 10,
-            "figure.dpi": 150,
-        }
-    )
+    # Apply unified theme for arXiv-ready figures
+    apply_matplotlib_theme("paper")
 
     fig, ax_l = plt.subplots(figsize=(7.0, 3.2))
     ax_m = ax_l.twinx()
 
     # Plot L traces (primary axis)
-    ax_l.plot(l_time, l_loop, label="L_loop (norm)", color="#1b9e77", linewidth=1.8)
-    ax_l.plot(l_time, l_ex, label="L_exchange (norm)", color="#7570b3", linewidth=1.8)
+    ax_l.plot(
+        l_time, l_loop, label="L_loop (norm)", color=COLORS["green"], linewidth=1.8
+    )
+    ax_l.plot(
+        l_time, l_ex, label="L_exchange (norm)", color=COLORS["gray"], linewidth=1.8
+    )
     if use_log_L:
         ax_l.set_yscale("log")
     ax_l.set_xlabel("Time (s)")
@@ -185,14 +182,23 @@ def render_paper_timeline(
 
     # Plot M(dB) (secondary axis)
     ax_m.plot(
-        t_series, m_db_series, label="M (dB)", color="#d95f02", linewidth=1.6, alpha=0.9
+        t_series,
+        m_db_series,
+        label="M (dB)",
+        color=COLORS["yellow"],
+        linewidth=1.6,
+        alpha=0.9,
     )
     ax_m.set_ylabel("M (dB)")
 
     # Ω shading
     for idx, (t0, t1, ev) in enumerate(omega_spans):
         ax_l.axvspan(
-            t0, t1, color="#aaaaaa", alpha=0.25, label="Ω" if idx == 0 else None
+            t0,
+            t1,
+            color=COLORS["gray_light"],
+            alpha=0.35,
+            label="Ω" if idx == 0 else None,
         )
 
     # Audit ticks (thinned rug at top of axis)
@@ -206,7 +212,7 @@ def render_paper_timeline(
             [0.96] * len(thinned),
             [1.0] * len(thinned),
             transform=ax_l.get_xaxis_transform(),
-            colors="#4d4d4d",
+            colors=COLORS["gray"],
             linestyles=(0, (2, 2)),
             linewidth=0.8,
             alpha=0.7,

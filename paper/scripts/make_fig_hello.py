@@ -2,6 +2,8 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+
+from ldtc.reporting.style import COLORS, apply_matplotlib_theme
 import numpy as np
 
 
@@ -10,14 +12,17 @@ def main() -> None:
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
+    # Apply shared theme
+    apply_matplotlib_theme("paper")
+
     x = np.linspace(0, 2 * np.pi, 400)
     y = np.sin(2 * x) * np.exp(-0.2 * x)
 
     fig, ax = plt.subplots(figsize=(5, 3))
-    ax.plot(x, y, label="demo signal")
+    ax.plot(x, y, label="demo signal", color=COLORS["green"])
     ax.set_xlabel("t")
     ax.set_ylabel("amplitude")
-    ax.grid(True, alpha=0.3)
+    ax.grid(True, alpha=0.25, color=COLORS["gray_light"])
     ax.legend(loc="best", frameon=False)
     fig.tight_layout()
 

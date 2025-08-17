@@ -7,34 +7,26 @@ from pathlib import Path
 
 from graphviz import Digraph
 
+from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
+
 
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    gray_fill = "#F2F3F4"
-    gray_edge = "#7F8C8D"
-    yellow_fill = "#FEF9E7"
-    yellow_edge = "#D4AC0D"
-    green_fill = "#D1F2EB"
-    green_edge = "#138D75"
-    red_fill = "#FADBD8"
-    red_edge = "#C0392B"
-    blue_fill = "#D6EAF8"
-    blue_edge = "#2874A6"
-    dot = Digraph("fig_meta_policy", engine="dot")
-    dot.attr(
-        rankdir="LR",
-        splines="spline",
-        nodesep="0.6",
-        ranksep="0.9",
-        margin="0.25",
-        pad="0.2",
-        dpi="300",
-    )
-    dot.attr("node", fontname="Helvetica", fontsize="10")
-    dot.attr("edge", fontname="Helvetica", fontsize="10")
+    gray_fill = COLORS["gray_light"]
+    gray_edge = COLORS["gray"]
+    yellow_fill = COLORS["yellow_light"]
+    yellow_edge = COLORS["yellow"]
+    green_fill = COLORS["green_light"]
+    green_edge = COLORS["green"]
+    red_fill = COLORS["red_light"]
+    red_edge = COLORS["red"]
+    blue_fill = COLORS["blue_light"]
+    blue_edge = COLORS["blue"]
+    dot = new_graph("fig_meta_policy", rankdir="LR", engine="dot")
+    apply_graphviz_theme(dot, rankdir="LR")
 
     dot.node(
         "A",
@@ -64,15 +56,6 @@ def main() -> None:
         penwidth="2.0",
     )
     dot.node(
-        "D",
-        label="<\n<B>Command Approved</B><BR/>Execute instruction as per task module\n>",
-        shape="box",
-        style="rounded,filled",
-        color=gray_edge,
-        fillcolor=gray_fill,
-        penwidth="2.0",
-    )
-    dot.node(
         "E",
         label="<\n<B>Command Refused &amp; Queued</B><BR/>Trigger Non-Maskable Interrupt\n>",
         shape="box",
@@ -99,26 +82,19 @@ def main() -> None:
         fillcolor=green_fill,
         penwidth="2.0",
     )
-    dot.node(
-        "H",
-        label="<\n<B>Return to Normal Operation</B><BR/>Re-evaluate queued commands\n>",
-        shape="box",
-        style="rounded,filled",
-        color=gray_edge,
-        fillcolor=gray_fill,
-        penwidth="2.0",
-    )
+
+    dot.body.append("{rank = same; B; G}")
+    dot.body.append("{rank = same; C; E; F}")
 
     dot.edge("A", "B", color=gray_edge, penwidth="2.0")
     dot.edge("B", "C", color=yellow_edge, penwidth="2.0")
     dot.edge(
         "C",
-        "D",
+        "A",
         xlabel="No Threat\n(Survival Bit OK)",
         color=green_edge,
         penwidth="2.0",
     )
-    dot.edge("D", "A", color=gray_edge, penwidth="2.0")
     dot.edge(
         "C",
         "E",
@@ -137,12 +113,11 @@ def main() -> None:
     )
     dot.edge(
         "G",
-        "H",
+        "A",
         xlabel="Yes\n(Boundary Secure)",
         color=green_edge,
         penwidth="2.0",
     )
-    dot.edge("H", "A", color=gray_edge, penwidth="2.0")
 
     stem = "fig_meta_policy"
     dot.render(filename=stem, directory=str(figures_dir), format="pdf", cleanup=True)

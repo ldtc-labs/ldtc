@@ -7,31 +7,23 @@ from pathlib import Path
 
 from graphviz import Digraph
 
+from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
+
 
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    green_fill = "#D1F2EB"
-    green_edge = "#138D75"
-    yellow_fill = "#FEF9E7"
-    yellow_edge = "#D4AC0D"
-    gray_fill = "#F2F3F4"
-    gray_edge = "#7F8C8D"
+    green_fill = COLORS["green_light"]
+    green_edge = COLORS["green"]
+    yellow_fill = COLORS["yellow_light"]
+    yellow_edge = COLORS["yellow"]
+    gray_fill = COLORS["gray_light"]
+    gray_edge = COLORS["gray"]
 
-    dot = Digraph("fig_loop_exchange", engine="dot")
-    dot.attr(
-        rankdir="LR",
-        splines="spline",
-        nodesep="0.6",
-        ranksep="0.8",
-        margin="0.25",
-        pad="0.2",
-        dpi="300",
-    )
-    dot.attr("node", fontname="Helvetica", fontsize="10")
-    dot.attr("edge", fontname="Helvetica", fontsize="10")
+    dot = new_graph("fig_loop_exchange", rankdir="LR", engine="dot")
+    apply_graphviz_theme(dot, rankdir="LR")
 
     with dot.subgraph(name="cluster_loop") as c:
         c.attr(label="<\n<B>Closed Self-Maintaining Loop (L<SUB>loop</SUB>)</B>\n>")

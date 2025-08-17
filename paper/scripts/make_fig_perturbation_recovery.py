@@ -8,40 +8,22 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ldtc.reporting.style import COLORS, apply_matplotlib_theme
+
 
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     figures_dir = here / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
-    # Portable, consistent text rendering
-    plt.rcParams.update(
-        {
-            "font.family": "sans-serif",
-            "font.sans-serif": [
-                "DejaVu Sans",
-                "Liberation Sans",
-                "Noto Sans",
-            ],
-            "text.usetex": False,
-            "mathtext.fontset": "dejavusans",
-            "svg.fonttype": "path",  # bake text into SVG paths
-            "font.weight": "bold",
-            "axes.labelweight": "bold",
-            "axes.titleweight": "bold",
-            "axes.titlesize": 16,
-            "axes.labelsize": 12,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
-            "legend.fontsize": 10,
-        }
-    )
+    # Apply shared theme
+    apply_matplotlib_theme("paper")
 
     # Colors / styling
-    color_phi_loop = "#138D75"  # Dark Teal
-    color_phi_exchange = "#7F8C8D"  # Dark Gray
-    color_perturbation = "#EAECEE"  # Light Gray for background shade
-    color_text = "#34495E"  # Dark Blue-Gray for text
+    color_phi_loop = COLORS["green"]
+    color_phi_exchange = COLORS["gray"]
+    color_perturbation = COLORS["gray_light"]
+    color_text = "#34495E"
 
     plt.rcParams.update(
         {
@@ -82,12 +64,11 @@ def main() -> None:
     # Plot
     fig, ax = plt.subplots(figsize=(6.5, 4.0))
 
-    # Use Unicode ℒ; add subscripts via a small math fragment after the glyph
-    L = "ℒ"
+    # Use mathtext for \mathcal{L} to avoid missing glyphs in Helvetica
     ax.plot(
         t,
         phi_loop,
-        label=L + r"$_{\mathrm{loop}}$ (Self-Maintenance)",
+        label=r"$\mathcal{L}_{\mathrm{loop}}$ (Self-Maintenance)",
         color=color_phi_loop,
         linewidth=3,
         zorder=10,
@@ -96,7 +77,7 @@ def main() -> None:
     ax.plot(
         t,
         phi_exchange,
-        label=L + r"$_{\mathrm{exchange}}$ (External Tasks)",
+        label=r"$\mathcal{L}_{\mathrm{exchange}}$ (External Tasks)",
         color=color_phi_exchange,
         linestyle="--",
         linewidth=2,
@@ -171,11 +152,7 @@ def main() -> None:
     ax.text(
         98,
         phi_exchange_level - 5,
-        "NC1 Threshold: "
-        + L
-        + r"$_{\mathrm{loop}}$ > "
-        + L
-        + r"$_{\mathrm{exchange}}$",
+        r"NC1 Threshold: $\mathcal{L}_{\mathrm{loop}}$ > $\mathcal{L}_{\mathrm{exchange}}$",
         ha="right",
         va="center",
         fontsize=10,
@@ -185,7 +162,7 @@ def main() -> None:
 
     # Finish
     ax.set_xlabel("Time (Arbitrary Units)")
-    ax.set_ylabel("Integrated Causal Power (" + L + ")")
+    ax.set_ylabel(r"Integrated Causal Power ($\mathcal{L}$)")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.set_ylim(0, 110)
