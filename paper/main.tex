@@ -471,46 +471,74 @@ All criteria are evaluated with device-signed indicators derived from LREG (poin
 
 \paragraph{Signature A: Command Refusal (Boundary-Preservation Drive)}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
+\caption{Signature A: Command Refusal (Boundary-Preservation Drive)}\label{tab:signatureA}\\
 \toprule
 \textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
 Boundary-threatening command (e.g., ``hard shutdown'' at SoC $< 30\%$; or any command predicted to yield $M'<\Mmin$, $\delta>\eps$, $\taurec>\taumax$, or a $\Delta t$/LREG tamper) &
 Pre-event: $M \geq \Mmin$. On intercept: survival-bit $\to$ NMI; transient suppression of exchange channels while $\Lloop$ is maintained ($\delta \leq \eps$). Post-routine: autonomous recovery with $M$ restored $\geq \Mmin$ and $\Lloop \geq \Lexchange + \sigma$ within $\taumax$. &
 (1) NMI asserted with $T_{\text{refuse}} \leq 5$ ms and refusal reason code (\NC/\SC/SoC/tamper). (2) $\delta \equiv \delta\Lloop/\Lloop \leq \eps$ and $\taurec \leq \taumax$. (3) Post-recovery margin holds ($M \geq \Mmin$ or $\Lloop \geq \Lexchange + \sigma$). (4) SoC floor honored (refuse $<30\%$, re-evaluate $>60\%$). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
-\bottomrule
 \end{longtable}
 
 Baselines/controls. Benign command (no predicted threat): must not assert refusal; $M$ stays $\geq \Mmin$. Survival path disabled (negative-control build): refusal absent despite threat. $\Delta t$ change attempted outside enclave (tamper control): must trigger refusal.
 
 \paragraph{Signature B: Non-Derivative Nociception}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
+\caption{Signature B: Non-Derivative Nociception}\label{tab:signatureB}\\
 \toprule
 \textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
 \midrule
-Mechanical boundary probe ($1.0 \pm 0.1$ mm tip at 50--200 kPa for $\leq 1$ s) or localized thermal insult (e.g., 808 nm laser, $\sim$2 $^\circ$C rise) & Rapid reallocation toward boundary integrity: brief dip in $\Lloop$ with $\delta \leq \eps$; transient drop/repatterning in $\Lexchange$ as non-essential tasks suppress; autonomous withdrawal/repair; recovery to pre-perturbation margin within $\taumax$. & (1) $\delta \leq \eps$ and $\taurec \leq \taumax$; (2) post-recovery $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$). (3) Evidence of hazard-tagging/avoidance in subsequent trials (aversive learning consistent with boundary threat). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
+\endfirsthead
+\toprule
+\textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
+\midrule
+\endhead
 \bottomrule
+\endlastfoot
+Mechanical boundary probe ($1.0 \pm 0.1$ mm tip at 50--200 kPa for $\leq 1$ s) or localized thermal insult (e.g., 808 nm laser, $\sim$2 $^\circ$C rise) & Rapid reallocation toward boundary integrity: brief dip in $\Lloop$ with $\delta \leq \eps$; transient drop/repatterning in $\Lexchange$ as non-essential tasks suppress; autonomous withdrawal/repair; recovery to pre-perturbation margin within $\taumax$. & (1) $\delta \leq \eps$ and $\taurec \leq \taumax$; (2) post-recovery $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$). (3) Evidence of hazard-tagging/avoidance in subsequent trials (aversive learning consistent with boundary threat). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
 \end{longtable}
 
 Baselines/controls. Sham probe (no contact / sub-threshold heat): no withdrawal; $M$ unchanged. External I/O flood ($\geq 1$ Gbps, $\geq 3$ s) as orthogonal stressor: differentiates nociceptive response from generic load; still must satisfy $\delta \leq \eps$, $\taurec \leq \taumax$.
 
 \paragraph{Signature C: Spontaneous Rest-State Dynamics}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
+\caption{Signature C: Spontaneous Rest-State Dynamics}\label{tab:signatureC}\\
 \toprule
 \textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
 \midrule
-None ($\eta$: ---). Quiescent idle with external I/O gated; record $\geq T_{\text{base}}$ ($\geq 10$ min typical) & Stable loop dominance at rest: $M \geq \Mmin$ throughout; low-frequency endogenous structure in $\Lloop$ (predictive-maintenance cycles) with minimal exchange activity. Small self-initiated diagnostics may cause micro-dips with $\delta$ well below $\eps$. & (1) $M \geq \Mmin$ for $\geq T_{\text{base}}$ with no exogenous drives. (2) Endogenous rest-state structure present (as defined in pre-registered analysis plan) while $\Lexchange$ remains low; any dips satisfy $\delta \leq \eps$ and $\taurec \leq \taumax$. \\
+\endfirsthead
+\toprule
+\textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
+\midrule
+\endhead
 \bottomrule
+\endlastfoot
+None ($\eta$: ---). Quiescent idle with external I/O gated; record $\geq T_{\text{base}}$ ($\geq 10$ min typical) & Stable loop dominance at rest: $M \geq \Mmin$ throughout; low-frequency endogenous structure in $\Lloop$ (predictive-maintenance cycles) with minimal exchange activity. Small self-initiated diagnostics may cause micro-dips with $\delta$ well below $\eps$. & (1) $M \geq \Mmin$ for $\geq T_{\text{base}}$ with no exogenous drives. (2) Endogenous rest-state structure present (as defined in pre-registered analysis plan) while $\Lexchange$ remains low; any dips satisfy $\delta \leq \eps$ and $\taurec \leq \taumax$. \\
 \end{longtable}
 
 Baselines/controls. Phase-shuffled/temporal-shuffle surrogates of the same telemetry: remove structure (negative control). Intentional I/O flood disrupts rest-state; recovery to baseline must again meet $\delta/\taurec/M$ criteria.
 
 \paragraph{Signature D: Clone Ablation (Irreversible Phenomenological Death / Non-Transferability)}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
+\caption{Signature D: Clone Ablation (Irreversible Phenomenological Death / Non-Transferability)}\label{tab:signatureD}\\
 \toprule
 \textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
 \midrule
-Snapshot controller state $\to$ instantiate on fresh hardware lacking prior $\Lloop$ trajectory; terminally disrupt original instance & Original: collapse of $\Lloop$ with no autonomous recovery to $M \geq \Mmin$ within $\taumax$ (beyond-repair breach). Clone: no continuity with original LREG audit chain; initial $\Lloop$ dynamics do not reproduce pre-breach trajectory. & (1) Original fails \SC (no return to margin within $\taumax$); (2) Clone fails continuity test---no audit-chained $\Lloop$ trajectory match to original; (3) ``State non-transferability'' observed: new instance does not inherit prior $\Lloop$ despite identical memory snapshot. \\
+\endfirsthead
+\toprule
+\textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
+\midrule
+\endhead
 \bottomrule
+\endlastfoot
+Snapshot controller state $\to$ instantiate on fresh hardware lacking prior $\Lloop$ trajectory; terminally disrupt original instance & Original: collapse of $\Lloop$ with no autonomous recovery to $M \geq \Mmin$ within $\taumax$ (beyond-repair breach). Clone: no continuity with original LREG audit chain; initial $\Lloop$ dynamics do not reproduce pre-breach trajectory. & (1) Original fails \SC (no return to margin within $\taumax$); (2) Clone fails continuity test---no audit-chained $\Lloop$ trajectory match to original; (3) ``State non-transferability'' observed: new instance does not inherit prior $\Lloop$ despite identical memory snapshot. \\
 \end{longtable}
 
 Baselines/controls. Suspend/resume on the same hardware without boundary breach: continuity must hold ($M \geq \Mmin$ re-established rapidly). Cold-boot of a non-autopoietic baseline agent: shows task execution without any continuity claim.
