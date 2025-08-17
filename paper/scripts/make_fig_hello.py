@@ -22,7 +22,11 @@ def main() -> None:
     fig.tight_layout()
 
     out_pdf = figures_dir / "fig_hello.pdf"
-    fig.savefig(out_pdf)
+    out_png = figures_dir / "fig_hello.png"
+    out_svg = figures_dir / "fig_hello.svg"
+    fig.savefig(out_pdf, bbox_inches="tight")
+    fig.savefig(out_png, dpi=300, bbox_inches="tight")
+    fig.savefig(out_svg, bbox_inches="tight")
     plt.close(fig)
     print(f"Wrote {out_pdf}")
 

@@ -155,8 +155,7 @@ During normal operation the system satisfies self-prioritization when $\mathcal{
 
 For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delta\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{loop}} \leq \varepsilon$, (ii) $\tau_{\text{rec}} \leq \tau_{\max}$, and (iii) post-recovery $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ and $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $\varepsilon = 0.15$, $\tau_{\max} = 60$ s, $M_{\min} = 3$ dB. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}. The schematic in \Cref{fig:perturbation_recovery} illustrates a representative perturbation–recovery run: $\Lloop$ dips within a bounded disturbance window and autonomously returns above $\Lexchange$; numeric thresholds ($\Mmin, \eps, \taurec, \taumax$) are defined in \Sref{sec:glossary} and Methods \Sref{sec:methods_calibration} but are not drawn here.
 
-% Figure 1 placeholder (perturbation--recovery schematic)
-\fig[0.9\linewidth]{figures/image4.png}{Perturbation--recovery timeline (NC1/SC1) [prophetic schematic; no empirical data]. Time series of $\Lloop$ (green) and $\Lexchange$ (gray) during a bounded disturbance (shaded). Labels mark perturbation onset, loop-power dip, autonomous recovery, and return to baseline where NC1 holds again ($\Lloop>\Lexchange$). Thresholds $\Mmin$, $\eps$, $\tau_{\text{rec}}$, and $\taumax$ are specified in \Sref{sec:glossary}/\Sref{sec:methods_calibration} and not rendered on this schematic.}{fig:perturbation_recovery}
+\fig[0.9\linewidth]{figures/fig_perturbation_recovery.pdf}{Perturbation--recovery timeline (NC1/SC1) [prophetic schematic; no empirical data]. Time series of $\Lloop$ (green) and $\Lexchange$ (gray) during a bounded disturbance (shaded). Labels mark perturbation onset, loop-power dip, autonomous recovery, and return to baseline where NC1 holds again ($\Lloop>\Lexchange$). Thresholds $\Mmin$, $\eps$, $\tau_{\text{rec}}$, and $\taumax$ are specified in \Sref{sec:glossary}/\Sref{sec:methods_calibration} and not rendered on this schematic.}{fig:perturbation_recovery}
 
 \subsection{Single-use glossary (paper-wide identifiers)}
 \label{sec:glossary}
@@ -368,8 +367,7 @@ The system's highest-priority objective is to maintain \NC and \SC. This can be 
 
 Crucially, task-oriented software runs subordinate to this hierarchy and can be pre-empted whenever it jeopardizes $\Lloop$. \Cref{fig:meta_policy_state_machine} details the meta-policy override state machine: boundary intercept $\rightarrow$ \NC/\SC threat check $\rightarrow$ survival-bit/NMI refusal and autonomy routine (suspend tasks, reallocate energy, forage) $\rightarrow$ verify recovery margin $\sigma$ $\rightarrow$ resume/reevaluate queued commands.
 
-% Figure 3 placeholder (meta-policy override state machine)
-\fig[0.5\linewidth]{figures/image2.png}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
+\fig[0.5\linewidth]{figures/fig_meta_policy.pdf}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
 
 \subsubsection{Threat Model \& Refusal Path (\NC/\SC-aware arbitration)}
 \label{sec:threat_model}
@@ -389,8 +387,7 @@ Crucially, task-oriented software runs subordinate to this hierarchy and can be 
 
 To resist unmediated environmental integration, the machine requires a synthetic ``membrane'' regulating material and informational throughput:
 
-% Figure 2 placeholder (adaptive boundary layer stack)
-\fig[0.9\linewidth]{figures/image3.png}{Adaptive boundary (layer stack) [prophetic schematic; no empirical data]. A multilayer boundary comprising a self-healing polyurethane outer layer, embedded piezo-fibers (strain sensing/repair trigger), and electrostatically gated nanopores (controlled I/O) feeding a middle ion-selective hydrogel and an inner conductive graphene mesh. Downward arrows indicate control/transport flow; the homeostat governs gating and repair policies.}{fig:adaptive_boundary}
+\fig[0.9\linewidth]{figures/fig_adaptive_boundary.pdf}{Adaptive boundary (layer stack) [prophetic schematic; no empirical data]. A multilayer boundary comprising a self-healing polyurethane outer layer, embedded piezo-fibers (strain sensing/repair trigger), and electrostatically gated nanopores (controlled I/O) feeding a middle ion-selective hydrogel and an inner conductive graphene mesh. Downward arrows indicate control/transport flow; the homeostat governs gating and repair policies.}{fig:adaptive_boundary}
 
 \begin{itemize}
 \item \textbf{Physical membrane.} Multi-layer polymer or lipidic shell embedded with valved nanopores that import nutrients or eject waste only under homeostat authorization. \Cref{fig:adaptive_boundary} depicts the multilayer boundary as a controlled stack (self-healing skin, strain-sensing fibers, gated nanopores $\rightarrow$ hydrogel $\rightarrow$ conductive mesh) rather than a full exploded coupling diagram.

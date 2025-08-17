@@ -13,7 +13,8 @@ dependencies = [
   "cryptography>=42.0",
   "cbor2>=5.6",
   "matplotlib>=3.8",
-  "statsmodels>=0.14"
+  "statsmodels>=0.14",
+  "graphviz>=0.20.3"
 ]
 
 [project.optional-dependencies]
