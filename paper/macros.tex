@@ -44,3 +44,42 @@
   \label{#4}
   \end{figure}%
 }
+
+% ------------------------------------------------------------
+% Cross-reference helpers (sections/subsections as § / §§)
+% Requires cleveref to be loaded in the main preamble
+\crefname{section}{\S}{\S\S}
+\Crefname{section}{\S}{\S\S}
+\crefname{subsection}{\S}{\S\S}
+\Crefname{subsection}{\S}{\S\S}
+\crefname{subsubsection}{\S}{\S\S}
+\Crefname{subsubsection}{\S}{\S\S}
+
+% Convenience wrappers for single and ranged section references
+\newcommand{\Sref}[1]{\cref{#1}}
+\newcommand{\SSref}[2]{\crefrange{#1}{#2}}
+
+% Appendix reference helper (prints "Appendix A", etc.)
+\newcommand{\Appref}[1]{Appendix~\ref{#1}}
+
+% ------------------------------------------------------------
+% Figures & Tables: ensure capitalized names in references
+\crefname{figure}{Figure}{Figures}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+
+% ------------------------------------------------------------
+% Box environment (tcolorbox theorem with global numbering)
+% Type name used for labels: 'box' → \cref{...} prints "Box N"
+\newtcbtheorem[auto counter]{docbox}{Box}%
+{enhanced jigsaw, breakable, colback=gray!5!white, colframe=gray!75!black, fonttitle=\bfseries}{box}
+
+% Cleveref naming for Box
+\crefname{box}{Box}{Boxes}
+\Crefname{box}{Box}{Boxes}
+\crefname{docbox}{Box}{Boxes}
+\Crefname{docbox}{Box}{Boxes}
+% tcolorbox theorem label type used in aux (tcb@cnt@docbox)
+\crefname{tcb@cnt@docbox}{Box}{Boxes}
+\Crefname{tcb@cnt@docbox}{Box}{Boxes}

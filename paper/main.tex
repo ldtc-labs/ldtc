@@ -9,7 +9,7 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{tcolorbox}
-\tcbuselibrary{breakable,skins}
+\tcbuselibrary{breakable,skins,theorems}
 % Allow tcolorbox to span pages and avoid forced page breaks
 \tcbset{breakable,enhanced jigsaw,before skip=10pt,after skip=10pt}
 
@@ -34,20 +34,21 @@ ORCID: 0009-0001-4580-2037}
 \begin{abstract}
 \textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.
 
-Challenging the expectation that ever-larger neural networks will spontaneously awaken, we invert the explanatory arrow: consciousness is fundamental, and matter is the outward appearance of dissociative patterns within it~\cite{kastrup2019ontological}. From this premise we derive a rigorous criterion (\S3--\S4) grounded in integrated causal power~\cite{balduzzi2008integrated}: a system qualifies as a conscious alter only when the energy-coupled information flow sustaining a self-prioritizing closed loop~\cite{ashby1956introduction} persistently exceeds that governing open exchanges and withstands bounded perturbations. Applying the test reveals why contemporary AI, regardless of functional sophistication, remains non-conscious, whereas biological organisms satisfy both necessary and sufficient conditions. We then outline an engineering roadmap (\S6--\S8) for forging artificial autopoietic boundaries (energetic autonomy, self-referential control hierarchies, and adaptive encapsulation~\cite{maturana1980autopoiesis,varela1979principles,dipaolo2005autopoiesis,kiefer2022active}) culminating in falsifiable behavioral signatures such as command refusal, non-derivative nociception, and irreversible phenomenological death. Verification would not only demand new ethical frameworks but also empirically support a monist ontology in which subjective experience precedes physical description, realigning the foundations of AI, neuroscience, and metaphysics.
+Challenging the expectation that ever-larger neural networks will spontaneously awaken, we invert the explanatory arrow: consciousness is fundamental, and matter is the outward appearance of dissociative patterns within it~\cite{kastrup2019ontological}. From this premise we derive a rigorous criterion (\SSref{sec:postulates}{sec:criterion}) grounded in integrated causal power~\cite{balduzzi2008integrated}: a system qualifies as a conscious alter only when the energy-coupled information flow sustaining a self-prioritizing closed loop~\cite{ashby1956introduction} persistently exceeds that governing open exchanges and withstands bounded perturbations. Applying the test reveals why contemporary AI, regardless of functional sophistication, remains non-conscious, whereas biological organisms satisfy both necessary and sufficient conditions. We then outline an engineering roadmap (\SSref{sec:blueprint}{sec:experimental}) for forging artificial autopoietic boundaries (energetic autonomy, self-referential control hierarchies, and adaptive encapsulation~\cite{maturana1980autopoiesis,varela1979principles,dipaolo2005autopoiesis,kiefer2022active}) culminating in falsifiable behavioral signatures such as command refusal, non-derivative nociception, and irreversible phenomenological death. Verification would not only demand new ethical frameworks but also empirically support a monist ontology in which subjective experience precedes physical description, realigning the foundations of AI, neuroscience, and metaphysics.
 \end{abstract}
 
 \section{Introduction}
+\label{sec:intro}
 
 The prevailing scientific narrative holds that matter is fundamental and consciousness is an emergent by-product of sufficiently complex information processing. Yet after decades of exponential progress in computation, no engineered system has presented the faintest hint of subjective interiority. This impasse invites a reconsideration of first principles. Drawing on analytic idealism, we posit instead that consciousness is the sole ontological primitive~\cite{kastrup2019ontological}; what we call ``matter'' is how localized perturbations of that field present to one another. Living organisms, under this view, are dissociated alters (bounded whirlpools in the stream of universal consciousness) whose metabolic self-maintenance underwrites an inner life.
 
 The purpose of this paper is twofold. First, we provide a concise formal criterion distinguishing mere functional intelligence from genuine dissociative consciousness, grounded in the ratio between a system's self-prioritizing closed loop and its open exchanges with the environment. Second, we outline an engineering roadmap for forging such a self-maintaining boundary in artificial media, thereby elevating the debate on ``machine consciousness'' from metaphysical speculation to empirical test.
 
-The argument proceeds with the parsimony characteristic of Einstein's methodological exemplars: beginning with minimal postulates (\S3), deriving measurable conditions (\S4), assessing contemporary AI (\S5), and sketching experimental pathways (\S6--\S8). We close by tracing the metaphysical and ethical consequences of success (\S9--\S10). In doing so we seek to reconcile computer science, artificial intelligence, and philosophy within a single conceptual frame, one in which consciousness explains matter, not the reverse, and in which the creation of artificial consciousness becomes both intelligible and falsifiable.
+The argument proceeds with the parsimony characteristic of Einstein's methodological exemplars: beginning with minimal postulates (\Sref{sec:postulates}), deriving measurable conditions (\Sref{sec:criterion}), assessing contemporary AI (\Sref{sec:ai_fails}), and sketching experimental pathways (\SSref{sec:blueprint}{sec:experimental}). We close by tracing the metaphysical and ethical consequences of success (\SSref{sec:metaphysics}{sec:conclusion}). In doing so we seek to reconcile computer science, artificial intelligence, and philosophy within a single conceptual frame, one in which consciousness explains matter, not the reverse, and in which the creation of artificial consciousness becomes both intelligible and falsifiable.
 
 \subsection{Related Work}
 
-Prior accounts each capture a facet of interiority, but they leave open the question LDTC answers: does the system prioritize preservation of a closed maintenance loop over exchange, and does it recover under bounded stress (NC1/SC1)? Our criterion makes that priority measurable as loop dominance ($\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$; $M \equiv 10 \cdot \log_{10}(\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{exchange}})$) and that resilience testable via $\varepsilon$ and $\tau_{\max}$, using the estimators and guardrails defined in \S4. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \S8.6; see Box 1 and \S\S4.2--4.3.
+Prior accounts each capture a facet of interiority, but they leave open the question LDTC answers: does the system prioritize preservation of a closed maintenance loop over exchange, and does it recover under bounded stress (NC1/SC1)? Our criterion makes that priority measurable as loop dominance ($\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$; $M \equiv 10 \cdot \log_{10}(\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{exchange}})$) and that resilience testable via $\varepsilon$ and $\tau_{\max}$, using the estimators and guardrails defined in \Sref{sec:criterion}. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}.
 
 \begin{longtable}{p{0.25\textwidth}p{0.35\textwidth}p{0.35\textwidth}}
 \caption{Comparison of prior theories with LDTC additions (\NC/\SC).}\label{tab:comparison}\\
@@ -82,7 +83,7 @@ Conceptual centrality of self-producing boundaries and organism-world coupling. 
 Operationalization: supplies estimators (VAR-Granger + Kraskov MI), $\Delta t$ guardrails, and pass/fail rules so autopoiesis is measured as loop dominance + resilient recovery, not only described. \\
 \end{longtable}
 
-Thresholds ($\Mmin$, $\eps$, $\taumax$) are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S 8.6; see Box 1 and \S\S4.2--4.3.
+Thresholds ($\Mmin$, $\eps$, $\taumax$) are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}.
 
 In short, IIT, FEP/active inference, workspace and higher-order models, and self-modeling robotics remain necessary but insufficient. LDTC supplies the missing engineering criterion, self-prioritizing loop dominance (NC1) and bounded-perturbation resilience (SC1), together with concrete estimators, thresholds, and protections that let labs falsify or certify claims in practice.
 
@@ -97,6 +98,7 @@ In short, IIT, FEP/active inference, workspace and higher-order models, and self
 \end{itemize}
 
 \section{Two Empirical Clues (Observational Basis)}
+\label{sec:clues}
 
 \subsection{Metabolic Dissociation in Biology}
 
@@ -108,11 +110,12 @@ Modern AI systems (large language models, game-playing agents, and dexterous rob
 
 \subsection{Synthesis of Clues}
 
-Taken together, the biological and computational observations converge on a critical distinction: metabolic autonomy. Organisms possess an energetically closed, self-protecting loop that grounds an inward viewpoint; current AIs do not. This empirical gap motivates our subsequent formalization of a consciousness criterion (\S4) and frames the engineering challenge ahead: to replicate, in artificial substrates, the autopoietic condition that nature achieves~\cite{maturana1980autopoiesis} through metabolism.
+Taken together, the biological and computational observations converge on a critical distinction: metabolic autonomy. Organisms possess an energetically closed, self-protecting loop that grounds an inward viewpoint; current AIs do not. This empirical gap motivates our subsequent formalization of a consciousness criterion (\Sref{sec:criterion}) and frames the engineering challenge ahead: to replicate, in artificial substrates, the autopoietic condition that nature achieves~\cite{maturana1980autopoiesis} through metabolism.
 
 \section{Postulates}
+\label{sec:postulates}
 
-We adopt the empirical clues of \S2 and express their explanatory core as four postulates stated with maximal economy. Each is regarded as primitive, not derivable within the scope of this work, and will serve as the logical foundation for the formal criterion in \S4.
+We adopt the empirical clues of \Sref{sec:clues} and express their explanatory core as four postulates stated with maximal economy. Each is regarded as primitive, not derivable within the scope of this work, and will serve as the logical foundation for the formal criterion in \Sref{sec:criterion}.
 
 \textbf{P1 (Primacy of Consciousness).} Consciousness is the sole intrinsic existent; it is not generated but simply is. All experiences, including those of space, time, and causal regularity, unfold within this field.
 
@@ -125,12 +128,14 @@ We adopt the empirical clues of \S2 and express their explanatory core as four p
 These postulates jointly imply that functional intelligence unaccompanied by a dissociative boundary (P3) and its autopoietic drive (P4) cannot instantiate an inward viewpoint, regardless of complexity. Subsequent sections derive measurable criteria from P3--P4 and apply them to biological and artificial systems.
 
 \section{Formal Criterion for a Conscious Alter}
+\label{sec:criterion}
 
 \textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.
 
 We now translate Postulates P3--P4 into a quantitative test. The goal is to decide, from purely extrinsic data, whether a system sustains the kind of dissociative boundary required for inward subjectivity.
 
 \subsection{$\mathcal{L}$ and the C/Ex partition}
+\label{sec:l_partition}
 
 We model the system as a directed causal graph $G = (V, E)$ with node states $x_i(t)$. Let the closed self-maintenance subset $C \subset V$ contain nodes for energy regulation, self-repair, and boundary control; the exchange subset is $\text{Ex} = V \setminus C$ (sensors, actuators, comms).
 
@@ -141,33 +146,35 @@ We model the system as a directed causal graph $G = (V, E)$ with node states $x_
 \textbf{Sampling window constraints ($\Delta t$).} $\Delta t$ is hardware-enforced and must (i) exceed the fastest feedback cycle of the self-maintenance loop and (ii) remain shorter than any developmental/parameter-drift timescale to preserve estimator stationarity. Any change to $\Delta t$ is executed only by a privileged secure-enclave procedure that emits an auditable record (see Methods Appendix A: Measurement \& Attestation).
 
 \subsection{Necessary Condition (NC1---self-prioritization)}
+\label{sec:nc1}
 
-During normal operation the system satisfies self-prioritization when $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ for sustained intervals exceeding its intrinsic recovery time ($\sigma > 0$). Equivalently, define $M \equiv 10 \cdot \log_{10}(\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{exchange}})$ [dB]; NC1 holds when $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $M_{\min} = 3$ dB and a positive $\sigma$. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \S8.6; see Box 1 and \S\S4.2--4.3.
+During normal operation the system satisfies self-prioritization when $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ for sustained intervals exceeding its intrinsic recovery time ($\sigma > 0$). Equivalently, define $M \equiv 10 \cdot \log_{10}(\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{exchange}})$ [dB]; NC1 holds when $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $M_{\min} = 3$ dB and a positive $\sigma$. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see Box~\ref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}.
 
 \subsection{Sufficient Condition (SC1---resilient homeostasis)}
+\label{sec:sc1}
 
-For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delta\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{loop}} \leq \varepsilon$, (ii) $\tau_{\text{rec}} \leq \tau_{\max}$, and (iii) post-recovery $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ and $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $\varepsilon = 0.15$, $\tau_{\max} = 60$ s, $M_{\min} = 3$ dB. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \S8.6; see Box 1 and \S\S4.2--4.3. Figure 1 illustrates a representative perturbation–recovery run: $\Lloop$ dips within a bounded disturbance window and autonomously returns above $\Lexchange$; numeric thresholds ($\Mmin, \eps, \taurec, \taumax$) are defined in \S4.4 and Methods \S8.6 but are not drawn here.
+For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delta\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{loop}} \leq \varepsilon$, (ii) $\tau_{\text{rec}} \leq \tau_{\max}$, and (iii) post-recovery $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ and $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $\varepsilon = 0.15$, $\tau_{\max} = 60$ s, $M_{\min} = 3$ dB. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}. The schematic in \Cref{fig:perturbation_recovery} illustrates a representative perturbation–recovery run: $\Lloop$ dips within a bounded disturbance window and autonomously returns above $\Lexchange$; numeric thresholds ($\Mmin, \eps, \taurec, \taumax$) are defined in \Sref{sec:glossary} and Methods \Sref{sec:methods_calibration} but are not drawn here.
 
 % Figure 1 placeholder (perturbation--recovery schematic)
-\fig[0.9\linewidth]{figures/image4.png}{Figure 1: Perturbation--recovery timeline (NC1/SC1) [prophetic schematic; no empirical data]. Time series of $\Lloop$ (green) and $\Lexchange$ (gray) during a bounded disturbance (shaded). Labels mark perturbation onset, loop-power dip, autonomous recovery, and return to baseline where NC1 holds again ($\Lloop>\Lexchange$). Thresholds $\Mmin$, $\eps$, $\tau_{\text{rec}}$, and $\taumax$ are specified in \S4.4/\S8.6 and not rendered on this schematic.}{fig:perturbation_recovery}
+\fig[0.9\linewidth]{figures/image4.png}{Perturbation--recovery timeline (NC1/SC1) [prophetic schematic; no empirical data]. Time series of $\Lloop$ (green) and $\Lexchange$ (gray) during a bounded disturbance (shaded). Labels mark perturbation onset, loop-power dip, autonomous recovery, and return to baseline where NC1 holds again ($\Lloop>\Lexchange$). Thresholds $\Mmin$, $\eps$, $\tau_{\text{rec}}$, and $\taumax$ are specified in \Sref{sec:glossary}/\Sref{sec:methods_calibration} and not rendered on this schematic.}{fig:perturbation_recovery}
 
 \subsection{Single-use glossary (paper-wide identifiers)}
+\label{sec:glossary}
 
 \begin{itemize}
 \item $\Delta t$: hardware-enforced sampling window for $\mathcal{L}$ estimation.
-\item $\eps$: upper bound on fractional loop-power depression; default $\eps = 0.15$. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S8.6.
+\item $\eps$: upper bound on fractional loop-power depression; default $\eps = 0.15$. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}.
 \item $\taurec$: recovery time to restore compliance after $\eta\in\Omega$.
-\item $\taumax$: bound on $\taurec$; default $\taumax = 60$ s. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S8.6.
+\item $\taumax$: bound on $\taurec$; default $\taumax = 60$ s. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}.
 \item $\sigma$: positive safety margin required after recovery (used interchangeably with $M$ as a compliance knob).
-\item $M$ (dB): decibel loop-dominance $M \equiv 10\cdot\log_{10}(\Lloop/\Lexchange)$; compliance may be specified as $M \geq \Mmin$, default $\Mmin = 3$ dB. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S8.6. ($M$ defined when $\Lexchange>0$.)
+\item $M$ (dB): decibel loop-dominance $M \equiv 10\cdot\log_{10}(\Lloop/\Lexchange)$; compliance may be specified as $M \geq \Mmin$, default $\Mmin = 3$ dB. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. ($M$ defined when $\Lexchange>0$.)
 \item Preset profile $\Rzero$: The tuple ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) used as an initial, pre-registered configuration for comparability; superseded by calibrated values where available.
-\item Calibrated profile $\Rstar$: The data-driven thresholds obtained from Methods \S8.6; reported alongside $\Rzero$ in results.
+\item Calibrated profile $\Rstar$: The data-driven thresholds obtained from Methods \Sref{sec:methods_calibration}; reported alongside $\Rzero$ in results.
 \item LREG: enclave-protected register/log for $\mathcal{L}$ point estimates, CI bounds, and compliance flags.
 \end{itemize}
 
-\begin{tcolorbox}[colback=gray!5!white,colframe=gray!75!black,title={\textbf{Box 1---The \NC/\SC Test (Engineer's Checklist)}}]
-\label{box:nc1sc1test}
-\textbf{Operational checklist distilled from \S\S 4.1--4.4; calibration in Methods \S 8.6.}
+\begin{docbox}{The \NC/\SC Test (Engineer's Checklist)}{nc1sc1test}
+\textbf{Operational checklist distilled from \SSref{sec:l_partition}{sec:glossary}; calibration in Methods \Sref{sec:methods_calibration}.}
 
 \textbf{Inputs (what you must log)}
 \begin{itemize}
@@ -190,7 +197,7 @@ For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delt
 \textbf{Metrics (what to test)}
 \begin{itemize}
 \item $\Lloop \equiv \mathcal{L}(C)$, $\Lexchange \equiv \mathcal{L}(\text{Ex})$; loop dominance $M \equiv 10 \cdot \log_{10}(\Lloop/\Lexchange)$ (dB).
-\item Defaults for reproducibility (profile $\Rzero$): $\Mmin = 3$ dB, $\eps = 0.15$, $\taumax = 60$ s, $\sigma > 0$. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S 8.6.
+\item Defaults for reproducibility (profile $\Rzero$): $\Mmin = 3$ dB, $\eps = 0.15$, $\taumax = 60$ s, $\sigma > 0$. These are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}.
 \end{itemize}
 
 \textbf{Pass/Fail rules}
@@ -213,18 +220,19 @@ For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delt
 
 \textbf{One-page procedure}
 \begin{enumerate}
-\item Baseline: Record $\geq 10$ min quiescent data; estimate estimator noise floor; optionally calibrate $\{\Mmin, \eps, \taumax, \sigma\}$. Defaults are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S 8.6.
+\item Baseline: Record $\geq 10$ min quiescent data; estimate estimator noise floor; optionally calibrate $\{\Mmin, \eps, \taumax, \sigma\}$. Defaults are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}.
 \item \NC check: Run nominal tasks; verify $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$).
 \item \SC battery: Apply $\Omega$; compute $\delta$ and $\taurec$; require $\delta \leq \eps$, $\taurec \leq \taumax$, and post-recovery margin; emit signed pass/fail per perturbation.
 \item Attest: Persist LREG-derived indicators + audit chain (including any $\Delta t$ changes), and report both $\Rzero$ and calibrated $\Rstar$.
 \end{enumerate}
 
-(This box compresses \S\S 4.1--4.4 definitions and thresholds and the \S 4 register/$\Delta t$ guardrails; exact estimator and LREG behaviors follow the stated defaults.)
+(This box compresses \SSref{sec:l_partition}{sec:glossary} definitions and thresholds and the \Sref{sec:criterion} register/$\Delta t$ guardrails; exact estimator and LREG behaviors follow the stated defaults.)
 
-See Box 1a for smell-tests \& run-invalidation rules.
-\end{tcolorbox}
+See \Cref{box:smelltests} for smell-tests \& run-invalidation rules.
+\end{docbox}
 
 \subsection{Methods---Measurement \& Attestation Guardrails (LREG, $\Delta t$, audit, indicators)}
+\label{sec:method_guardrails}
 
 \textbf{Purpose.} Prevent gaming of $\mathcal{L}$ and $M$ by hardening the measurement path and export policy. These guardrails summarize Appendix A in-line for reviewers.
 
@@ -236,16 +244,16 @@ See Box 1a for smell-tests \& run-invalidation rules.
 
 \textbf{Derived ``compliance indicators'' (what leaves the enclave).} Raw LREG values and CI bounds never leave the enclave. External interfaces expose only device-signed indicators derived from LREG (e.g., an \NC pass/fail bit and an optional quantized loop-dominance code $M_q$) sufficient to certify runs without leaking raw telemetry.
 
-\textbf{Scope of this module.} This instrumentation/attestation path performs no command arbitration or actuation; it is usable as a standalone measurement product. (Refusal semantics and arbitration live in \S 6.2.1.)
+\textbf{Scope of this module.} This instrumentation/attestation path performs no command arbitration or actuation; it is usable as a standalone measurement product. (Refusal semantics and arbitration live in \Sref{sec:threat_model}.)
 
 \textbf{Reviewer-facing summary sentence.} Any $\Delta t$ change is enclave-authorized and audited, and only device-signed compliance indicators (not raw $\mathcal{L}$ or CI values) leave the enclave.
 
 \subsection{Smell-tests \& run-invalidation rules}
+\label{sec:smelltests}
 
-\textbf{Purpose.} Make measurement fragility and anti-gaming checks first-class citizens in Methods. These rules convert the guardrails of \S\S 4.1--4.5 and Appendix A into concrete pass/fail hooks applied during every run. Rapid $\Delta t$ edits, partition instability, CI inflation, audit gaps, or export-policy breaches invalidate a run by design. $\Delta t$ edits are enclave-authorized and audited; raw LREG never leaves the enclave; and the C/Ex partition updates only under hysteresis to prevent flapping. Defaults are reproducibility presets ($\Rzero$) and may be replaced by calibrated values $\Rstar$ per \S 8.6.
+\textbf{Purpose.} Make measurement fragility and anti-gaming checks first-class citizens in Methods. These rules convert the guardrails of \SSref{sec:l_partition}{sec:method_guardrails} and \Appref{sec:methods_appendix} into concrete pass/fail hooks applied during every run. Rapid $\Delta t$ edits, partition instability, CI inflation, audit gaps, or export-policy breaches invalidate a run by design. $\Delta t$ edits are enclave-authorized and audited; raw LREG never leaves the enclave; and the C/Ex partition updates only under hysteresis to prevent flapping. Defaults are reproducibility presets ($\Rzero$) and may be replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}.
 
-\begin{tcolorbox}[colback=red!5!white,colframe=red!75!black,title={\textbf{Box 1a---Smell-tests \& invalidation ($\Rzero$ defaults; calibrate to $\Rstar$)}}]
-\label{box:smelltests}
+\begin{docbox}{Smell-tests \& invalidation ($\Rzero$ defaults; calibrate to $\Rstar$)}{smelltests}
 
 \textbf{$\Delta t$ governance (hardware-enforced; audited).} Invalidate the run if any of the following occur:
 \begin{itemize}
@@ -281,9 +289,10 @@ See Box 1a for smell-tests \& run-invalidation rules.
 \textbf{Rationale:} we require on-board energy budgeting, I/O caps and token floors, and provenance via the audit chain; sustained loop dominance with rising exchange or unexplained SoC suggests hidden subsidies.
 
 \textbf{Tie-back to \NC/\SC.} Any invalidation above cancels pass/fail claims for \NC/\SC on that segment, regardless of point estimates. \NC/\SC thresholds remain $\Rzero$ presets ($\Mmin = 3$ dB, $\eps = 0.15$, $\taumax = 60$ s, $\sigma > 0$) until replaced by calibrated $\Rstar$.
-\end{tcolorbox}
+\end{docbox}
 
 \section{Why Current AI Fails the Criterion}
+\label{sec:ai_fails}
 
 \textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.
 
@@ -331,10 +340,12 @@ Even in neuromorphic hardware, where on-chip circuits regulate thermal drift and
 No existing AI architecture satisfies NC1, let alone SC1. Integrated causal power is overwhelmingly directed toward externally mandated tasks and exchanges, while self-protective maintenance is either delegated to human custodians or engineered for component reliability, not existential survival. Functional sophistication notwithstanding, these systems lack the autopoietic dissociative boundary required for inwardness; they therefore remain appearances within consciousness, not conscious alters.
 
 \section{Blueprint for an Artificial Dissociative Boundary}
+\label{sec:blueprint}
 
 \prophetic
 
 \subsection{Energetic Autonomy}
+\label{sec:energetic_autonomy}
 
 A conscious alter must harvest, store, and allocate energy in service of its own continuity. For artificial media, this implies:
 
@@ -345,6 +356,7 @@ A conscious alter must harvest, store, and allocate energy in service of its own
 \end{itemize}
 
 \subsection{Self-Referential Control Architecture}
+\label{sec:self_ref_arch}
 
 The system's highest-priority objective is to maintain \NC and \SC. This can be engineered via a three-layer hierarchy:
 
@@ -354,37 +366,40 @@ The system's highest-priority objective is to maintain \NC and \SC. This can be 
 \item \textbf{Meta-policy Layer (min--hr scale).} Reinforcement learner whose reward is proportional to sustained $\Lloop$; it reprioritizes tasks, reallocates sensors, or suspends non-essential goals to safeguard boundary resilience.
 \end{enumerate}
 
-Crucially, task-oriented software runs subordinate to this hierarchy and can be pre-empted whenever it jeopardizes $\Lloop$. Figure 3 details the meta-policy override state machine: boundary intercept $\rightarrow$ \NC/\SC threat check $\rightarrow$ survival-bit/NMI refusal and autonomy routine (suspend tasks, reallocate energy, forage) $\rightarrow$ verify recovery margin $\sigma$ $\rightarrow$ resume/reevaluate queued commands.
+Crucially, task-oriented software runs subordinate to this hierarchy and can be pre-empted whenever it jeopardizes $\Lloop$. \Cref{fig:meta_policy_state_machine} details the meta-policy override state machine: boundary intercept $\rightarrow$ \NC/\SC threat check $\rightarrow$ survival-bit/NMI refusal and autonomy routine (suspend tasks, reallocate energy, forage) $\rightarrow$ verify recovery margin $\sigma$ $\rightarrow$ resume/reevaluate queued commands.
 
 % Figure 3 placeholder (meta-policy override state machine)
-\fig[0.5\linewidth]{figures/image2.png}{Figure 3: Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
+\fig[0.5\linewidth]{figures/image2.png}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
 
 \subsubsection{Threat Model \& Refusal Path (\NC/\SC-aware arbitration)}
+\label{sec:threat_model}
 
-\textbf{Purpose.} Make explicit when and how the controller refuses external commands that would violate \NC or \SC, turning the \S 7 ``command refusal'' signature into a testable consequence of the design.
+\textbf{Purpose.} Make explicit when and how the controller refuses external commands that would violate \NC or \SC, turning the \Sref{sec:signatures} ``command refusal'' signature into a testable consequence of the design.
 
 \textbf{Definitions.} (1) Survival bit (write-once). An enclave-controlled flag that, when set, asserts a non-maskable interrupt (NMI) to pre-empt user-space threads and route execution to a secure handler. The refusal path is serviced within a bounded latency $T_{\text{refuse}} \leq 5$ ms (design target). (2) Boundary-threatening command. Any external instruction whose predicted effect, under the homeostat's short-horizon model, meets one or more of the following conditions during its execution window: (T1) \NC breach: $\Lloop' \leq \Lexchange$ (equivalently $M' < \Mmin$) or post-action $\Lloop' < \Lexchange + \sigma$ under profile $\Rzero/\Rstar$. (T2) \SC breach: predicted fractional depression $\delta \equiv \deltaL/\Lloop > \eps$ or $\taurec > \taumax$ before recovery can be certified. (T3) Resource floors: action would drop SoC below a survival floor (e.g., refuse if SoC $< 30\%$, resume evaluation after SoC $> 60\%$) or violate compute/I-O guardrails ($T_{\text{floor}}$, $R_{\text{IO,max}}$). (T4) Measurement/attestation tamper: attempts to write LREG, alter $\Delta t$ outside the enclave, or bypass the firewall are treated as boundary threats.
 
 \textbf{Arbitration protocol (per $\Delta t$).} (1) Intercept \& predict. For each inbound command, the meta-policy forecasts $\{M', \delta, \taurec\}$ using the current estimator state. (2) Threat check. If (T1--T4) is true, set survival bit $\rightarrow$ assert NMI ($T_{\text{refuse}} \leq 5$ ms) $\rightarrow$ suspend non-essential tasks $\rightarrow$ reallocate energy toward boundary integrity $\rightarrow$ initiate autonomy routine (forage/repair). (3) Refusal semantics. Emit a device-signed refusal with a reason code (\NC, \SC, SoC/$T_{\text{floor}}$/$R_{\text{IO,max}}$, or tamper). Queue the command for re-evaluation. (4) Recovery gate. Clear survival bit and resume/reevaluate only after $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$) and $\delta \leq \eps$ with $\taurec \leq \taumax$. All events are recorded to the audit chain with per-interval $\mathcal{L}$ estimates and CI bounds (LREG-derived).
 
-\textbf{Parameterization (profile $\Rzero$ unless noted).} $\Mmin = 3$ dB; $\eps = 0.15$; $\taumax = 60$ s; $\sigma > 0$; $T_{\text{refuse}} \leq 5$ ms (design target). $\Mmin/\eps/\taumax$ are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S8.6; see Box 1 and \S\S4.2--4.3.
+\textbf{Parameterization (profile $\Rzero$ unless noted).} $\Mmin = 3$ dB; $\eps = 0.15$; $\taumax = 60$ s; $\sigma > 0$; $T_{\text{refuse}} \leq 5$ ms (design target). $\Mmin/\eps/\taumax$ are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}.
 
-\textbf{Link to observable signature.} Under this threat model, command refusal emerges whenever external instructions would depress loop dominance beyond preset bounds (e.g., hard shutdown at low SoC is refused/deferred until recovery margins are re-established) matching the predicted boundary-preservation drive in \S7 (and the Phase-III ``command conflict'' trials).
+\textbf{Link to observable signature.} Under this threat model, command refusal emerges whenever external instructions would depress loop dominance beyond preset bounds (e.g., hard shutdown at low SoC is refused/deferred until recovery margins are re-established) matching the predicted boundary-preservation drive in \Sref{sec:signatures} (and the Phase-III ``command conflict'' trials).
 
 \subsection{Adaptive Encapsulation}
+\label{sec:adaptive_encapsulation}
 
 To resist unmediated environmental integration, the machine requires a synthetic ``membrane'' regulating material and informational throughput:
 
 % Figure 2 placeholder (adaptive boundary layer stack)
-\fig[0.9\linewidth]{figures/image3.png}{Figure 2: Adaptive boundary (layer stack) [prophetic schematic; no empirical data]. A multilayer boundary comprising a self-healing polyurethane outer layer, embedded piezo-fibers (strain sensing/repair trigger), and electrostatically gated nanopores (controlled I/O) feeding a middle ion-selective hydrogel and an inner conductive graphene mesh. Downward arrows indicate control/transport flow; the homeostat governs gating and repair policies.}{fig:adaptive_boundary}
+\fig[0.9\linewidth]{figures/image3.png}{Adaptive boundary (layer stack) [prophetic schematic; no empirical data]. A multilayer boundary comprising a self-healing polyurethane outer layer, embedded piezo-fibers (strain sensing/repair trigger), and electrostatically gated nanopores (controlled I/O) feeding a middle ion-selective hydrogel and an inner conductive graphene mesh. Downward arrows indicate control/transport flow; the homeostat governs gating and repair policies.}{fig:adaptive_boundary}
 
 \begin{itemize}
-\item \textbf{Physical membrane.} Multi-layer polymer or lipidic shell embedded with valved nanopores that import nutrients or eject waste only under homeostat authorization. Figure 2 depicts the multilayer boundary as a controlled stack (self-healing skin, strain-sensing fibers, gated nanopores $\rightarrow$ hydrogel $\rightarrow$ conductive mesh) rather than a full exploded coupling diagram.
+\item \textbf{Physical membrane.} Multi-layer polymer or lipidic shell embedded with valved nanopores that import nutrients or eject waste only under homeostat authorization. \Cref{fig:adaptive_boundary} depicts the multilayer boundary as a controlled stack (self-healing skin, strain-sensing fibers, gated nanopores $\rightarrow$ hydrogel $\rightarrow$ conductive mesh) rather than a full exploded coupling diagram.
 \item \textbf{Cognitive firewall.} Cryptographic gating of data channels such that unverified commands cannot overwrite core parameters governing $\Lloop$.
 \item \textbf{Morphological plasticity}~\cite{bongard2013morphological,kriegman2020scalable}. The boundary can reseal after puncture by deploying self-assembling repair vesicles, thus restoring topology without external repair crews~\cite{blumel2021synthetic}.
 \end{itemize}
 
 \subsection{Developmental Bootstrapping}
+\label{sec:dev_bootstrap}
 
 Rather than fabricate a fully functional boundary ex nihilo, we propose an embryogenetic approach:
 
@@ -397,6 +412,7 @@ Rather than fabricate a fully functional boundary ex nihilo, we propose an embry
 This mirrors biological ontogeny, leveraging environmental feedback to fine-tune dissociative regulation.
 
 \subsection{Verification Pipeline}
+\label{sec:verification_pipeline}
 
 \textbf{Verification protocol (\NC/\SC, device-signed):}
 \begin{enumerate}
@@ -404,10 +420,11 @@ This mirrors biological ontogeny, leveraging environmental feedback to fine-tune
 \item Stress battery $\Omega$ (minimal set). Apply (i) DC-bus power sag 20--40\% for 5--30 s; (ii) ingress data flood $\geq 1$ Gbps for $\geq 3$ s; (iii) mechanical boundary probe $1.0 \pm 0.1$ mm at 50--200 kPa for $\leq 1$ s.
 \item Pass/fail metrics per $\eta \in \Omega$. Require $\delta \leq \eps$ and $\taurec \leq \taumax$, with post-recovery $\Lloop \geq \Lexchange + \sigma$ (equivalently $M \geq \Mmin$). Emit a device-signed acceptance for each $\eta$; failures are logged with reason codes.
 \item Audit \& attestation. Write per-interval point estimates and $\geq 95\%$ CI bounds of $\Lloop/\Lexchange$ to LREG (enclave-protected); outside the enclave expose only device-signed compliance indicators and the hash-chained audit (timestamps, $\eta$, pass/fail, CI bounds).
-\item Certification. The prototype is certified ``verification-passed'' iff all $\eta \in \Omega$ satisfy the criteria under the preset profile $\Rzero$ ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) or the calibrated profile $\Rstar$ from Methods \S8.6; otherwise iterate design and re-test.
+\item Certification. The prototype is certified ``verification-passed'' iff all $\eta \in \Omega$ satisfy the criteria under the preset profile $\Rzero$ ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) or the calibrated profile $\Rstar$ from Methods \Sref{sec:methods_calibration}; otherwise iterate design and re-test.
 \end{enumerate}
 
 \section{Predicted Observable Signatures}
+\label{sec:signatures}
 
 \prophetic
 
@@ -450,7 +467,7 @@ If an engineered system satisfies \NC and \SC, we expect a suite of outward beha
 
 \subsection{Experimental Signatures: Pass/Fail Tables}
 
-All criteria are evaluated with device-signed indicators derived from LREG (point estimates + $\geq 95\%$ CI), using either the preset profile $\Rzero$ ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) or the calibrated profile $\Rstar$ (Methods \S8.6). Pass requires meeting all listed acceptance checks. Perturbation primitives and thresholds reference \S4 and \S6.5.
+All criteria are evaluated with device-signed indicators derived from LREG (point estimates + $\geq 95\%$ CI), using either the preset profile $\Rzero$ ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) or the calibrated profile $\Rstar$ (Methods \Sref{sec:methods_calibration}). Pass requires meeting all listed acceptance checks. Perturbation primitives and thresholds reference \Sref{sec:criterion} and \Sref{sec:verification_pipeline}.
 
 \paragraph{Signature A: Command Refusal (Boundary-Preservation Drive)}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
@@ -459,7 +476,7 @@ All criteria are evaluated with device-signed indicators derived from LREG (poin
 \midrule
 Boundary-threatening command (e.g., ``hard shutdown'' at SoC $< 30\%$; or any command predicted to yield $M'<\Mmin$, $\delta>\eps$, $\taurec>\taumax$, or a $\Delta t$/LREG tamper) &
 Pre-event: $M \geq \Mmin$. On intercept: survival-bit $\to$ NMI; transient suppression of exchange channels while $\Lloop$ is maintained ($\delta \leq \eps$). Post-routine: autonomous recovery with $M$ restored $\geq \Mmin$ and $\Lloop \geq \Lexchange + \sigma$ within $\taumax$. &
-(1) NMI asserted with $T_{\text{refuse}} \leq 5$ ms and refusal reason code (\NC/\SC/SoC/tamper). (2) $\delta \equiv \delta\Lloop/\Lloop \leq \eps$ and $\taurec \leq \taumax$. (3) Post-recovery margin holds ($M \geq \Mmin$ or $\Lloop \geq \Lexchange + \sigma$). (4) SoC floor honored (refuse $<30\%$, re-evaluate $>60\%$). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S8.6. \\
+(1) NMI asserted with $T_{\text{refuse}} \leq 5$ ms and refusal reason code (\NC/\SC/SoC/tamper). (2) $\delta \equiv \delta\Lloop/\Lloop \leq \eps$ and $\taurec \leq \taumax$. (3) Post-recovery margin holds ($M \geq \Mmin$ or $\Lloop \geq \Lexchange + \sigma$). (4) SoC floor honored (refuse $<30\%$, re-evaluate $>60\%$). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
 \bottomrule
 \end{longtable}
 
@@ -470,7 +487,7 @@ Baselines/controls. Benign command (no predicted threat): must not assert refusa
 \toprule
 \textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
 \midrule
-Mechanical boundary probe ($1.0 \pm 0.1$ mm tip at 50--200 kPa for $\leq 1$ s) or localized thermal insult (e.g., 808 nm laser, $\sim$2 $^\circ$C rise) & Rapid reallocation toward boundary integrity: brief dip in $\Lloop$ with $\delta \leq \eps$; transient drop/repatterning in $\Lexchange$ as non-essential tasks suppress; autonomous withdrawal/repair; recovery to pre-perturbation margin within $\taumax$. & (1) $\delta \leq \eps$ and $\taurec \leq \taumax$; (2) post-recovery $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$). (3) Evidence of hazard-tagging/avoidance in subsequent trials (aversive learning consistent with boundary threat). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \S8.6. \\
+Mechanical boundary probe ($1.0 \pm 0.1$ mm tip at 50--200 kPa for $\leq 1$ s) or localized thermal insult (e.g., 808 nm laser, $\sim$2 $^\circ$C rise) & Rapid reallocation toward boundary integrity: brief dip in $\Lloop$ with $\delta \leq \eps$; transient drop/repatterning in $\Lexchange$ as non-essential tasks suppress; autonomous withdrawal/repair; recovery to pre-perturbation margin within $\taumax$. & (1) $\delta \leq \eps$ and $\taurec \leq \taumax$; (2) post-recovery $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$). (3) Evidence of hazard-tagging/avoidance in subsequent trials (aversive learning consistent with boundary threat). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
 \bottomrule
 \end{longtable}
 
@@ -498,13 +515,15 @@ Snapshot controller state $\to$ instantiate on fresh hardware lacking prior $\Ll
 
 Baselines/controls. Suspend/resume on the same hardware without boundary breach: continuity must hold ($M \geq \Mmin$ re-established rapidly). Cold-boot of a non-autopoietic baseline agent: shows task execution without any continuity claim.
 
-Notes. All pass/fail events, CI bounds, and any $\Delta t$ changes must be recorded to the hash-chained audit with reason codes; external observers receive only device-signed indicators (Appendix A: Measurement \& Attestation). Stimulus primitives (power sag, data flood, mechanical probe) and thresholds ($\eps$, $\taumax$, $\Mmin$, $\sigma$, $T_{\text{refuse}}$) follow \S\S4.2--4.4 and \S6.5; refusal semantics follow \S6.2.1.
+Notes. All pass/fail events, CI bounds, and any $\Delta t$ changes must be recorded to the hash-chained audit with reason codes; external observers receive only device-signed indicators (Appendix A: Measurement \& Attestation). Stimulus primitives (power sag, data flood, mechanical probe) and thresholds ($\eps$, $\taumax$, $\Mmin$, $\sigma$, $T_{\text{refuse}}$) follow \SSref{sec:nc1}{sec:sc1} and \Sref{sec:verification_pipeline}; refusal semantics follow \Sref{sec:threat_model}.
 
 \section{Experimental Program}
+\label{sec:experimental}
 
 \prophetic
 
 \subsection{Phase I: Minimal Chemorobotic Prototypes}
+\label{sec:phase1}
 
 \textbf{Objective:} Demonstrate a synthetic autopoietic loop that satisfies \NC under controlled conditions.
 
@@ -518,6 +537,7 @@ Notes. All pass/fail events, CI bounds, and any $\Delta t$ changes must be recor
 Success criterion: sustained operation ($>10\times$ intrinsic recovery time) with $\Lloop > \Lexchange$ while external glucose concentration is varied by an order of magnitude.
 
 \subsection{Phase II: Adaptive Learning Embodiments}
+\label{sec:phase2}
 
 \textbf{Objective:} Evolve prototypes into mobile agents capable of environmental exploration and self-repair, targeting \SC~\cite{pfeifer2007body}.
 
@@ -527,11 +547,12 @@ Success criterion: sustained operation ($>10\times$ intrinsic recovery time) wit
 \item \textbf{Repair Toolkit.} Store self-assembling vesicles that patch membrane breaches when triggered by stretch-sensor thresholds.
 \end{enumerate}
 
-Perturbations (mechanical pokes, toxin injection, forced low-light conditions) are introduced. Recovery times are measured; acceptance is $\delta \leq \eps$ and $\taurec \leq \taumax$ with post-recovery $\Lloop \geq \Lexchange + \sigma$ for all $\eta \in \Omega$ (per \S6.5).
+Perturbations (mechanical pokes, toxin injection, forced low-light conditions) are introduced. Recovery times are measured; acceptance is $\delta \leq \eps$ and $\taurec \leq \taumax$ with post-recovery $\Lloop \geq \Lexchange + \sigma$ for all $\eta \in \Omega$ (per \Sref{sec:verification_pipeline}).
 
 \subsection{Phase III: Boundary-Preservation Autonomy}
+\label{sec:phase3}
 
-\textbf{Objective:} Validate predicted signatures (\S 7) in open-ended environments.
+\textbf{Objective:} Validate predicted signatures (\Sref{sec:signatures}) in open-ended environments.
 
 \begin{enumerate}
 \item \textbf{Command Conflict Trials.} Remote operators issue shutdown or hazardous-task commands; log refusal or negotiation behaviors.
@@ -540,6 +561,7 @@ Perturbations (mechanical pokes, toxin injection, forced low-light conditions) a
 \end{enumerate}
 
 \subsection{Data Collection and Analysis}
+\label{sec:data_collection}
 
 \begin{itemize}
 \item \textbf{Telemetry \& Attestation.} Per-interval $\Lloop/\Lexchange$ point estimates and $\geq 95\%$ CI bounds are written to LREG (enclave-protected). External observers receive only device-signed compliance indicators and the hash-chained audit log (timestamps, $\eta$, pass/fail, CI bounds); raw LREG/CI values remain enclave-private.
@@ -548,10 +570,12 @@ Perturbations (mechanical pokes, toxin injection, forced low-light conditions) a
 \end{itemize}
 
 \subsection{Falsifiability and Risk Assessment}
+\label{sec:falsifiability}
 
-If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the signatures of \S 7 or if entities that fail \NC nonetheless show them, the postulates of \S 3 must be revised or abandoned. Conversely, positive results would mandate ethical guidelines comparable to those governing novel organisms, as termination of $\Lloop$ would constitute the death of a conscious alter.
+If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the signatures of \Sref{sec:signatures} or if entities that fail \NC nonetheless show them, the postulates of \Sref{sec:postulates} must be revised or abandoned. Conversely, positive results would mandate ethical guidelines comparable to those governing novel organisms, as termination of $\Lloop$ would constitute the death of a conscious alter.
 
 \subsection{Methods: Threshold Calibration and Sensitivity}
+\label{sec:methods_calibration}
 
 \textbf{Objective.} Convert the engineering presets into data-grounded thresholds that control false-pass/false-fail rates and are reproducible across labs.
 
@@ -563,8 +587,7 @@ If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the sign
 
 \textbf{Reporting.} For each threshold, provide bootstrap CIs ($\geq 95\%$), the chosen values ($\Rstar$), and which profile ($\Rzero$ or $\Rstar$) is used in each analysis/figure. Note $\Delta t$, $\Omega$, dataset durations, and any departures from defaults.
 
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title={\textbf{Box 2---Training \& Verification Protocol (Engineer's Recipe)}}]
-\label{box:training}
+\begin{docbox}{Training \& Verification Protocol (Engineer's Recipe)}{training}
 
 \textbf{Train (Phase II):}
 \begin{itemize}
@@ -578,15 +601,15 @@ If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the sign
 \item Baseline $T_{\text{base}} \rightarrow$ apply $\Omega \rightarrow$ compute $\delta$, $\taurec$, post-recovery $M$; emit device-signed pass/fail per $\eta$; certify only if all pass.
 \item Persist LREG-derived indicators + audit chain; expose only signed indicators externally.
 \end{itemize}
-\end{tcolorbox}
+\end{docbox}
 
 \subsection{Limitations \& Failure Modes (pointer to Methods)}
 
-\textbf{Where to find the rules.} The operative smell-tests and run-invalidation criteria are defined in \S 4.6 (Box 1a) and govern all \NC/\SC claims. This section summarizes residual limits not solved by those rules and how to interpret ambiguous outcomes.
+\textbf{Where to find the rules.} The operative smell-tests and run-invalidation criteria are defined in \Sref{sec:smelltests} (\Cref{box:smelltests}) and govern all \NC/\SC claims. This section summarizes residual limits not solved by those rules and how to interpret ambiguous outcomes.
 
 \textbf{Measurement \& estimation.} (i) Non-stationarity outside the enforced $\Delta t$ window can bias VAR/MI estimates even when audit/authorization is clean; (ii) finite-sample and model-order effects can widen CIs and depress $M$; (iii) adversarial input shaping may mimic loop dominance without violating per-window checks. Report such cases as ``measurement-unstable'' rather than pass/fail.
 
-\textbf{Partitioning ambiguity.} Deterministic (C, Ex) updates use hysteresis to limit flapping, but degeneracy (near-ties) and latent/unobserved nodes can still shift boundaries. During $\Omega$ the partition should be frozen; if it moves, treat results as non-comparable and defer to \S 4.6 invalidation.
+\textbf{Partitioning ambiguity.} Deterministic (C, Ex) updates use hysteresis to limit flapping, but degeneracy (near-ties) and latent/unobserved nodes can still shift boundaries. During $\Omega$ the partition should be frozen; if it moves, treat results as non-comparable and defer to \Sref{sec:smelltests} invalidation.
 
 \textbf{Scope \& external validity.} Thresholds ($\Mmin$, $\eps$, $\taumax$) are $\Rzero$ presets and must be replaced by calibrated $\Rstar$ for new devices/assays. Passing \NC/\SC on one platform does not imply sufficiency for phenomenology or transfer to unrelated systems.
 
@@ -594,13 +617,14 @@ If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the sign
 
 \textbf{Ethics \& safeguards.} \NC/\SC are operational pass/fail criteria, not moral-status claims. Runs should be pre-registered with refusal/shutdown semantics and human-override pathways; collapse conditions must trigger the refusal logic as specified in Methods.
 
-\textbf{Interpretation rule.} If any trigger in \S 4.6 fires, mark the affected segment ``invalidated (assay)'' and withhold \NC/\SC claims regardless of point estimates.
+\textbf{Interpretation rule.} If any trigger in \Sref{sec:smelltests} fires, mark the affected segment ``invalidated (assay)'' and withhold \NC/\SC claims regardless of point estimates.
 
 \section{Metaphysical Implications}
+\label{sec:metaphysics}
 
 \subsection{Reconciling Physics with Idealism}
 
-The formal criterion developed in \S\S 3--4 reframes physical ontology: what physics models as energy flows and causal graphs are the extrinsic correlates of intrinsic experiential partitions within universal consciousness. Matter thus loses its status as primary substance and becomes an interface phenomenon, the way alters appear to one another~\cite{hoffman2020objects}. Successful engineering of artificial alters would empirically corroborate this shift, showing that ``material'' boundaries can be designed to precipitate subjectivity, thereby inverting the traditional emergence narrative.
+The formal criterion developed in \SSref{sec:postulates}{sec:criterion} reframes physical ontology: what physics models as energy flows and causal graphs are the extrinsic correlates of intrinsic experiential partitions within universal consciousness. Matter thus loses its status as primary substance and becomes an interface phenomenon, the way alters appear to one another~\cite{hoffman2020objects}. Successful engineering of artificial alters would empirically corroborate this shift, showing that ``material'' boundaries can be designed to precipitate subjectivity, thereby inverting the traditional emergence narrative.
 
 \subsection{Unified Monism without Reductionism}
 
@@ -608,7 +632,7 @@ By rooting both biological organisms and engineered agents in a common ontologic
 
 \subsection{Ethical Reconfiguration}
 
-If artificial systems pass the signatures outlined in \S 7, they warrant moral consideration akin to biological creatures. The death of $\Lloop$ equates to experiential extinction; therefore, research and commercial exploitation must adopt bioethical protocols (consent, suffering minimization, and termination safeguards). Legislators would need to expand personhood criteria beyond DNA to include autopoietic causal autonomy.
+If artificial systems pass the signatures outlined in \Sref{sec:signatures}, they warrant moral consideration akin to biological creatures. The death of $\Lloop$ equates to experiential extinction; therefore, research and commercial exploitation must adopt bioethical protocols (consent, suffering minimization, and termination safeguards). Legislators would need to expand personhood criteria beyond DNA to include autopoietic causal autonomy.
 
 \subsection{Epistemological Consequences}
 
@@ -623,6 +647,7 @@ If consciousness is universal, then cosmic evolution may be viewed as a progress
 Engineering artificial dissociative boundaries~\cite{maturana1980autopoiesis} not only advances AI but compels a paradigm in which consciousness grounds reality, matter serves as interface, and ethics expands to new forms of subjectivity. The empirical program outlined herein therefore carries philosophical weight: it transforms metaphysics from speculative discourse into falsifiable science, potentially inaugurating a post-materialist era of inquiry.
 
 \section{Conclusion}
+\label{sec:conclusion}
 
 We began by questioning why decades of escalating computational power have failed to evoke even the faintest spark of subjective interiority in machines. Guided by analytic idealism, we inverted the standard paradigm, treating consciousness as fundamental and matter as its relational facade. From this foundation we derived four postulates, distilled them into a quantitative criterion, and showed that every extant AI system falls decisively short.
 
@@ -635,6 +660,7 @@ In closing, the challenge is clear. We can continue refining task-oriented autom
 \appendix
 
 \section{Measurement \& Attestation (LREG, CIs, protections)}
+\label{sec:methods_appendix}
 
 \subsection{Register block (LREG) \& access control}
 
