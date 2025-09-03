@@ -205,8 +205,23 @@ refactor(runtime,lmeas): decouple scheduler tick from windowing logic
 
 ## Versioning and releases
 
-- The version is tracked in `pyproject.toml` (`project.version`). Use SemVer where practical.
-- Maintainers bump versions as part of release PRs (include release notes in the PR body).
+- The version is tracked in `pyproject.toml` (`project.version`) and mirrored in `src/ldtc/__init__.py` as `__version__`. Use SemVer.
+- Workflow (main + dev):
+  - Contributors: branch off `dev` and open PRs targeting `dev`.
+  - Maintainer (release): open a "Prepare release vX.Y.Z" PR from `dev` → `main`, bump version, update changelog, merge.
+  - Tag on `main`: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags`.
+  - A GitHub Action publishes the package to PyPI when a `v*.*.*` tag is pushed.
+  - After release, merge `main` back into `dev` to carry the version bump and any hotfixes.
+
+### Branching rules
+
+- `main`: protected; mirrors PyPI; release-only.
+- `dev`: integration branch; default PR target for contributors.
+- Feature branches: `feature/...` from `dev`; hotfixes: `hotfix/...` from `main`.
+
+### CI
+
+- PRs to `dev`/`main` run lint (ruff), type-checks (mypy), tests (pytest), and a build check.
 
 ## Security and provenance
 
