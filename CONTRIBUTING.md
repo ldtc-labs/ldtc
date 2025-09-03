@@ -189,6 +189,45 @@ fix(guardrails,attest): block raw LREG reads and enforce indicator-only exports
 refactor(runtime,lmeas): decouple scheduler tick from windowing logic
 ```
 
+## Pull requests and squash merges
+
+- PR title: use Conventional Commit format.
+  - Example: `feat(cli): add figures subcommand`
+  - Imperative mood; no trailing period; ≤ 72 chars; use `!` for breaking changes.
+  - Prefer one primary scope; use comma-separated scopes only when necessary.
+- PR description: include brief sections: What, Why, How (brief), Testing, Risks/Impact, Docs/Follow-ups.
+  - Link issues with keywords (e.g., `Closes #123`).
+- Merging: use “Squash and merge” with “Pull request title and description”.
+- Keep PRs focused; avoid unrelated changes in the same PR.
+
+Conventional Commits applies to the subject line (your PR title) and optional footers. The PR body is free-form; when squashing, it becomes the commit body. Place any footers at the bottom of the description.
+
+Recommended PR template:
+
+```text
+What
+- Short summary of the change
+
+Why
+- Motivation/user value
+
+How (brief)
+- Key implementation notes or decisions
+
+Testing
+- Local/CI coverage; links to tests if relevant
+
+Risks/Impact
+- Compat, rollout, perf, security; mitigations
+
+Docs/Follow-ups
+- Docs updated or TODO next steps
+
+Closes #123
+BREAKING CHANGE: <details if any>
+Co-authored-by: Name <email>
+```
+
 ## Pull request checklist
 
 - Tests: added/updated; `make test` passes.
