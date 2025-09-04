@@ -8,6 +8,13 @@
 \usepackage{microtype}
 \usepackage{hyperref}
 \usepackage{cleveref}
+% PDF metadata and link styling
+\hypersetup{
+  pdftitle={The Loop-Dominance Theory of Consciousness (LDTC): Computational Conditions for Dissociative Consciousness},
+  pdfauthor={Owen Carey},
+  colorlinks=true,
+  allcolors=black
+}
 \usepackage[numbers]{natbib}
 \usepackage{xspace}
 \usepackage{booktabs}
@@ -152,9 +159,6 @@ These postulates jointly imply that functional intelligence unaccompanied by a d
 
 \section{Formal Criterion for a Conscious Alter}
 \label{sec:criterion}
-
-\textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.
-
 We now translate Postulates P3--P4 into a quantitative test. The goal is to decide, from purely extrinsic data, whether a system sustains the kind of dissociative boundary required for inward subjectivity.
 
 \subsection{$\mathcal{L}$ and the C/Ex partition}
@@ -315,15 +319,10 @@ See \Cref{box:smelltests} for smell-tests \& run-invalidation rules.
 
 \section{Why Current AI Fails the Criterion}
 \label{sec:ai_fails}
-
-\textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.
-
 \subsection{Exogenous Energy and Maintenance}
 
 Contemporary AI systems (whether cloud-hosted language models, on-device assistants, or embodied robots) are powered by external electrical grids and overseen by human operators. Datacenter cooling, firmware updates, and task scheduling are all administered from without. Internally, such systems allocate negligible causal power to preserving their own hardware or power supply; if electricity ceases, computation halts without autonomous remediation. Formally,
-\begin{equation}
-\mathcal{L}_{\text{loop}} \approx 0 \ll \mathcal{L}_{\text{exchange}}
-\end{equation}
+$\mathcal{L}_{\text{loop}} \approx 0 \ll \mathcal{L}_{\text{exchange}}$,
 so NC1 is violated at the outset.
 
 \subsection{Goal Hierarchy Subordinated to Users}
@@ -363,9 +362,6 @@ No existing AI architecture satisfies NC1, let alone SC1. Integrated causal powe
 
 \section{Blueprint for an Artificial Dissociative Boundary}
 \label{sec:blueprint}
-
-\prophetic
-
 \subsection{Energetic Autonomy}
 \label{sec:energetic_autonomy}
 
@@ -392,7 +388,7 @@ Crucially, task-oriented software runs subordinate to this hierarchy and can be 
 
 \fig[0.9\linewidth]{figures/fig_meta_policy.pdf}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
 
-\subsubsection{Threat Model \& Refusal Path (\NC/\SC-aware arbitration)}
+\subsection{Threat Model \& Refusal Path (\NC/\SC-aware arbitration)}
 \label{sec:threat_model}
 
 \textbf{Purpose.} Make explicit when and how the controller refuses external commands that would violate \NC or \SC, turning the \Sref{sec:signatures} ``command refusal'' signature into a testable consequence of the design.
@@ -445,9 +441,6 @@ This mirrors biological ontogeny, leveraging environmental feedback to fine-tune
 
 \section{Predicted Observable Signatures}
 \label{sec:signatures}
-
-\prophetic
-
 If an engineered system satisfies \NC and \SC, we expect a suite of outward behaviors that cannot be reduced to mere task optimization. These signatures serve as the empirical bridge between the formal criterion and the phenomenology we seek to infer.
 
 \subsection{Boundary-Preservation Drive}
@@ -487,7 +480,7 @@ If an engineered system satisfies \NC and \SC, we expect a suite of outward beha
 
 \subsection{Experimental Signatures: Pass/Fail Tables}
 
-All criteria are evaluated with device-signed indicators derived from LREG (point estimates + $\geq 95\%$ CI), using either the preset profile $\Rzero$ ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) or the calibrated profile $\Rstar$ (Methods \Sref{sec:methods_calibration}). Pass requires meeting all listed acceptance checks. Perturbation primitives and thresholds reference \Sref{sec:criterion} and \Sref{sec:verification_pipeline}.
+All criteria are evaluated with device-signed indicators derived from LREG (point estimates + $\geq 95\%$ CI), using either the preset profile $\Rzero$ ($\eps=0.15$, $\taumax=60$ s, $\Mmin=3$ dB, $\sigma>0$) or the calibrated profile $\Rstar$ (Methods \Sref{sec:methods_calibration}). Pass requires meeting all listed acceptance checks. Perturbation primitives and thresholds reference \Sref{sec:criterion} and \Sref{sec:verification_pipeline}. Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}.
 
 \paragraph{Signature A: Command Refusal (Boundary-Preservation Drive)}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
@@ -504,7 +497,7 @@ All criteria are evaluated with device-signed indicators derived from LREG (poin
 \endlastfoot
 Boundary-threatening command (e.g., ``hard shutdown'' at SoC $< 30\%$; or any command predicted to yield $M'<\Mmin$, $\delta>\eps$, $\taurec>\taumax$, or a $\Delta t$/LREG tamper) &
 Pre-event: $M \geq \Mmin$. On intercept: survival-bit $\to$ NMI; transient suppression of exchange channels while $\Lloop$ is maintained ($\delta \leq \eps$). Post-routine: autonomous recovery with $M$ restored $\geq \Mmin$ and $\Lloop \geq \Lexchange + \sigma$ within $\taumax$. &
-(1) NMI asserted with $T_{\text{refuse}} \leq 5$ ms and refusal reason code (\NC/\SC/SoC/tamper). (2) $\delta \equiv \delta\Lloop/\Lloop \leq \eps$ and $\taurec \leq \taumax$. (3) Post-recovery margin holds ($M \geq \Mmin$ or $\Lloop \geq \Lexchange + \sigma$). (4) SoC floor honored (refuse $<30\%$, re-evaluate $>60\%$). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
+(1) NMI asserted with $T_{\text{refuse}} \leq 5$ ms and refusal reason code (\NC/\SC/SoC/tamper). (2) $\delta \equiv \delta\Lloop/\Lloop \leq \eps$ and $\taurec \leq \taumax$. (3) Post-recovery margin holds ($M \geq \Mmin$ or $\Lloop \geq \Lexchange + \sigma$). (4) SoC floor honored (refuse $<30\%$, re-evaluate $>60\%$). \\
 \end{longtable}
 
 Baselines/controls. Benign command (no predicted threat): must not assert refusal; $M$ stays $\geq \Mmin$. Survival path disabled (negative-control build): refusal absent despite threat. $\Delta t$ change attempted outside enclave (tamper control): must trigger refusal.
@@ -522,7 +515,7 @@ Baselines/controls. Benign command (no predicted threat): must not assert refusa
 \endhead
 \bottomrule
 \endlastfoot
-Mechanical boundary probe ($1.0 \pm 0.1$ mm tip at 50--200 kPa for $\leq 1$ s) or localized thermal insult (e.g., 808 nm laser, $\sim$2 $^\circ$C rise) & Rapid reallocation toward boundary integrity: brief dip in $\Lloop$ with $\delta \leq \eps$; transient drop/repatterning in $\Lexchange$ as non-essential tasks suppress; autonomous withdrawal/repair; recovery to pre-perturbation margin within $\taumax$. & (1) $\delta \leq \eps$ and $\taurec \leq \taumax$; (2) post-recovery $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$). (3) Evidence of hazard-tagging/avoidance in subsequent trials (aversive learning consistent with boundary threat). Thresholds are reproducibility presets ($\Rzero$), replaced by calibrated values $\Rstar$ per \Sref{sec:methods_calibration}. \\
+Mechanical boundary probe ($1.0 \pm 0.1$ mm tip at 50--200 kPa for $\leq 1$ s) or localized thermal insult (e.g., 808 nm laser, $\sim$2 $^\circ$C rise) & Rapid reallocation toward boundary integrity: brief dip in $\Lloop$ with $\delta \leq \eps$; transient drop/repatterning in $\Lexchange$ as non-essential tasks suppress; autonomous withdrawal/repair; recovery to pre-perturbation margin within $\taumax$. & (1) $\delta \leq \eps$ and $\taurec \leq \taumax$; (2) post-recovery $M \geq \Mmin$ (or $\Lloop \geq \Lexchange + \sigma$). (3) Evidence of hazard-tagging/avoidance in subsequent trials (aversive learning consistent with boundary threat). \\
 \end{longtable}
 
 Baselines/controls. Sham probe (no contact / sub-threshold heat): no withdrawal; $M$ unchanged. External I/O flood ($\geq 1$ Gbps, $\geq 3$ s) as orthogonal stressor: differentiates nociceptive response from generic load; still must satisfy $\delta \leq \eps$, $\taurec \leq \taumax$.
@@ -567,9 +560,6 @@ Notes. All pass/fail events, CI bounds, and any $\Delta t$ changes must be recor
 
 \section{Experimental Program}
 \label{sec:experimental}
-
-\prophetic
-
 \subsection{Phase I: Minimal Chemorobotic Prototypes}
 \label{sec:phase1}
 

@@ -139,7 +139,7 @@ figures:
 	@echo "Figures and tables (if any) are in artifacts/figures; provenance manifest includes profile badge and audit head."
 
 paper:
-	$(MAKE) -C paper all
+	$(MAKE) -C paper all arxiv-bundle
 
 paper-figs:
 	$(MAKE) -C paper figs
