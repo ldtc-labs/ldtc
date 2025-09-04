@@ -1,4 +1,4 @@
-# LDTC Hello-World  
+# LDTC  
 
 <p align="center">
   <img src="docs/assets/ldtc-logo.png" alt="LDTC logo" width="360" />
@@ -10,7 +10,7 @@
 
 ## Overview
 
-- **Purpose (big picture)**: A minimal, substrate‑agnostic “hello‑world” stack for LDTC. It measures loop‑dominance (Lloop vs Lexchange), enforces guardrails (LREG/audit/Δt governance), runs Ω‑perturbations, evaluates NC1/SC1, logs/attests results, and demonstrates command refusal.
+- **Purpose (big picture)**: A minimal, substrate‑agnostic stack for LDTC. It measures loop‑dominance (Lloop vs Lexchange), enforces guardrails (LREG/audit/Δt governance), runs Ω‑perturbations, evaluates NC1/SC1, logs/attests results, and demonstrates command refusal.
 - **Software plant vs hardware plant**:
   - **Software plant**: an in‑process discrete‑time model with energy E, temperature T, repair/health R, demand, io, and harvest H, plus built‑in Ω stressors.
   - **Hardware plant**: an optional adapter that ingests real telemetry over UDP or Serial and exposes the same interface, so measurement, arbitration, indicators, and CLI work unchanged.

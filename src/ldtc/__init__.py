@@ -1,4 +1,4 @@
-"""LDTC Hello-World package."""
+"""LDTC package."""
 
 from __future__ import annotations
 

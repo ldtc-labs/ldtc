@@ -60,7 +60,6 @@ exclude = [
     '^notebooks/',
     '^artifacts/',
     '^src/ldtc\\.egg-info/',
-    '^src/ldtc_hello_world\\.egg-info/',
 ]
 explicit_package_bases = true
 packages = ["src/ldtc"]

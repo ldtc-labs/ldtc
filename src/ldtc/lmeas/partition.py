@@ -17,7 +17,7 @@ class PartitionManager:
     Deterministic C/Ex partition with simple hysteresis:
     - Start from seeded C.
     - Periodically 're-grows' by moving nodes that increase L_loop more than a threshold.
-      (For hello-world we keep a simple fixed assignment with an optional flip hook.)
+      (For this reference implementation we keep a simple fixed assignment with an optional flip hook.)
     - Can be 'frozen' during Ω.
     """
 

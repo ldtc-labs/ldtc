@@ -1,4 +1,4 @@
-### Contributing to LDTC Hello-World
+### Contributing to LDTC
 
 Thanks for your interest in contributing. This repository is a verification harness for the Loop‑Dominance (NC1/SC1) pipeline described in the manuscript. Contributions should keep the code reproducible, auditable, and consistent with the paper’s symbols and assumptions (Δt, M, ε, τmax, σ, C/Ex partition, Ω battery, LREG/attestation).
 
