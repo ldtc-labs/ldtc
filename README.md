@@ -214,7 +214,7 @@ make docker-run
 # Or run any CLI subcommand, e.g., an Ω power-sag trial
 docker run --rm \
   -v $(pwd)/artifacts:/app/artifacts \
-  ldtc-hello-world:latest omega-power-sag --config configs/profile_r0.yml --drop 0.35 --duration 8
+  ldtc:latest omega-power-sag --config configs/profile_r0.yml --drop 0.35 --duration 8
 ```
 
 Notes:
