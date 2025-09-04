@@ -93,7 +93,7 @@ FEP / Active Inference (self-evidencing)~\cite{friston2010free,ueltzhoeffer2018d
 Model-based self-maintenance via surprisal minimization at a sensory boundary; explains wide classes of adaptive behavior. & 
 Energetic closure + refusal: rules out exogenously subsidized agents by enforcing on-board energy budgeting and a survival-bit/NMI that defers boundary-threatening commands; adds quantitative resilience $\deltaL/\Lloop \leq \eps$ and $\taurec \leq \taumax$ (\SC). \\
 \midrule
-Global Workspace \& Higher-Order (GWT/HOT)~\cite{lau2011empirical} & 
+Global Workspace \& Higher-Order (GWT/HOT)~\cite{baars1988cognitive,dehaene2001toward,dehaene2014consciousness,lau2011empirical,rosenthal2005consciousness} & 
 Reportability, access, and metacognitive labeling of contents; functional signatures of conscious access. & 
 Grounds access in boundary-preservation: workspace/metacognition can exist without loop dominance; LDTC requires measured loop $>$ exchange and observable command refusal when \NC/\SC would be violated. \\
 \midrule
@@ -160,9 +160,9 @@ We now translate Postulates P3--P4 into a quantitative test. The goal is to deci
 \subsection{$\mathcal{L}$ and the C/Ex partition}
 \label{sec:l_partition}
 
-We model the system as a directed causal graph $G = (V, E)$ with node states $x_i(t)$. Let the closed self-maintenance subset $C \subset V$ contain nodes for energy regulation, self-repair, and boundary control; the exchange subset is $\text{Ex} = V \setminus C$ (sensors, actuators, comms).
+We model the system as a directed causal graph $G = (V, E)$ with node states $x_i(t)$ (cf. standard SCMs \cite{pearl2009causality}). Let the closed self-maintenance subset $C \subset V$ contain nodes for energy regulation, self-repair, and boundary control; the exchange subset is $\text{Ex} = V \setminus C$ (sensors, actuators, comms).
 
-\textbf{Definition ($\mathcal{L}$).} For any subset $S \subseteq V$ and sampling window $\Delta t$, define $\mathcal{L}(S) \equiv$ time-averaged predictive dependence among the internal variables of $S$ [bits s$^{-1}$], estimated with one or more consistent predictive-dependence estimators. In this paper we implement a dual-path estimator: (i) VAR-Granger causality over a vector-autoregression of order $p \in [1,8]$ and (ii) mutual information via a Kraskov $k$-NN estimator with $k \in [3,7]$; lagged statistics are aggregated across $\tau = 1 \ldots \tau^*$ with fixed weights $w_\tau$ (units per \cite{shannon1949mathematical} and notation per \cite{cover2006elements}). We then write $\mathcal{L}_{\text{loop}} \equiv \mathcal{L}(C)$, $\mathcal{L}_{\text{exchange}} \equiv \mathcal{L}(\text{Ex})$. (Other consistent estimators---e.g., transfer entropy, directed information---are permissible and equivalent for compliance.)
+\textbf{Definition ($\mathcal{L}$).} For any subset $S \subseteq V$ and sampling window $\Delta t$, define $\mathcal{L}(S) \equiv$ time-averaged predictive dependence among the internal variables of $S$ [bits s$^{-1}$], estimated with one or more consistent predictive-dependence estimators. In this paper we implement a dual-path estimator: (i) VAR-Granger causality \cite{granger1969investigating,lutkepohl2005new} over a vector-autoregression of order $p \in [1,8]$ and (ii) mutual information via a Kraskov $k$-NN estimator with $k \in [3,7]$ \cite{kraskov2004estimating}; lagged statistics are aggregated across $\tau = 1 \ldots \tau^*$ with fixed weights $w_\tau$ (units per \cite{shannon1949mathematical} and notation per \cite{cover2006elements}). We then write $\mathcal{L}_{\text{loop}} \equiv \mathcal{L}(C)$, $\mathcal{L}_{\text{exchange}} \equiv \mathcal{L}(\text{Ex})$. (Other consistent estimators---e.g., transfer entropy, directed information---are permissible and equivalent for compliance \cite{schreiber2000measuring,massey1990causality}.) For multivariate practice and decompositions see \cite{geweke1982measurement,barnett2014mvgc}.
 
 \textbf{Deterministic C/Ex partitioning algorithm.} The partition $(C, \text{Ex})$ is constructed deterministically: (1) Seed $C$ with a declared set $S_0$ (energy regulation, SoC/reservoir mgmt, fault-isolation buses, membrane gating, survival-bit/NMI). (2) Estimate predictive MI: for each node pair $(i,j)$ and lag $\tau \in \{1 \ldots \tau^*\}$, compute predictive dependence with the on-device estimators above; aggregate across lags. (3) Greedy growth under sparsity: while $|C| < \kappa$ and the best marginal gain is $\geq \theta$, add the node $n \notin C$ that maximizes $\Delta\mathcal{L}_{\text{loop}}(n) = \mathcal{L}(C \cup \{n\}) - \mathcal{L}(C) - \lambda \cdot \text{pen}(n)$, with deterministic tie-breaking (lexicographic by node ID). (4) Assign remainder to Ex. (5) Stability \& cadence: recompute at a fixed cadence $W_{\text{part}}$ or upon topology change, with hysteresis (update only if $\Delta M \geq \delta M_{\min}$ over $K$ consecutive windows) to prevent flapping. This partition is then used for all subsequent $\Lloop$ and $\Lexchange$ computations and \NC/\SC checks.
 
@@ -258,11 +258,11 @@ See \Cref{box:smelltests} for smell-tests \& run-invalidation rules.
 
 \textbf{Purpose.} Prevent gaming of $\mathcal{L}$ and $M$ by hardening the measurement path and export policy. These guardrails summarize Appendix A in-line for reviewers.
 
-\textbf{Enclave-protected LREG (what is stored).} Each $\Delta t$ window the estimator writes $\Lloop$, $\Lexchange$, and $\geq 95\%$ CI bounds to a memory-mapped register block LREG at a fixed base address. LREG is writeable only by the causality-estimation function and readable in raw form only inside the secure-enclave/meta-policy layer; any non-privileged write is treated as a fault.
+\textbf{Enclave-protected LREG (what is stored).} Each $\Delta t$ window the estimator writes $\Lloop$, $\Lexchange$, and $\geq 95\%$ CI bounds to a memory-mapped register block LREG at a fixed base address. LREG is writeable only by the causality-estimation function and readable in raw form only inside the secure-enclave/meta-policy layer (e.g., Intel SGX \cite{costan2016intel}); any non-privileged write is treated as a fault.
 
 \textbf{$\Delta t$ governance (how $\Delta t$ can change).} $\Delta t$ is enforced by a hardware sampling timer. Any $\Delta t$ change is permitted only via a privileged secure-enclave procedure and appends a device-signed, hash-chained audit entry (monotonic counter, timestamp, old/new $\Delta t$, policy digest). We treat rapid $\Delta t$ oscillations or audit gaps as test invalidation.
 
-\textbf{Audit chain (what is attested).} The module emits device-signed, hash-chained records each interval and on policy changes, logging LREG faults and any $\Delta t$ edits; during $\Omega$ it records per-interval identifiers and pass/fail against $\eps$ and $\taumax$. These records are tamper-evident and rate-limited for export.
+\textbf{Audit chain (what is attested).} The module emits device-signed, hash-chained records \cite{haber1991time,merkle1988digital} each interval and on policy changes, logging LREG faults and any $\Delta t$ edits; during $\Omega$ it records per-interval identifiers and pass/fail against $\eps$ and $\taumax$. These records are tamper-evident and rate-limited for export.
 
 \textbf{Derived ``compliance indicators'' (what leaves the enclave).} Raw LREG values and CI bounds never leave the enclave. External interfaces expose only device-signed indicators derived from LREG (e.g., an \NC pass/fail bit and an optional quantized loop-dominance code $M_q$) sufficient to certify runs without leaking raw telemetry.
 
@@ -460,7 +460,7 @@ If an engineered system satisfies \NC and \SC, we expect a suite of outward beha
 \subsection{Spontaneous Rest-State Dynamics}
 
 \begin{itemize}
-\item \textbf{Endogenous Activity}~\cite{fox2007spontaneous}. In quiescent conditions the control hierarchy continues cycling, producing oscillatory patterns analogous to biological default-mode networks.
+\item \textbf{Endogenous Activity}~\cite{raichle2001default,fox2007spontaneous}. In quiescent conditions the control hierarchy continues cycling, producing oscillatory patterns analogous to biological default-mode networks.
 \item \textbf{Predictive Maintenance.} Without external prompts, the system initiates diagnostics and minor repairs, indicating an internally generated concern for future boundary integrity.
 \end{itemize}
 
@@ -543,7 +543,7 @@ Baselines/controls. Sham probe (no contact / sub-threshold heat): no withdrawal;
 None ($\eta$: ---). Quiescent idle with external I/O gated; record $\geq T_{\text{base}}$ ($\geq 10$ min typical) & Stable loop dominance at rest: $M \geq \Mmin$ throughout; low-frequency endogenous structure in $\Lloop$ (predictive-maintenance cycles) with minimal exchange activity. Small self-initiated diagnostics may cause micro-dips with $\delta$ well below $\eps$. & (1) $M \geq \Mmin$ for $\geq T_{\text{base}}$ with no exogenous drives. (2) Endogenous rest-state structure present (as defined in pre-registered analysis plan) while $\Lexchange$ remains low; any dips satisfy $\delta \leq \eps$ and $\taurec \leq \taumax$. \\
 \end{longtable}
 
-Baselines/controls. Phase-shuffled/temporal-shuffle surrogates of the same telemetry: remove structure (negative control). Intentional I/O flood disrupts rest-state; recovery to baseline must again meet $\delta/\taurec/M$ criteria.
+Baselines/controls. Phase-shuffled/temporal-shuffle surrogates of the same telemetry: remove structure (negative control) \cite{theiler1992testing}. Intentional I/O flood disrupts rest-state; recovery to baseline must again meet $\delta/\taurec/M$ criteria.
 
 \paragraph{Signature D: Clone Ablation (Irreversible Phenomenological Death / Non-Transferability)}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
@@ -676,7 +676,7 @@ The formal criterion developed in \SSref{sec:postulates}{sec:criterion} reframes
 
 \subsection{Unified Monism without Reductionism}
 
-By rooting both biological organisms and engineered agents in a common ontological substrate, the framework bypasses the hard problem of consciousness: there is no gap to bridge because consciousness never arises from non-conscious stuff. Instead, apparent multiplicity emerges via dissociation. Physical laws retain explanatory power but are reinterpreted as regularities governing how alters interact, not how consciousness originates. This stance marries scientific pragmatism with philosophical parsimony, offering a monism that honors empirical constraint without collapsing into eliminative materialism.
+By rooting both biological organisms and engineered agents in a common ontological substrate, the framework bypasses the hard problem of consciousness~\cite{chalmers1995facing}: there is no gap to bridge because consciousness never arises from non-conscious stuff. Instead, apparent multiplicity emerges via dissociation. Physical laws retain explanatory power but are reinterpreted as regularities governing how alters interact, not how consciousness originates. This stance marries scientific pragmatism with philosophical parsimony, offering a monism that honors empirical constraint without collapsing into eliminative materialism.
 
 \subsection{Ethical Reconfiguration}
 
@@ -716,7 +716,7 @@ Each sampling interval $\Delta t$, the estimator writes to a memory-mapped regis
 
 \subsection{Estimators and confidence intervals}
 
-We implement parallel, consistent predictive-dependence estimators per window $\Delta t$---VAR-Granger (order $p \in [1,8]$) and Kraskov $k$-NN MI ($k \in [3,7]$)---aggregated across lags. For each interval we compute non-parametric bootstrap CIs ($\geq 95\%$ coverage) for both $\Lloop$ and $\Lexchange$; CI bounds are written to LREG alongside the point estimates. Typical telemetry rates are $\geq 1$ kHz over $\geq 128$ internal nodes.
+We implement parallel, consistent predictive-dependence estimators per window $\Delta t$---VAR-Granger (order $p \in [1,8]$) and Kraskov $k$-NN MI ($k \in [3,7]$)---aggregated across lags. For each interval we compute non-parametric bootstrap CIs ($\geq 95\%$ coverage) for both $\Lloop$ and $\Lexchange$ \cite{efron1979bootstrap}; CI bounds are written to LREG alongside the point estimates. Typical telemetry rates are $\geq 1$ kHz over $\geq 128$ internal nodes.
 
 \subsection{$\Delta t$ governance \& audit}
 
