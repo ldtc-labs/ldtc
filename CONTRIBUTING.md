@@ -258,6 +258,38 @@ Co-authored-by: Name <email>
 - `dev`: integration branch; default PR target for contributors.
 - Feature branches: `feature/...` from `dev`; hotfixes: `hotfix/...` from `main`.
 
+#### Branch naming
+
+- Use lowercase kebab-case; no spaces; keep names concise (aim ≤ 40 chars).
+- Prefix conventions (align with Conventional Commit categories):
+  - `feature/<scope>-<short-desc>` (from `dev`)
+  - `fix/<issue-or-bug>-<short-desc>` (from `dev`)
+  - `chore/<short-desc>` (from `dev`)
+  - `docs/<short-desc>` (from `dev`)
+  - `ci/<short-desc>` (from `dev`)
+  - `refactor/<scope>-<short-desc>` (from `dev`)
+  - `test/<short-desc>` (from `dev`)
+  - `perf/<short-desc>` (from `dev`)
+  - `build/<short-desc>` (from `dev`)
+  - `release/vX.Y.Z` (from `dev`, for release prep PRs)
+  - `hotfix/<short-desc>` (from `main`, for urgent fixes)
+- Optionally append an issue ID at the end (e.g., `feat/cli-figures-123`).
+- Delete remote and local branches after merge.
+
+Examples:
+
+```text
+feature/cli-figures
+fix/omega-duration-units-123
+docs/contributing-branch-naming
+ci/mplbackend-agg-headless
+build/lock-filters-ldtc
+refactor/runtime-jitter-accounting
+test/omega-suite
+release/v0.2.0
+hotfix/attest-sig-verify
+```
+
 ### CI
 
 - PRs to `dev`/`main` run lint (ruff), type-checks (mypy), tests (pytest), and a build check.
