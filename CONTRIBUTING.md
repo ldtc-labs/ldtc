@@ -193,7 +193,7 @@ refactor(runtime,lmeas): decouple scheduler tick from windowing logic
 
 - PR title: use Conventional Commit format.
   - Example: `feat(cli): add figures subcommand`
-  - Imperative mood; no trailing period; ≤ 72 chars; use `!` for breaking changes.
+  - Imperative mood; no trailing period; aim for ≤ 72 chars; use `!` for breaking changes.
   - Prefer one primary scope; use comma-separated scopes only when necessary.
 - PR description: include brief sections: What, Why, How (brief), Testing, Risks/Impact, Docs/Follow-ups.
   - Link issues with keywords (e.g., `Closes #123`).
