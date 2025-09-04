@@ -46,7 +46,7 @@
 }
 
 % ------------------------------------------------------------
-% Cross-reference helpers (sections/subsections as § / §§)
+% Cross-reference helpers (sections/subsections as \S / \S\S)
 % Requires cleveref to be loaded in the main preamble
 \crefname{section}{\S}{\S\S}
 \Crefname{section}{\S}{\S\S}
@@ -71,7 +71,7 @@
 
 % ------------------------------------------------------------
 % Box environment (tcolorbox theorem with global numbering)
-% Type name used for labels: 'box' → \cref{...} prints "Box N"
+% Type name used for labels: 'box' -> \cref{...} prints "Box N"
 \newtcbtheorem[auto counter]{docbox}{Box}%
 {enhanced jigsaw, breakable, colback=gray!5!white, colframe=gray!75!black, fonttitle=\bfseries}{box}
 
