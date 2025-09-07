@@ -8,7 +8,7 @@ These conditions mark a run as **invalid** and are appended to the audit:
 - **Export breach**: an attempt to export raw LREG content.
 - **Subsidy flag** *(optional extension)*: sustained `M` increase while I/O or SoC rises without logged harvest.
 
-The hello-world implements CI inflation; others can be layered in easily.
+This implementation includes CI inflation; others can be layered in easily.
 
 ## Negative controls (expected failures)
 

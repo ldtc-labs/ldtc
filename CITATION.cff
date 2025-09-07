@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "LDTC Hello-World: Single-Machine, Real-Time Digital Boundary Organism"
+title: "LDTC: Single-Machine, Real-Time Digital Boundary Organism"
 message: "If you use this software, please cite it as below."
 type: software
 authors:
@@ -8,11 +8,11 @@ authors:
     orcid: "https://orcid.org/0009-0001-4580-2037"
 identifiers:
   - type: url
-    value: "https://github.com/owenthcarey/ldtc-hello-world"
-repository-code: "https://github.com/owenthcarey/ldtc-hello-world"
+    value: "https://github.com/ldtc-labs/ldtc"
+repository-code: "https://github.com/ldtc-labs/ldtc"
 license: MIT
-version: 0.1.0
-date-released: 2025-08-13
+version: 1.0.0
+date-released: 2025-09-07
 preferred-citation:
   type: article
   title: "A verification harness for Loop-Dominance NC1/SC1 on a single machine"

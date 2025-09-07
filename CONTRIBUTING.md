@@ -1,4 +1,4 @@
-### Contributing to LDTC Hello-World
+### Contributing to LDTC
 
 Thanks for your interest in contributing. This repository is a verification harness for the Loop‑Dominance (NC1/SC1) pipeline described in the manuscript. Contributions should keep the code reproducible, auditable, and consistent with the paper’s symbols and assumptions (Δt, M, ε, τmax, σ, C/Ex partition, Ω battery, LREG/attestation).
 
@@ -189,6 +189,45 @@ fix(guardrails,attest): block raw LREG reads and enforce indicator-only exports
 refactor(runtime,lmeas): decouple scheduler tick from windowing logic
 ```
 
+## Pull requests and squash merges
+
+- PR title: use Conventional Commit format.
+  - Example: `feat(cli): add figures subcommand`
+  - Imperative mood; no trailing period; aim for ≤ 72 chars; use `!` for breaking changes.
+  - Prefer one primary scope; use comma-separated scopes only when necessary.
+- PR description: include brief sections: What, Why, How (brief), Testing, Risks/Impact, Docs/Follow-ups.
+  - Link issues with keywords (e.g., `Closes #123`).
+- Merging: use “Squash and merge” with “Pull request title and description”.
+- Keep PRs focused; avoid unrelated changes in the same PR.
+
+Conventional Commits applies to the subject line (your PR title) and optional footers. The PR body is free-form; when squashing, it becomes the commit body. Place any footers at the bottom of the description.
+
+Recommended PR template:
+
+```text
+What
+- Short summary of the change
+
+Why
+- Motivation/user value
+
+How (brief)
+- Key implementation notes or decisions
+
+Testing
+- Local/CI coverage; links to tests if relevant
+
+Risks/Impact
+- Compat, rollout, perf, security; mitigations
+
+Docs/Follow-ups
+- Docs updated or TODO next steps
+
+Closes #123
+BREAKING CHANGE: <details if any>
+Co-authored-by: Name <email>
+```
+
 ## Pull request checklist
 
 - Tests: added/updated; `make test` passes.
@@ -205,8 +244,55 @@ refactor(runtime,lmeas): decouple scheduler tick from windowing logic
 
 ## Versioning and releases
 
-- The version is tracked in `pyproject.toml` (`project.version`). Use SemVer where practical.
-- Maintainers bump versions as part of release PRs (include release notes in the PR body).
+- The version is tracked in `pyproject.toml` (`project.version`) and mirrored in `src/ldtc/__init__.py` as `__version__`. Use SemVer.
+- Workflow (main + dev):
+  - Contributors: branch off `dev` and open PRs targeting `dev`.
+  - Maintainer (release): open a "Prepare release vX.Y.Z" PR from `dev` → `main`, bump version, update changelog, merge.
+  - Tag on `main`: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags`.
+  - A GitHub Action publishes the package to PyPI when a `v*.*.*` tag is pushed.
+  - After release, merge `main` back into `dev` to carry the version bump and any hotfixes.
+
+### Branching rules
+
+- `main`: protected; mirrors PyPI; release-only.
+- `dev`: integration branch; default PR target for contributors.
+- Feature branches: `feature/...` from `dev`; hotfixes: `hotfix/...` from `main`.
+
+#### Branch naming
+
+- Use lowercase kebab-case; no spaces; keep names concise (aim ≤ 40 chars).
+- Prefix conventions (align with Conventional Commit categories):
+  - `feature/<scope>-<short-desc>` (from `dev`)
+  - `fix/<issue-or-bug>-<short-desc>` (from `dev`)
+  - `chore/<short-desc>` (from `dev`)
+  - `docs/<short-desc>` (from `dev`)
+  - `ci/<short-desc>` (from `dev`)
+  - `refactor/<scope>-<short-desc>` (from `dev`)
+  - `test/<short-desc>` (from `dev`)
+  - `perf/<short-desc>` (from `dev`)
+  - `build/<short-desc>` (from `dev`)
+  - `release/vX.Y.Z` (from `dev`, for release prep PRs)
+  - `hotfix/<short-desc>` (from `main`, for urgent fixes)
+- Optionally append an issue ID at the end (e.g., `feat/cli-figures-123`).
+- Delete remote and local branches after merge.
+
+Examples:
+
+```text
+feature/cli-figures
+fix/omega-duration-units-123
+docs/contributing-branch-naming
+ci/mplbackend-agg-headless
+build/lock-filters-ldtc
+refactor/runtime-jitter-accounting
+test/omega-suite
+release/v0.2.0
+hotfix/attest-sig-verify
+```
+
+### CI
+
+- PRs to `dev`/`main` run lint (ruff), type-checks (mypy), tests (pytest), and a build check.
 
 ## Security and provenance
 

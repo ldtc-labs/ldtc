@@ -1033,7 +1033,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         lreg.invalidate("raw_lreg_breach")
         _append_invalidation(audit, "raw_lreg_breach", {}, _sink={})
 
-    # Compute SC1 pass/fail (hello-world: simple thresholds)
+    # Compute SC1 pass/fail (simple thresholds)
     if (
         L_loop_baseline is None
         or L_loop_trough is None
@@ -1944,7 +1944,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="ldtc", description="LDTC hello-world CLI")
+    p = argparse.ArgumentParser(prog="ldtc", description="LDTC CLI")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     p_run = sub.add_parser("run", help="Run baseline NC1 loop")

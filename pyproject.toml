@@ -1,6 +1,6 @@
 [project]
-name = "ldtc-hello-world"
-version = "0.1.0"
+name = "ldtc"
+version = "1.0.0"
 description = "Single-machine, real-time digital boundary organism: NC1/SC1 verification harness."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -38,6 +38,13 @@ pythonpath = ["."]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ldtc*"]
+
 [tool.mypy]
 python_version = "3.9"
 warn_unused_ignores = true
@@ -52,7 +59,7 @@ ignore_missing_imports = true
 exclude = [
     '^notebooks/',
     '^artifacts/',
-    '^src/ldtc_hello_world\.egg-info/',
+    '^src/ldtc\\.egg-info/',
 ]
 explicit_package_bases = true
 packages = ["src/ldtc"]

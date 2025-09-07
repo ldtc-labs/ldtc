@@ -2,7 +2,7 @@
 
 ## Verification Timeline
 
-After a run, render the hello-world timeline figure:
+After a run, render the verification timeline figure:
 
 ```bash
 python -c "from ldtc.reporting.artifacts import bundle; print(bundle('artifacts/figures','artifacts/audits/audit.jsonl',[{'eta':'power_sag','delta':0.1,'tau_rec':5.0,'pass':True}]))"

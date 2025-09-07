@@ -42,12 +42,12 @@ install:
 
 lock:
 	@echo "Generating pinned requirements (runtime)"
-	$(PY) -c 'import sys,subprocess,tempfile,shutil,os; td=tempfile.mkdtemp(); v=os.path.join(td,"v"); subprocess.check_call([sys.executable,"-m","venv",v]); ac=os.path.join(v,"bin","activate"); cmd=f". {ac} && python -m pip install -U pip setuptools wheel && pip install . && pip freeze | grep -v '^ldtc-hello-world' > requirements.txt"; subprocess.check_call(["bash","-lc",cmd]); shutil.rmtree(td)'
+	$(PY) -c 'import sys,subprocess,tempfile,shutil,os; td=tempfile.mkdtemp(); v=os.path.join(td,"v"); subprocess.check_call([sys.executable,"-m","venv",v]); ac=os.path.join(v,"bin","activate"); cmd=f". {ac} && python -m pip install -U pip setuptools wheel && pip install . && pip freeze | grep -v '^ldtc==' > requirements.txt"; subprocess.check_call(["bash","-lc",cmd]); shutil.rmtree(td)'
 	@echo "Wrote requirements.txt"
 
 lock-dev:
 	@echo "Generating pinned requirements (dev)"
-	$(PY) -c 'import sys,subprocess,tempfile,shutil,os; td=tempfile.mkdtemp(); v=os.path.join(td,"v"); subprocess.check_call([sys.executable,"-m","venv",v]); ac=os.path.join(v,"bin","activate"); cmd=f". {ac} && python -m pip install -U pip setuptools wheel && pip install .[dev] && pip freeze | grep -v '^ldtc-hello-world' > requirements-dev.txt"; subprocess.check_call(["bash","-lc",cmd]); shutil.rmtree(td)'
+	$(PY) -c 'import sys,subprocess,tempfile,shutil,os; td=tempfile.mkdtemp(); v=os.path.join(td,"v"); subprocess.check_call([sys.executable,"-m","venv",v]); ac=os.path.join(v,"bin","activate"); cmd=f". {ac} && python -m pip install -U pip setuptools wheel && pip install .[dev] && pip freeze | grep -v '^ldtc==' > requirements-dev.txt"; subprocess.check_call(["bash","-lc",cmd]); shutil.rmtree(td)'
 	@echo "Wrote requirements-dev.txt"
 
 dev:
@@ -122,12 +122,12 @@ clean-artifacts:
 	rm -rf artifacts
 
 docker-build:
-	docker build -t ldtc-hello-world:latest .
+	docker build -t ldtc:latest .
 
 docker-run:
 	docker run --rm \
 	  -v $(PWD)/artifacts:/app/artifacts \
-	  ldtc-hello-world:latest run --config configs/profile_r0.yml
+	  ldtc:latest run --config configs/profile_r0.yml
 
 figures:
 	# Run baseline, power sag (Ω), ingress flood (Ω), command conflict (Ω), and exogenous subsidy (Ω)
@@ -139,7 +139,7 @@ figures:
 	@echo "Figures and tables (if any) are in artifacts/figures; provenance manifest includes profile badge and audit head."
 
 paper:
-	$(MAKE) -C paper all
+	$(MAKE) -C paper all arxiv-bundle
 
 paper-figs:
 	$(MAKE) -C paper figs
