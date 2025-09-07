@@ -1,0 +1,25 @@
+name: record-public
+
+on:
+  public: {}
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create evidence issue with timestamp
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ts=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          body="Repository made public.
+
+          UTC: $ts
+          Event: $GITHUB_EVENT_NAME
+          Repo: $GITHUB_REPOSITORY
+          Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh api repos/$GITHUB_REPOSITORY/issues -f title='Visibility change: Public' -f body="$body" >/dev/null

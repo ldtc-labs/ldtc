@@ -220,3 +220,8 @@ docker run --rm \
 Notes:
 - Artifacts are persisted to your host `artifacts/` via a bind mount.
 - The container uses the `ldtc` entrypoint; pass subcommands/flags after the image name.
+
+## Provenance
+
+- Wayback capture (private state): https://web.archive.org/web/20250907184105/https://github.com/ldtc-labs/ldtc
+- On publicizing, an automated GitHub Actions workflow (`record-public`) opens an issue noting the UTC timestamp of the visibility change (see Issues: “Visibility change: Public”).
