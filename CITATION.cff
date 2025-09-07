@@ -11,8 +11,8 @@ identifiers:
     value: "https://github.com/ldtc-labs/ldtc"
 repository-code: "https://github.com/ldtc-labs/ldtc"
 license: MIT
-version: 0.1.0
-date-released: 2025-08-13
+version: 1.0.0
+date-released: 2025-09-07
 preferred-citation:
   type: article
   title: "A verification harness for Loop-Dominance NC1/SC1 on a single machine"

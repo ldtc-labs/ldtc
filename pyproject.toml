@@ -1,6 +1,6 @@
 [project]
 name = "ldtc"
-version = "0.1.0"
+version = "1.0.0"
 description = "Single-machine, real-time digital boundary organism: NC1/SC1 verification harness."
 readme = "README.md"
 requires-python = ">=3.9"
