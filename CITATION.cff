@@ -9,6 +9,8 @@ authors:
 identifiers:
   - type: url
     value: "https://github.com/ldtc-labs/ldtc"
+  - type: doi
+    value: "10.5281/zenodo.17073880"
 repository-code: "https://github.com/ldtc-labs/ldtc"
 license: MIT
 version: 1.0.0

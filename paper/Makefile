@@ -31,8 +31,10 @@ arxiv-bundle: pdf
 	cp -p main.tex $(ARXIV_DIR)/
 	cp -p macros.tex $(ARXIV_DIR)/
 	cp -p refs.bib $(ARXIV_DIR)/
+	cp -p main.bbl $(ARXIV_DIR)/
+	-@[ -f version.tex ] && cp -p version.tex $(ARXIV_DIR)/ || true
 	@for f in $(USED_FIGS); do \
 		cp -p "$$f" "$(ARXIV_DIR)/figures/"; \
 	done
-	@cd $(ARXIV_DIR) && zip -r ../arxiv_upload.zip main.tex macros.tex refs.bib figures >/dev/null
-	@echo "Created arXiv bundle at artifacts/arxiv_upload.zip with used figures: $(USED_FIGS)"
+	@cd $(ARXIV_DIR) && zip -r ../arxiv_upload.zip main.tex macros.tex refs.bib main.bbl version.tex figures >/dev/null
+	@echo "Created arXiv bundle at artifacts/arxiv_upload.zip including main.bbl and used figures: $(USED_FIGS)"
