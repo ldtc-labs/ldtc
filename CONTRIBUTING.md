@@ -245,33 +245,31 @@ Co-authored-by: Name <email>
 ## Versioning and releases
 
 - The version is tracked in `pyproject.toml` (`project.version`) and mirrored in `src/ldtc/__init__.py` as `__version__`. Use SemVer.
-- Workflow (main + dev):
-  - Contributors: branch off `dev` and open PRs targeting `dev`.
-  - Maintainer (release): open a "Prepare release vX.Y.Z" PR from `dev` → `main`, bump version, update changelog, merge.
+- Workflow (single `main` branch):
+  - Contributors: branch off `main` and open PRs.
+  - Maintainer (release): bump version, tag, and publish to PyPI.
   - Tag on `main`: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags`.
   - A GitHub Action publishes the package to PyPI when a `v*.*.*` tag is pushed.
-  - After release, merge `main` back into `dev` to carry the version bump and any hotfixes.
 
 ### Branching rules
 
-- `main`: protected; mirrors PyPI; release-only.
-- `dev`: integration branch; default PR target for contributors.
-- Feature branches: `feature/...` from `dev`; hotfixes: `hotfix/...` from `main`.
+- `main`: default branch; protected; mirrors PyPI.
+- Feature branches: `feature/...` from `main`; hotfixes: `hotfix/...` from `main`.
 
 #### Branch naming
 
 - Use lowercase kebab-case; no spaces; keep names concise (aim ≤ 40 chars).
 - Prefix conventions (align with Conventional Commit categories):
-  - `feature/<scope>-<short-desc>` (from `dev`)
-  - `fix/<issue-or-bug>-<short-desc>` (from `dev`)
-  - `chore/<short-desc>` (from `dev`)
-  - `docs/<short-desc>` (from `dev`)
-  - `ci/<short-desc>` (from `dev`)
-  - `refactor/<scope>-<short-desc>` (from `dev`)
-  - `test/<short-desc>` (from `dev`)
-  - `perf/<short-desc>` (from `dev`)
-  - `build/<short-desc>` (from `dev`)
-  - `release/vX.Y.Z` (from `dev`, for release prep PRs)
+  - `feature/<scope>-<short-desc>` (from `main`)
+  - `fix/<issue-or-bug>-<short-desc>` (from `main`)
+  - `chore/<short-desc>` (from `main`)
+  - `docs/<short-desc>` (from `main`)
+  - `ci/<short-desc>` (from `main`)
+  - `refactor/<scope>-<short-desc>` (from `main`)
+  - `test/<short-desc>` (from `main`)
+  - `perf/<short-desc>` (from `main`)
+  - `build/<short-desc>` (from `main`)
+  - `release/vX.Y.Z` (from `main`, for release prep PRs)
   - `hotfix/<short-desc>` (from `main`, for urgent fixes)
 - Optionally append an issue ID at the end (e.g., `feat/cli-figures-123`).
 - Delete remote and local branches after merge.
@@ -292,7 +290,7 @@ hotfix/attest-sig-verify
 
 ### CI
 
-- PRs to `dev`/`main` run lint (ruff), type-checks (mypy), tests (pytest), and a build check.
+- PRs to `main` run lint (ruff), type-checks (mypy), tests (pytest), and a build check.
 
 ## Security and provenance
 
