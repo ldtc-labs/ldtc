@@ -1,0 +1,59 @@
+site_name: LDTC
+site_description: Real-time NC1/SC1 verification harness (paper + Python package)
+site_url: https://docs.ldtc.dev/
+repo_url: https://github.com/ldtc-labs/ldtc
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.instant
+    - navigation.tracking
+    - content.code.copy
+  # logo: assets/ldtc-logo.png
+extra:
+  generator: false
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Concepts:
+    - Definitions: concepts/definitions.md
+    - Architecture: concepts/architecture.md
+    - Indicators: concepts/indicators.md
+    - Guardrails & Invalidations: concepts/guardrails.md
+    - Paper → Code: concepts/paper-to-code.md
+  - Guides:
+    - Calibration (R*): guides/calibration.md
+    - Reporting & Figures: guides/reporting.md
+    - Runs & Ω Battery: guides/runs.md
+  - Examples:
+    - Minimal Run: examples/minimal.md
+    - Notebooks: examples/notebooks.md
+  - API Reference:
+    - Package: api/ldtc.md
+    - runtime: api/runtime.md
+    - lmeas: api/lmeas.md
+    - guardrails: api/guardrails.md
+    - attest: api/attest.md
+    - arbiter: api/arbiter.md
+    - omega: api/omega.md
+    - plant: api/plant.md
+    - reporting: api/reporting.md
+    - cli: api/cli.md
+  - Meta:
+    - Contributing: meta/contributing.md
+    - Citation: meta/citation.md
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            docstring_style: google
+extra_css:
+  - styles/brand.css
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true

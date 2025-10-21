@@ -118,6 +118,7 @@ Recommended scopes (choose the smallest, most accurate unit; prefer module/direc
   - `paper` – LaTeX manuscript sources under `paper/` (e.g., `main.tex`, `macros.tex`, `refs.bib`, `Makefile`, `scripts/`)
   - `pyproject` – `pyproject.toml` packaging/build metadata and tool config
   - `repo` – repository metadata and top-level files (e.g., `README.md`, `CONTRIBUTING.md`, `LICENSE`, `CITATION.cff`, `.gitignore`); also docs assets like images under `docs/assets/`
+  - `mkdocs` – documentation site (MkDocs/Material) configuration and content under `docs/`
   - `scripts` – utility/CLI scripts under `scripts/`
   - `tests` – unit/integration tests under `tests/`
   - `workflows` – CI pipelines under `.github/workflows/`

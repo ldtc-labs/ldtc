@@ -26,6 +26,11 @@ dev = [
   "types-PyYAML>=6.0.12.20240311",
   "ipykernel>=6.29"
 ]
+docs = [
+  "mkdocs>=1.5",
+  "mkdocs-material[imaging]>=9.5",
+  "mkdocstrings[python]>=0.24"
+]
 
 [project.scripts]
 ldtc = "ldtc.cli.main:main"

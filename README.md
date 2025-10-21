@@ -4,9 +4,16 @@
   <img src="docs/assets/ldtc-logo.png" alt="LDTC logo" width="360" />
 </p>
 
-<!--[DOI badge (concept DOI) minted on Zenodo]-->
+<!--[DOI badge (concept DOI) minted on Zenodo)-->
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17073880.svg)](https://doi.org/10.5281/zenodo.17073880)
+
+> Docs: built with MkDocs Material. Local preview:
+>
+> ```bash
+> pip install -e ".[docs]"
+> mkdocs serve
+> ```
 
 ## Overview
 
