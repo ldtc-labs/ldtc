@@ -611,6 +611,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#hardware-in-the-loop-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware-in-the-loop (optional)
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1161,6 +1170,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#hardware-in-the-loop-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware-in-the-loop (optional)
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1198,6 +1216,27 @@
 </code></pre></div>
 
 <p>Artifacts: audit JSONL, indicators JSONL/CBOR, and optional figure bundles under <code>artifacts/</code>.</p>
+<h2 id="hardware-in-the-loop-optional">Hardware-in-the-loop (optional)<a class="headerlink" href="#hardware-in-the-loop-optional" title="Permanent link">&para;</a></h2>
+<p>Select the hardware adapter and UDP telemetry in your config:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># in configs/profile_r0.yml (example)</span>
+<span class="nt">plant</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">adapter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hardware</span><span class="w">        </span><span class="c1"># or &quot;sim&quot; (default)</span>
+<span class="w">  </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">udp</span><span class="w">           </span><span class="c1"># or &quot;serial&quot; (requires pyserial)</span>
+<span class="w">  </span><span class="nt">udp_bind_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+<span class="w">  </span><span class="nt">udp_bind_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5005</span>
+<span class="w">  </span><span class="c1"># Optional control channel back to device</span>
+<span class="w">  </span><span class="c1"># udp_control_host: 127.0.0.1</span>
+<span class="w">  </span><span class="c1"># udp_control_port: 5006</span>
+<span class="w">  </span><span class="nt">telemetry_timeout_sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+</code></pre></div>
+
+<p>Send telemetry as JSON over UDP with keys <code>E,T,R,demand,io,H</code> in [0,1]. Example:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">socket</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span>
+<span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+<span class="n">sock</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;E&quot;</span><span class="p">:</span><span class="mf">0.6</span><span class="p">,</span><span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">0.3</span><span class="p">,</span><span class="s2">&quot;R&quot;</span><span class="p">:</span><span class="mf">0.9</span><span class="p">,</span><span class="s2">&quot;demand&quot;</span><span class="p">:</span><span class="mf">0.2</span><span class="p">,</span><span class="s2">&quot;io&quot;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span><span class="s2">&quot;H&quot;</span><span class="p">:</span><span class="mf">0.015</span><span class="p">})</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="p">(</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">5005</span><span class="p">))</span>
+</code></pre></div>
+
+<p>The CLI ingests these values through the same LREG/Ω/attestation path.</p>
 
 
 

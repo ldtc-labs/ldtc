@@ -440,6 +440,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Run invalidation conditions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-run-audits-same-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-run audits (same file)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1105,6 +1120,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Run invalidation conditions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-run-audits-same-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-run audits (same file)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1142,6 +1172,13 @@
 <li><strong>Export breach</strong>: an attempt to export raw LREG content.</li>
 <li><strong>Subsidy flag</strong> (optional extension): sustained <code>M</code> increase while I/O or SoC rises without logged harvest.</li>
 </ul>
+<h3 id="multi-run-audits-same-file">Multi-run audits (same file)<a class="headerlink" href="#multi-run-audits-same-file" title="Permanent link">&para;</a></h3>
+<p>Each CLI invocation starts a fresh audit chain (counter resets; <code>prev_hash=GENESIS</code>) but, by default, appends to the same <code>artifacts/audits/audit.jsonl</code>. The post-run integrity check validates the entire file, so after the first run, subsequent runs in the same file will trip an "Audit chain broken" invalidation. For clean, non-invalidated runs, clear artifacts between commands, e.g.:</p>
+<div class="codehilite"><pre><span></span><code>make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ldtc<span class="w"> </span>run<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml
+make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ldtc<span class="w"> </span>omega-power-sag<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml<span class="w"> </span>--drop<span class="w"> </span><span class="m">0</span>.35<span class="w"> </span>--duration<span class="w"> </span><span class="m">8</span>
+</code></pre></div>
+
+<p>If you are iterating on figures or manifests, this invalidation is expected and does not prevent artifacts from being produced; it only reflects multiple runs aggregated into a single audit file.</p>
 <p>Negative controls (expected failures) are provided via example configs to exercise invalidations and refusal paths.</p>
 
 

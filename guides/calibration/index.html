@@ -563,6 +563,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mmindb-vs-relation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mmin(dB) vs σ (relation)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1159,6 +1174,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mmindb-vs-relation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mmin(dB) vs σ (relation)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1209,6 +1239,17 @@
 <li>Calibration runs on the synthetic plant with <code>seed_C=[E,T,R]</code> matching the demo. For other plants/settings, re-run calibration.</li>
 <li>The baseline and Ω trials reuse the same estimators used in the CLI, including block bootstrap CIs. Estimator options include a VAR/linear path and mutual information paths (sklearn MI and Kraskov k‑NN/KSG). Optional TE/DI plugin hooks are provided; if no backend is installed, the methods fall back to MI (KSG) as a conservative proxy.</li>
 </ul>
+<h3 id="mmindb-vs-relation">Mmin(dB) vs σ (relation)<a class="headerlink" href="#mmindb-vs-relation" title="Permanent link">&para;</a></h3>
+<p>Both encode a margin between <code>L_loop</code> and <code>L_exchange</code>:</p>
+<ul>
+<li><code>Mmin_db</code> (multiplicative in dB): require <code>L_loop ≥ L_exchange × 10^(Mmin_db/10)</code>.</li>
+<li><code>σ</code> (additive): require <code>L_loop ≥ L_exchange + σ</code>.</li>
+</ul>
+<p>They relate via:</p>
+<div class="codehilite"><pre><span></span><code>σ = (10^(Mmin_db/10) − 1) × L_exchange
+</code></pre></div>
+
+<p>The calibrator writes <code>Mmin_db</code> and derives a consistent <code>σ</code> for reporting.</p>
 
 
 

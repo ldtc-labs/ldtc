@@ -316,6 +316,33 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pinned-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pinned environments
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys-device-signed-indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keys (device-signed indicators)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-clean-linux-repro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker (clean Linux repro)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#project-layout" class="md-nav__link">
     <span class="md-ellipsis">
       Project layout
@@ -1133,6 +1160,33 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pinned-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pinned environments
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys-device-signed-indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keys (device-signed indicators)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-clean-linux-repro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker (clean Linux repro)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#project-layout" class="md-nav__link">
     <span class="md-ellipsis">
       Project layout
@@ -1178,6 +1232,40 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </code></pre></div>
 
 <p>Artifacts are written under <code>artifacts/</code> (audit, indicators, figures).</p>
+<h2 id="pinned-environments">Pinned environments<a class="headerlink" href="#pinned-environments" title="Permanent link">&para;</a></h2>
+<p>For exact reproduction of included artifacts/figures:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Runtime (reproduce artifacts/figures)</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c1"># Dev tooling (tests, lint, typing, notebooks)</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
+</code></pre></div>
+
+<h2 id="keys-device-signed-indicators">Keys (device-signed indicators)<a class="headerlink" href="#keys-device-signed-indicators" title="Permanent link">&para;</a></h2>
+<p>Indicators are signed with Ed25519. Generate keys once per workspace:</p>
+<div class="codehilite"><pre><span></span><code>python<span class="w"> </span>scripts/keygen.py<span class="w">  </span><span class="c1"># writes artifacts/keys/ed25519_{pub,priv}.pem</span>
+</code></pre></div>
+
+<p>Verify indicators in CI or locally:</p>
+<div class="codehilite"><pre><span></span><code>python<span class="w"> </span>scripts/verify_indicators.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ind-dir<span class="w"> </span>artifacts/indicators<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--audit<span class="w"> </span>artifacts/audits/audit.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--pub<span class="w"> </span>artifacts/keys/ed25519_pub.pem
+</code></pre></div>
+
+<h2 id="docker-clean-linux-repro">Docker (clean Linux repro)<a class="headerlink" href="#docker-clean-linux-repro" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Build the image</span>
+make<span class="w"> </span>docker-build
+
+<span class="c1"># Run baseline NC1 loop inside the container (artifacts mapped to host)</span>
+make<span class="w"> </span>docker-run
+
+<span class="c1"># Or run any CLI subcommand, e.g., an Ω power-sag trial</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/artifacts:/app/artifacts<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ldtc:latest<span class="w"> </span>omega-power-sag<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml<span class="w"> </span>--drop<span class="w"> </span><span class="m">0</span>.35<span class="w"> </span>--duration<span class="w"> </span><span class="m">8</span>
+</code></pre></div>
+
 <h2 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
 <p>See <code>CONTRIBUTING.md</code> for a high-level map and development workflow.</p>
 
