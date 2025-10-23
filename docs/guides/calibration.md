@@ -30,3 +30,18 @@ python scripts/calibrate_rstar.py --dt 0.01 --window-sec 0.25 --method linear --
 
 - Calibration runs on the synthetic plant with `seed_C=[E,T,R]` matching the demo. For other plants/settings, re-run calibration.
 - The baseline and Ω trials reuse the same estimators used in the CLI, including block bootstrap CIs. Estimator options include a VAR/linear path and mutual information paths (sklearn MI and Kraskov k‑NN/KSG). Optional TE/DI plugin hooks are provided; if no backend is installed, the methods fall back to MI (KSG) as a conservative proxy.
+
+### Mmin(dB) vs σ (relation)
+
+Both encode a margin between `L_loop` and `L_exchange`:
+
+- `Mmin_db` (multiplicative in dB): require `L_loop ≥ L_exchange × 10^(Mmin_db/10)`.
+- `σ` (additive): require `L_loop ≥ L_exchange + σ`.
+
+They relate via:
+
+```
+σ = (10^(Mmin_db/10) − 1) × L_exchange
+```
+
+The calibrator writes `Mmin_db` and derives a consistent `σ` for reporting.
