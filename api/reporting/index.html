@@ -983,6 +983,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ldtc.reporting.tables.write_sc1_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      write_sc1_table
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ldtc.reporting.style" class="md-nav__link">
     <span class="md-ellipsis">
       style
@@ -1234,6 +1243,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ldtc.reporting.tables.write_sc1_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      write_sc1_table
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ldtc.reporting.style" class="md-nav__link">
     <span class="md-ellipsis">
       style
@@ -1298,6 +1316,14 @@
 <a id="ldtc.reporting.artifacts"></a>
     <div class="doc doc-contents first">
 
+        <p>Reporting: Artifact bundling for verification outputs.</p>
+<p>Builds paper-style timelines, SC1 tables, and a manifest from the audit log.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Reporting &amp; Figures; Verification Pipeline.</p>
+</details>
 
 
 
@@ -1329,16 +1355,122 @@
 
     <div class="doc doc-contents ">
 
+        <p>Create a verification artifact bundle from an audit log.</p>
+<p>Generates a paper-style timeline (PNG+SVG), an optional SC1 CSV table, and
+a manifest JSON describing profile thresholds and artifact paths.</p>
 
 
-<details class="emit-a-single-verification-bundle-for-a-trial-consisting-of" open>
-  <summary>Emit a single verification bundle for a trial consisting of</summary>
-  <ul>
-<li>Paper-style timeline image (PNG+SVG)</li>
-<li>SC1 table (if present) with columns: eta, delta, tau_rec, M_post, pass</li>
-<li>JSON manifest with profile, seeds, Δt, method, CI coverage, and audit hash head</li>
-</ul>
-</details>        <p>Returns paths of generated artifacts.</p>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>artifact_dir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output directory for generated artifacts.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>audit_path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the JSONL audit log.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys for produced files: <code>timeline_png</code>, <code>timeline_svg</code>,</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>sc1_table</code> (optional), <code>manifest</code>, <code>config_snapshot</code> (optional),</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>and a policy <code>notice</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the audit log is missing or empty.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1360,6 +1492,15 @@
 <a id="ldtc.reporting.timeline"></a>
     <div class="doc doc-contents first">
 
+        <p>Reporting: Timeline rendering.</p>
+<p>Parses an audit log to render paper-style timelines of normalized L traces and
+M(dB) with Ω shading and audit tick marks.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Reporting &amp; Figures.</p>
+</details>
 
 
 
@@ -1391,13 +1532,196 @@
 
     <div class="doc doc-contents ">
 
-        <p>Render a paper-style timeline plotting L_loop, L_exchange, and M(dB) with Ω shading and audit ticks.</p>
-<p>Inputs:
-- audit_path: JSONL audit log emitted by runs.
-- out_base_path: path prefix for outputs ('.png' and '.svg' will be appended).
-- sidecar_csv (optional): CSV with columns 'time_s,L_loop,L_ex,M_db' to plot true L traces.
-  If omitted, L_loop/L_ex are shown as normalized curves derived from M: L_ex=1.0; L_loop=10**(M/10).
-- show: whether to display the plot.</p>
+        <p>Render a paper-style timeline of L traces and M(dB).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>audit_path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>JSONL audit log emitted by runs.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>out_base_path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output path prefix; '.png' and '.svg' are appended.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>sidecar_csv</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional CSV file with columns time_s,L_loop,L_ex,M_db.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>show</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Display the figure interactively.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>min_tick_spacing_s</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Minimum spacing between audit tick marks (s).</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.75</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>use_log_L</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Plot L on a log scale.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>footer_profile</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional profile badge text (R0/R*).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>footer_audit_head</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional last-hash value for audit provenance.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys 'png' and 'svg' pointing to the saved figure paths.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If per-window M data are absent in the audit.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1415,7 +1739,116 @@
 
     <div class="doc doc-contents ">
 
-        <p>Legacy: render a simple audit-density timeline.</p>
+        <p>Render a simple audit-density timeline (legacy).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>audit_path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to audit log.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>figure_path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output path for the PNG figure.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>show</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Display the figure interactively.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Tuple">Tuple</span>[<span title="int">int</span>, <span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tuple of (number_of_records, number_of_buckets_plotted).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the audit file has no records.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1437,6 +1870,14 @@
 <a id="ldtc.reporting.tables"></a>
     <div class="doc doc-contents first">
 
+        <p>Reporting: Table writers.</p>
+<p>CSV writers for verification tables with enforcement of the no-raw-LREG policy.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Reporting &amp; Figures; Export policy.</p>
+</details>
 
 
 
@@ -1457,6 +1898,71 @@
 
 
 
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ldtc.reporting.tables.write_sc1_table" class="doc doc-heading">
+            <code class=" language-python"><span class="n">write_sc1_table</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">out_csv</span><span class="p">)</span></code>
+
+<a href="#ldtc.reporting.tables.write_sc1_table" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Write SC1 result rows to a CSV file.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>rows</code>
+            </td>
+            <td>
+                  <code><span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts with consistent keys across rows.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>out_csv</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Target CSV path to write.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
 
 
   </div>
@@ -1472,6 +1978,14 @@
 <a id="ldtc.reporting.style"></a>
     <div class="doc doc-contents first">
 
+        <p>Reporting: Plot and graph styles.</p>
+<p>Matplotlib and Graphviz theming for consistent, publication-ready figures.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Reporting &amp; Figures.</p>
+</details>
 
 
 
@@ -1506,6 +2020,69 @@
         <p>Apply consistent Graphviz attributes to a Digraph.</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>dot</code>
+            </td>
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A :class:<code>graphviz.Digraph</code> instance.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rankdir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Graph layout direction ("LR" or "TB").</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;LR&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>overrides</code>
+            </td>
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional nested dict overriding default graph/node/edge attrs.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
     </div>
 
 </div>
@@ -1521,12 +2098,40 @@
 
     <div class="doc doc-contents ">
 
-        <p>Apply a consistent Matplotlib style suitable for arXiv CS papers.</p>
-<ul>
-<li>Sans-serif fonts (Helvetica fallback chain), consistent label sizes</li>
-<li>Vector-friendly outputs (Type 42 fonts for PDF/PS; real text in SVG)</li>
-<li>No top/right spines; tight layout handled by callers</li>
-</ul>
+        <p>Apply a consistent Matplotlib style.</p>
+<p>Configures fonts, spine visibility, label sizes, and vector-friendly output
+settings for consistent figures in the docs and paper.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>kind</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional style variant; currently informational only.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;paper&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1544,7 +2149,116 @@
 
     <div class="doc doc-contents ">
 
-        <p>Create a Digraph preconfigured with this project's theme.</p>
+        <p>Create a themed Graphviz Digraph.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Graph name.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rankdir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Layout direction.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;LR&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>engine</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Graphviz engine (e.g., "dot", "neato").</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;dot&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A configured :class:<code>graphviz.Digraph</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="RuntimeError">RuntimeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If graphviz is not available.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

@@ -869,11 +869,35 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ldtc.arbiter.policy.ControlAction" class="md-nav__link">
+    <span class="md-ellipsis">
+      ControlAction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ldtc.arbiter.policy.ControllerPolicy" class="md-nav__link">
     <span class="md-ellipsis">
       ControllerPolicy
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="ControllerPolicy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ldtc.arbiter.policy.ControllerPolicy.compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -890,6 +914,30 @@
   <a href="#ldtc.arbiter.refusal.RefusalArbiter" class="md-nav__link">
     <span class="md-ellipsis">
       RefusalArbiter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RefusalArbiter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ldtc.arbiter.refusal.RefusalArbiter.decide" class="md-nav__link">
+    <span class="md-ellipsis">
+      decide
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.arbiter.refusal.RefusalDecision" class="md-nav__link">
+    <span class="md-ellipsis">
+      RefusalDecision
     </span>
   </a>
   
@@ -1135,11 +1183,35 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ldtc.arbiter.policy.ControlAction" class="md-nav__link">
+    <span class="md-ellipsis">
+      ControlAction
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ldtc.arbiter.policy.ControllerPolicy" class="md-nav__link">
     <span class="md-ellipsis">
       ControllerPolicy
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="ControllerPolicy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ldtc.arbiter.policy.ControllerPolicy.compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1156,6 +1228,30 @@
   <a href="#ldtc.arbiter.refusal.RefusalArbiter" class="md-nav__link">
     <span class="md-ellipsis">
       RefusalArbiter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RefusalArbiter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ldtc.arbiter.refusal.RefusalArbiter.decide" class="md-nav__link">
+    <span class="md-ellipsis">
+      decide
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.arbiter.refusal.RefusalDecision" class="md-nav__link">
+    <span class="md-ellipsis">
+      RefusalDecision
     </span>
   </a>
   
@@ -1190,6 +1286,15 @@
 <a id="ldtc.arbiter.policy"></a>
     <div class="doc doc-contents first">
 
+        <p>Arbiter: Controller policy over refusal logic.</p>
+<p>Provides a simple homeostatic controller that consults the refusal arbiter to
+prioritize boundary integrity over risky external commands.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Self-Referential Control; Threat Model &amp; Refusal.</p>
+</details>
 
 
 
@@ -1213,20 +1318,79 @@
 
 
 
-<h2 id="ldtc.arbiter.policy.ControllerPolicy" class="doc doc-heading">
-            <code>ControllerPolicy</code>
+<h2 id="ldtc.arbiter.policy.ControlAction" class="doc doc-heading">
+            <code>ControlAction</code>
 
 
-<a href="#ldtc.arbiter.policy.ControllerPolicy" class="headerlink" title="Permanent link">&para;</a></h2>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#ldtc.arbiter.policy.ControlAction" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
 
 
-        <p>Simple homeostasis controller:
-- If E low -&gt; throttle up, repair down
-- If T high -&gt; cool up
-- If R low -&gt; repair up when E sufficient</p>
+        <p>Low-level control action for the plant actuators.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.policy.ControlAction.throttle">throttle</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Throttle level in [0, 1].</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.policy.ControlAction.cool">cool</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Cooling effort in [0, 1].</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.policy.ControlAction.repair">repair</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Repair effort in [0, 1].</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.policy.ControlAction.accept_cmd">accept_cmd</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to accept a risky external command.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
 
@@ -1248,6 +1412,194 @@
 
 
 
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ldtc.arbiter.policy.ControllerPolicy" class="doc doc-heading">
+            <code>ControllerPolicy</code>
+
+
+<a href="#ldtc.arbiter.policy.ControllerPolicy" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Simple homeostatic controller layered over a refusal arbiter.</p>
+<p>Heuristically sets throttle, cooling, and repair based on current state,
+and consults :class:<code>RefusalArbiter</code> to decide whether to accept a risky
+external command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>refusal</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="RefusalArbiter (ldtc.arbiter.refusal.RefusalArbiter)" href="#ldtc.arbiter.refusal.RefusalArbiter">RefusalArbiter</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Refusal arbiter used to gate risky commands.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ldtc.arbiter.policy.ControllerPolicy.compute" class="doc doc-heading">
+            <code class=" language-python"><span class="n">compute</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">predicted_M_db</span><span class="p">,</span> <span class="n">risky_cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#ldtc.arbiter.policy.ControllerPolicy.compute" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute an action and command-acceptance decision.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>state</code>
+            </td>
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="float">float</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Plant state with keys 'E', 'T', and 'R'.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>predicted_M_db</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Predicted loop-dominance margin.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>risky_cmd</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional risky command to evaluate.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="ControlAction
+
+
+  
+      dataclass
+   (ldtc.arbiter.policy.ControlAction)" href="#ldtc.arbiter.policy.ControlAction">ControlAction</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>class:<code>ControlAction</code> with actuator settings and accept flag.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
 
 
 
@@ -1273,6 +1625,16 @@
 <a id="ldtc.arbiter.refusal"></a>
     <div class="doc doc-contents first">
 
+        <p>Arbiter: Command refusal logic.</p>
+<p>Implements survival-bit/NMI-like refusal when predicted loop margin or resource
+constraints indicate boundary threat. Used by the controller to gate risky
+external commands.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Threat Model &amp; Refusal Path; Signature A.</p>
+</details>
 
 
 
@@ -1306,7 +1668,277 @@
     <div class="doc doc-contents ">
 
 
-        <p>Survival-bit/NMI analogue: if predicted threat to NC1/SC1 is high, refuse risky commands.</p>
+        <p>Refusal logic for boundary-threatening commands.</p>
+<p>Emulates a survival-bit/NMI: when SoC is below a floor, temperature above a
+ceiling, or predicted loop margin below <code>Mmin</code>, refuses risky commands.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>Mmin_db</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Minimum acceptable decibel margin.</p>
+              </div>
+            </td>
+            <td>
+                  <code>3.0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>soc_floor</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Minimum SoC before refusing.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.15</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>temp_ceiling</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Maximum temperature before refusing.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.85</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ldtc.arbiter.refusal.RefusalArbiter.decide" class="doc doc-heading">
+            <code class=" language-python"><span class="n">decide</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">predicted_M_db</span><span class="p">,</span> <span class="n">risky_cmd</span><span class="p">)</span></code>
+
+<a href="#ldtc.arbiter.refusal.RefusalArbiter.decide" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Evaluate a risky command and emit an accept/refuse decision.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>state</code>
+            </td>
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="float">float</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Current plant state (expects keys 'E' and 'T').</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>predicted_M_db</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Predicted loop-dominance margin.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>risky_cmd</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Command name when evaluating a risky instruction; None for benign.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="RefusalDecision
+
+
+  
+      dataclass
+   (ldtc.arbiter.refusal.RefusalDecision)" href="#ldtc.arbiter.refusal.RefusalDecision">RefusalDecision</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>class:<code>RefusalDecision</code> describing the action and reason.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ldtc.arbiter.refusal.RefusalDecision" class="doc doc-heading">
+            <code>RefusalDecision</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#ldtc.arbiter.refusal.RefusalDecision" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Decision emitted by the refusal arbiter.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.refusal.RefusalDecision.accept">accept</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to accept the risky command.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.refusal.RefusalDecision.reason">reason</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Reason code (e.g., 'soc_floor', 'overheat', 'M_margin', 'ok').</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.arbiter.refusal.RefusalDecision.trefuse_ms">trefuse_ms</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Estimated refusal latency in milliseconds.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
 

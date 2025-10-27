@@ -960,6 +960,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ldtc.cli.main.AdapterProtocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      AdapterProtocol
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1107,6 +1116,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ldtc.cli.main.AdapterProtocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      AdapterProtocol
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1136,6 +1154,17 @@
 <a id="ldtc.cli.main"></a>
     <div class="doc doc-contents first">
 
+        <p>LDTC CLI: run baseline and Ω perturbation demos.</p>
+<p>Defines the <code>ldtc</code> command with subcommands for the baseline run and omega
+perturbations (power sag, ingress flood, command conflict, exogenous subsidy).
+It orchestrates runtime scheduling, measurement, guardrails, attestation, and
+reporting.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Verification Pipeline; CLI orchestration.</p>
+</details>
 
 
 
@@ -1154,6 +1183,55 @@
 
 
 
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ldtc.cli.main.AdapterProtocol" class="doc doc-heading">
+            <code>AdapterProtocol</code>
+
+
+<a href="#ldtc.cli.main.AdapterProtocol" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+        <p>Protocol for plant adapters used by the CLI.</p>
+<p>Implementations must support reading state, writing actuators, and
+applying omega stimuli.</p>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 
 

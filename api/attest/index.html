@@ -846,6 +846,33 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ldtc.attest.indicators.IndicatorConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      IndicatorConfig
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.indicators.build_and_sign" class="md-nav__link">
+    <span class="md-ellipsis">
+      build_and_sign
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.indicators.quantize_M" class="md-nav__link">
+    <span class="md-ellipsis">
+      quantize_M
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ldtc.attest.exporter" class="md-nav__link">
     <span class="md-ellipsis">
       exporter
@@ -861,12 +888,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="IndicatorExporter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ldtc.attest.exporter.IndicatorExporter.maybe_export" class="md-nav__link">
+    <span class="md-ellipsis">
+      maybe_export
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
   <a href="#ldtc.attest.keys" class="md-nav__link">
     <span class="md-ellipsis">
       keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.keys.KeyPaths" class="md-nav__link">
+    <span class="md-ellipsis">
+      KeyPaths
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.keys.ensure_keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      ensure_keys
     </span>
   </a>
   
@@ -1135,6 +1195,33 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ldtc.attest.indicators.IndicatorConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      IndicatorConfig
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.indicators.build_and_sign" class="md-nav__link">
+    <span class="md-ellipsis">
+      build_and_sign
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.indicators.quantize_M" class="md-nav__link">
+    <span class="md-ellipsis">
+      quantize_M
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ldtc.attest.exporter" class="md-nav__link">
     <span class="md-ellipsis">
       exporter
@@ -1150,12 +1237,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="IndicatorExporter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ldtc.attest.exporter.IndicatorExporter.maybe_export" class="md-nav__link">
+    <span class="md-ellipsis">
+      maybe_export
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
   <a href="#ldtc.attest.keys" class="md-nav__link">
     <span class="md-ellipsis">
       keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.keys.KeyPaths" class="md-nav__link">
+    <span class="md-ellipsis">
+      KeyPaths
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ldtc.attest.keys.ensure_keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      ensure_keys
     </span>
   </a>
   
@@ -1190,6 +1310,91 @@
 <a id="ldtc.attest.indicators"></a>
     <div class="doc doc-contents first">
 
+        <p>Attest: Indicator encoding and signing.</p>
+<p>Defines the indicator payload schema, M(dB) quantization, and Ed25519 signing
+for CBOR-encoded device-signed packets.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Methods: Measurement &amp; Attestation; Exported indicators.</p>
+</details>
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ldtc.attest.indicators.IndicatorConfig" class="doc doc-heading">
+            <code>IndicatorConfig</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#ldtc.attest.indicators.IndicatorConfig" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Configuration for indicator encoding.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.attest.indicators.IndicatorConfig.Mmin_db">Mmin_db</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Threshold for NC1 pass.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.attest.indicators.IndicatorConfig.profile_id">profile_id</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Profile selector (0=R0, 1=R*).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
 
 
 
@@ -1218,6 +1423,228 @@
 
 </div>
 
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ldtc.attest.indicators.build_and_sign" class="doc doc-heading">
+            <code class=" language-python"><span class="n">build_and_sign</span><span class="p">(</span><span class="n">priv</span><span class="p">,</span> <span class="n">audit</span><span class="p">,</span> <span class="n">derived</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">last_sc1_pass</span><span class="p">)</span></code>
+
+<a href="#ldtc.attest.indicators.build_and_sign" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Build CBOR indicator payload and Ed25519 signature bundle.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>priv</code>
+            </td>
+            <td>
+                  <code><span title="cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey">Ed25519PrivateKey</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Ed25519 private key.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>audit</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="AuditLog (ldtc.guardrails.audit.AuditLog)" href="../guardrails/#ldtc.guardrails.audit.AuditLog">AuditLog</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Audit log providing last hash head.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>derived</code>
+            </td>
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="float">float</span> | <span title="int">int</span> | <span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Derived indicators (e.g., nc1, M_db, counter, invalidated).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>cfg</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="IndicatorConfig
+
+
+  
+      dataclass
+   (ldtc.attest.indicators.IndicatorConfig)" href="#ldtc.attest.indicators.IndicatorConfig">IndicatorConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Indicator configuration with profile id and thresholds.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>last_sc1_pass</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether SC1 passed.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Tuple">Tuple</span>[<span title="bytes">bytes</span>, <span title="typing.Dict">Dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tuple of (cbor_bytes, bundle_dict) where bundle contains hex signature.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ldtc.attest.indicators.quantize_M" class="doc doc-heading">
+            <code class=" language-python"><span class="n">quantize_M</span><span class="p">(</span><span class="n">M_db</span><span class="p">)</span></code>
+
+<a href="#ldtc.attest.indicators.quantize_M" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Quantize loop-dominance M (dB) to a 6-bit code.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>M_db</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Decibel loop-dominance value.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Integer in the range [0, 63] using 0.25 dB steps (0..15.75 dB).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
 <div class="doc doc-object doc-module">
 
 
@@ -1225,6 +1652,15 @@
 <a id="ldtc.attest.exporter"></a>
     <div class="doc doc-contents first">
 
+        <p>Attest: Indicator exporter.</p>
+<p>Rate-limited writer for device-signed indicator bundles in JSONL and CBOR,
+with strict enforcement of the no-raw-LREG export policy.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Methods: Measurement &amp; Attestation; Export policy.</p>
+</details>
 
 
 
@@ -1258,7 +1694,56 @@
     <div class="doc doc-contents ">
 
 
-        <p>Rate-limited export of device-signed indicator packets to JSONL and CBOR.</p>
+        <p>Rate-limited export of device-signed indicator packets.</p>
+<p>Writes JSONL and CBOR artifacts side-by-side after signing a derived
+indicator payload. Enforces the no-raw-LREG policy.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>out_dir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output directory for indicator artifacts.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rate_hz</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Maximum export rate in Hz.</p>
+              </div>
+            </td>
+            <td>
+                  <code>2.0</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
 
@@ -1280,6 +1765,157 @@
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ldtc.attest.exporter.IndicatorExporter.maybe_export" class="doc doc-heading">
+            <code class=" language-python"><span class="n">maybe_export</span><span class="p">(</span><span class="n">priv</span><span class="p">,</span> <span class="n">audit</span><span class="p">,</span> <span class="n">derived</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">last_sc1_pass</span><span class="p">)</span></code>
+
+<a href="#ldtc.attest.exporter.IndicatorExporter.maybe_export" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Export a signed indicator bundle if rate limit allows.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>priv</code>
+            </td>
+            <td>
+                  <code><span title="cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey">Ed25519PrivateKey</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Ed25519 private key.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>audit</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="AuditLog (ldtc.guardrails.audit.AuditLog)" href="../guardrails/#ldtc.guardrails.audit.AuditLog">AuditLog</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Audit log instance (provides last hash head).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>derived</code>
+            </td>
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="float">float</span> | <span title="int">int</span> | <span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Derived indicators from LREG (no raw L fields).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>cfg</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="IndicatorConfig
+
+
+  
+      dataclass
+   (ldtc.attest.indicators.IndicatorConfig)" href="#ldtc.attest.indicators.IndicatorConfig">IndicatorConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Indicator configuration including profile id.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>last_sc1_pass</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether SC1 passed in the last evaluation.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tuple <code>(exported, base_path)</code> where <code>base_path</code> is the file path</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>prefix for generated artifacts.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
 
 
 
@@ -1305,6 +1941,14 @@
 <a id="ldtc.attest.keys"></a>
     <div class="doc doc-contents first">
 
+        <p>Attest: Key management helpers.</p>
+<p>Load or generate Ed25519 keys stored as PEM files for device-signed indicators.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Methods: Measurement &amp; Attestation.</p>
+</details>
 
 
 
@@ -1324,6 +1968,170 @@
 
 
 
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ldtc.attest.keys.KeyPaths" class="doc doc-heading">
+            <code>KeyPaths</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#ldtc.attest.keys.KeyPaths" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Filesystem locations for key files.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.attest.keys.KeyPaths.priv_path">priv_path</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the private key PEM file.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="ldtc.attest.keys.KeyPaths.pub_path">pub_path</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the public key PEM file.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ldtc.attest.keys.ensure_keys" class="doc doc-heading">
+            <code class=" language-python"><span class="n">ensure_keys</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span></code>
+
+<a href="#ldtc.attest.keys.ensure_keys" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Load or generate Ed25519 keys at the provided paths.</p>
+<p>If no keys exist, generates a new keypair and writes them as PEM. If keys
+exist but are not Ed25519, regenerates an Ed25519 pair in place.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>paths</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="KeyPaths
+
+
+  
+      dataclass
+   (ldtc.attest.keys.KeyPaths)" href="#ldtc.attest.keys.KeyPaths">KeyPaths</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Private and public key filesystem paths.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Tuple">Tuple</span>[<span title="cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey">Ed25519PrivateKey</span>, <span title="cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PublicKey">Ed25519PublicKey</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Tuple <code>(private_key, public_key)</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
 
 
 

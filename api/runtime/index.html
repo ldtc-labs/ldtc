@@ -1238,6 +1238,15 @@
 <a id="ldtc.runtime.scheduler"></a>
     <div class="doc doc-contents first">
 
+        <p>Runtime: Fixed-interval scheduler.</p>
+<p>Lightweight Δt-enforcing scheduler with jitter metrics and optional audit
+hooks, used by CLI runs and verification harness loops.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Methods: Measurement &amp; Attestation Guardrails.</p>
+</details>
 
 
 
@@ -1271,13 +1280,116 @@
     <div class="doc doc-contents ">
 
 
-        <p>Fixed-interval scheduler that enforces Δt using perf_counter sleep.
-Calls <code>tick_fn(now)</code> every Δt seconds until <code>stop()</code> is invoked.</p>
-<ul>
-<li>Records jitter metrics.</li>
-<li>Provides hooks for 'on_start' and 'on_stop'.</li>
-</ul>
+        <p>Fixed-interval scheduler.</p>
+<p>Enforces a constant sampling interval Δt and invokes a tick callback every
+period until stopped. Tracks jitter statistics and emits optional audit
+events through a user-provided hook.</p>
 
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>dt</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Target period in seconds (Δt &gt; 0).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tick_fn</code>
+            </td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span>[[<span title="float">float</span>], None]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Callback invoked each tick with the current <code>perf_counter</code>
+timestamp.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>on_start</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[], None]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional hook executed before the worker thread begins.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>on_stop</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="ldtc.runtime.scheduler.TickStats">TickStats</span>], None]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional hook executed after stop; receives final <code>TickStats</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>audit_hook</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="str">str</span>, <span title="typing.Dict">Dict</span>], None]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional callable taking <code>(event: str, details: Dict)</code> for
+emitting audit records.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="notes" open>
+  <summary>Notes</summary>
+  <ul>
+<li>Jitter metrics are accessible on the <code>stats</code> attribute.</li>
+<li>Thread-safe updates to Δt can be made via <code>set_dt</code>.</li>
+</ul>
+</details>
 
 
 
@@ -1310,8 +1422,62 @@ Calls <code>tick_fn(now)</code> every Δt seconds until <code>stop()</code> is i
 
     <div class="doc doc-contents ">
 
-        <p>Change the enforced Δt at runtime in a thread-safe way.</p>
-<p>Returns the previous dt.</p>
+        <p>Change Δt at runtime.</p>
+<p>Thread-safe update of the enforced period.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>new_dt</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>New period in seconds (Δt &gt; 0).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The previous <code>dt</code> value.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1342,6 +1508,15 @@ Calls <code>tick_fn(now)</code> every Δt seconds until <code>stop()</code> is i
 <a id="ldtc.runtime.windows"></a>
     <div class="doc doc-contents first">
 
+        <p>Runtime: Sliding windows and bootstrap indices.</p>
+<p>Provides a fixed-length per-channel window and helper to generate circular
+block-bootstrap indices for CI estimation.</p>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>paper/main.tex — Methods: Measurement &amp; Attestation Guardrails.</p>
+</details>
 
 
 
@@ -1375,12 +1550,66 @@ Calls <code>tick_fn(now)</code> every Δt seconds until <code>stop()</code> is i
     <div class="doc doc-contents ">
 
 
-        <p>Maintains a fixed-length sliding window for named channels.</p>
-<ul>
-<li>append(sample_dict) with keys -&gt; float</li>
-<li>get_matrix(order) returns ndarray shape (T, N) in <code>order</code></li>
-</ul>
+        <p>Fixed-length, per-channel sliding window.</p>
+<p>Maintains a deque per channel and exposes a dense matrix view when the
+window is full. Useful for streaming estimators that require a fixed-size
+time-by-signal buffer.</p>
 
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>capacity</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of samples to retain per channel.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>channel_order</code>
+            </td>
+            <td>
+                  <code><span title="typing.List">List</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Ordered list of channel names used for matrix columns.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="notes" open>
+  <summary>Notes</summary>
+  <ul>
+<li><code>append</code> inserts a new sample dict; missing keys default to 0.0.</li>
+<li><code>get_matrix</code> returns a <code>(T, N)</code> numpy array in <code>channel_order</code>.</li>
+</ul>
+</details>
 
 
 
@@ -1422,8 +1651,103 @@ Calls <code>tick_fn(now)</code> every Δt seconds until <code>stop()</code> is i
 
     <div class="doc doc-contents ">
 
-        <p>Simple circular block bootstrap indices for time series.
-Returns list of index arrays of length n.</p>
+        <p>Circular block-bootstrap indices for time series.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>n</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Length of the time series.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>block</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Block length for resampling.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>draws</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of bootstrap replicates to generate.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.List">List</span>[<span title="numpy.ndarray">ndarray</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of index arrays (each of length <code>n</code>) representing bootstrap</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.List">List</span>[<span title="numpy.ndarray">ndarray</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>samples with circular wrapping at boundaries.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
