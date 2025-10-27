@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""Scripts: Calibrate R* thresholds.
+
+Runs baseline and power-sag Ω trials to derive calibrated thresholds
+(Mmin, epsilon, tau_max, sigma). Writes `configs/profile_rstar.yml` and emits
+comparison artifacts (CSV/figure) against R0 along with a JSON summary.
+
+See Also:
+    paper/main.tex — Methods: Threshold Calibration.
+"""
 from __future__ import annotations
 
 import os
@@ -26,6 +35,22 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @dataclass
 class CalibInputs:
+    """Input configuration for R* calibration.
+
+    Attributes:
+        dt: Sampling interval Δt.
+        window_sec: Ready window duration in seconds.
+        method: Estimation method (e.g., "linear", "mi").
+        p_lag: VAR order for linear estimator.
+        mi_lag: Lag for MI-based estimators.
+        n_boot: Bootstrap draws per window.
+        baseline_sec: Baseline duration to estimate noise floor.
+        omega_trials: Number of Ω power-sag trials to run.
+        sag_drop: Fractional harvest drop during sag.
+        sag_duration: Duration of sag (seconds).
+        safety_margin: Additive safety margin for epsilon calibration.
+    """
+
     dt: float
     window_sec: float
     method: str
@@ -41,6 +66,16 @@ class CalibInputs:
 
 @dataclass
 class CalibOutputs:
+    """Calibrated R* thresholds and profile identifier.
+
+    Attributes:
+        Mmin_db: Calibrated minimum loop-dominance (dB).
+        epsilon: Calibrated perturbation tolerance.
+        tau_max: Calibrated recovery-time bound (seconds).
+        sigma: Additive margin in absolute L units.
+        profile_id: Profile selector (1 indicates R*).
+    """
+
     Mmin_db: float
     epsilon: float
     tau_max: float
@@ -49,6 +84,13 @@ class CalibOutputs:
 
 
 def _print_progress(prefix: str, i: int, total: int) -> None:
+    """Render a simple in-place progress bar.
+
+    Args:
+        prefix: Text prefix to display.
+        i: Current step (0-indexed).
+        total: Total number of steps.
+    """
     i = max(0, min(i, total))
     pct = int(100 * i / max(1, total))
     bar_len = 20
@@ -61,6 +103,15 @@ def _print_progress(prefix: str, i: int, total: int) -> None:
 
 
 def run_baseline_once(inp: CalibInputs, seed_C: List[int]) -> Dict[str, List[float]]:
+    """Run a non-Ω baseline segment and collect metrics.
+
+    Args:
+        inp: Calibration input configuration.
+        seed_C: Initial loop set indices for the partition manager.
+
+    Returns:
+        Dict containing time series for ``M`` and ``L_ex``.
+    """
     window = max(4, int(inp.window_sec / inp.dt))
     adapter = PlantAdapter()
     order = ["E", "T", "R", "demand", "io", "H"]
@@ -98,8 +149,15 @@ def run_baseline_once(inp: CalibInputs, seed_C: List[int]) -> Dict[str, List[flo
 
 
 def run_power_sag_once(inp: CalibInputs, seed_C: List[int]) -> Tuple[float, float]:
-    """
-    Returns (delta, tau_rec_sec) for a single Ω power-sag trial.
+    """Run one Ω power-sag trial.
+
+    Args:
+        inp: Calibration input configuration.
+        seed_C: Initial loop set indices.
+
+    Returns:
+        Tuple ``(delta, tau_rec_sec)`` where ``delta`` is the fractional loop
+        drop and ``tau_rec_sec`` is the estimated recovery time in seconds.
     """
     window = max(4, int(inp.window_sec / inp.dt))
     adapter = PlantAdapter()
@@ -202,6 +260,15 @@ def run_power_sag_once(inp: CalibInputs, seed_C: List[int]) -> Tuple[float, floa
 
 
 def calibrate_R_star(inp: CalibInputs, seed_C: List[int]) -> CalibOutputs:
+    """Calibrate R* thresholds from baseline and Ω trials.
+
+    Args:
+        inp: Calibration input configuration.
+        seed_C: Initial loop set indices.
+
+    Returns:
+        :class:`CalibOutputs` with calibrated thresholds and profile id.
+    """
     # Baseline: estimate M lower bound and typical L_ex for sigma
     base = run_baseline_once(inp, seed_C=seed_C)
     M_arr = np.asarray(base["M"], dtype=float)
@@ -246,6 +313,13 @@ def calibrate_R_star(inp: CalibInputs, seed_C: List[int]) -> CalibOutputs:
 
 
 def write_profile_yaml(out_path: str, inp: CalibInputs, out: CalibOutputs) -> None:
+    """Write a YAML profile for R* thresholds.
+
+    Args:
+        out_path: Destination path for the YAML profile.
+        inp: Input configuration used for calibration.
+        out: Calibrated thresholds.
+    """
     data = {
         "profile_id": int(out.profile_id),
         "dt": float(inp.dt),
@@ -265,6 +339,14 @@ def write_profile_yaml(out_path: str, inp: CalibInputs, out: CalibOutputs) -> No
 
 
 def _load_yaml(path: str) -> Mapping[str, Any]:
+    """Load a YAML file as a mapping (or empty mapping on failure).
+
+    Args:
+        path: YAML file path.
+
+    Returns:
+        Mapping of keys to values; empty if missing/invalid.
+    """
     if not os.path.exists(path):
         return {}
     with open(path, "r", encoding="utf-8") as f:
@@ -278,6 +360,13 @@ def _load_yaml(path: str) -> Mapping[str, Any]:
 
 
 def _write_compare_csv(out_csv: str, r0: Dict[str, float], rstar: CalibOutputs) -> None:
+    """Write a CSV comparing R0 parameters with calibrated R*.
+
+    Args:
+        out_csv: Output CSV path.
+        r0: Baseline R0 parameter mapping.
+        rstar: Calibrated thresholds.
+    """
     os.makedirs(os.path.dirname(out_csv), exist_ok=True)
     rows = [
         ("Mmin_db", r0.get("Mmin_db", float("nan")), rstar.Mmin_db),
@@ -297,6 +386,13 @@ def _write_compare_csv(out_csv: str, r0: Dict[str, float], rstar: CalibOutputs) 
 def _write_compare_figure(
     out_png: str, r0: Dict[str, float], rstar: CalibOutputs
 ) -> None:
+    """Write a PNG bar chart comparing R0 vs R* parameters.
+
+    Args:
+        out_png: Output PNG path.
+        r0: Baseline R0 parameter mapping.
+        rstar: Calibrated thresholds.
+    """
     os.makedirs(os.path.dirname(out_png), exist_ok=True)
     params = ["Mmin_db", "epsilon", "tau_max", "sigma"]
     r0_vals: List[float] = [
@@ -326,6 +422,11 @@ def _write_compare_figure(
 
 
 def main() -> None:
+    """CLI entrypoint for R* calibration.
+
+    Parses arguments, runs calibration, writes the profile and comparison
+    artifacts, and prints summary paths.
+    """
     ap = argparse.ArgumentParser(
         description="Calibrate R* thresholds (Mmin, epsilon, tau_max, sigma) and write configs/profile_rstar.yml"
     )

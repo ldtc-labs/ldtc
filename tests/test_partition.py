@@ -1,9 +1,15 @@
+"""Tests: C/Ex partition management and hysteresis.
+
+Ensures updates occur only after sufficient ΔM and required streak.
+"""
+
 from __future__ import annotations
 
 from ldtc.lmeas.partition import PartitionManager
 
 
 def test_partition():
+    """Partition should update only after sufficient ΔM and required streak."""
     pm = PartitionManager(N_signals=5, seed_C=[0, 1])
     p = pm.get()
     assert set(p.C) == {0, 1}

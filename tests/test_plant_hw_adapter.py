@@ -1,3 +1,8 @@
+"""Tests: Hardware-in-the-loop UDP adapter paths.
+
+Verifies telemetry ingest/read_state and basic actuator/omega forwarding.
+"""
+
 from __future__ import annotations
 
 import json
@@ -10,6 +15,7 @@ from ldtc.plant.models import Action
 
 
 def test_hw_adapter_udp_ingest_and_read_state():
+    """UDP telemetry should be ingested and exposed via read_state; control paths ok."""
     # Bind to an ephemeral port for test isolation
     # Find a free UDP port by binding then closing
     tmp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

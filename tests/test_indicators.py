@@ -1,3 +1,8 @@
+"""Tests: Indicator quantization and signing/verification.
+
+Checks quarter-dB quantization behavior and end-to-end verification helper.
+"""
+
 from __future__ import annotations
 
 import json
@@ -9,6 +14,7 @@ from scripts.verify_indicators import verify_indicators, audit_chain_status
 
 
 def test_quantize_M_step_and_rounding():
+    """Quarter-dB stepping and rounding behavior for M quantization."""
     # exact quarter-dB steps
     assert quantize_M(0.00) == 0
     assert quantize_M(0.25) == 1
@@ -22,6 +28,7 @@ def test_quantize_M_step_and_rounding():
 
 
 def test_quantize_M_clamp_and_saturation():
+    """Quantization should clamp at 0 and saturate at 63 (15.75 dB)."""
     # negative clamps to 0
     assert quantize_M(-10.0) == 0
     # upper saturation at 63 (15.75 dB)
@@ -31,6 +38,7 @@ def test_quantize_M_clamp_and_saturation():
 
 
 def test_quantize_M_monotonic_over_range():
+    """Quantization code should be monotonic over a wide M range."""
     last = -1
     for m in [x * 0.1 for x in range(-50, 250)]:  # -5.0 dB .. 25.0 dB
         q = quantize_M(m)
@@ -39,6 +47,7 @@ def test_quantize_M_monotonic_over_range():
 
 
 def test_build_and_sign_includes_mq(tmp_path):
+    """Build/sign should include quantized M (mq) consistent with M_db input."""
     # keys and audit
     kp = KeyPaths(str(tmp_path / "k_priv.pem"), str(tmp_path / "k_pub.pem"))
     priv, _pub = ensure_keys(kp)
@@ -64,6 +73,7 @@ def test_build_and_sign_includes_mq(tmp_path):
 
 
 def test_indicator_signature_verification_tool(tmp_path):
+    """Helper tool should verify signatures, CBOR equality, and audit prev-hash."""
     # Prepare keys
     kp = KeyPaths(str(tmp_path / "k_priv.pem"), str(tmp_path / "k_pub.pem"))
     priv, pub = ensure_keys(kp)

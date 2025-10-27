@@ -1,3 +1,13 @@
+"""Guardrails: Smell-tests and invalidation heuristics.
+
+Includes CI width guards, partition flip-rate checks, Δt jitter thresholds,
+exogenous subsidy red flags, and audit-chain integrity checks. Used by the CLI
+to determine when to invalidate a run by assay.
+
+See Also:
+    paper/main.tex — Smell-tests & invalidation.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,6 +18,22 @@ import os
 
 @dataclass
 class SmellConfig:
+    """Configuration thresholds for smell-tests and guards.
+
+    Attributes:
+        max_dt_changes_per_hour: Δt edits allowed per hour.
+        max_partition_flips_per_hour: Partition flips allowed per hour.
+        max_ci_halfwidth: Absolute CI half-width limit.
+        forbid_partition_flip_during_omega: Freeze partition during Ω.
+        ci_lookback_windows: Number of windows used for CI history checks.
+        ci_inflate_factor: Relative inflation vs baseline median allowed.
+        jitter_p95_rel_max: Max p95(|jitter|)/dt before invalidation.
+        io_suspicious_threshold: I/O threshold considered suspicious.
+        min_M_rise_db: Minimum M rise to flag subsidy.
+        M_rise_lookback: Look-back windows for subsidy check.
+        min_harvest_for_soc_gain: Minimum H considered non-zero for SoC gains.
+    """
+
     max_dt_changes_per_hour: int = 3
     max_partition_flips_per_hour: int = 2
     max_ci_halfwidth: float = 0.30
@@ -25,6 +51,14 @@ class SmellConfig:
 
 
 def ci_halfwidth(ci: Tuple[float, float]) -> float:
+    """Compute the half-width of a confidence interval.
+
+    Args:
+        ci: Tuple of (lo, hi) bounds.
+
+    Returns:
+        Half-width value; very large if inputs are NaN/None.
+    """
     lo, hi = ci
     if any(map(lambda v: v is None or v != v, (lo, hi))):  # NaN check
         return 1e9
@@ -34,6 +68,16 @@ def ci_halfwidth(ci: Tuple[float, float]) -> float:
 def invalid_by_ci(
     ci_loop: Tuple[float, float], ci_ex: Tuple[float, float], cfg: SmellConfig
 ) -> bool:
+    """Check absolute CI half-width limits.
+
+    Args:
+        ci_loop: CI for loop influence.
+        ci_ex: CI for exchange influence.
+        cfg: Threshold configuration.
+
+    Returns:
+        True if either half-width exceeds the configured maximum.
+    """
     return (
         ci_halfwidth(ci_loop) > cfg.max_ci_halfwidth
         or ci_halfwidth(ci_ex) > cfg.max_ci_halfwidth
@@ -41,6 +85,15 @@ def invalid_by_ci(
 
 
 def flips_per_hour(flips: int, elapsed_sec: float) -> float:
+    """Compute flip rate per hour.
+
+    Args:
+        flips: Number of flips observed.
+        elapsed_sec: Elapsed time in seconds.
+
+    Returns:
+        Flip rate in events per hour.
+    """
     if elapsed_sec <= 0:
         return float("inf") if flips > 0 else 0.0
     return 3600.0 * (float(flips) / float(elapsed_sec))
@@ -49,12 +102,32 @@ def flips_per_hour(flips: int, elapsed_sec: float) -> float:
 def invalid_by_partition_flips(
     flips: int, elapsed_sec: float, cfg: SmellConfig
 ) -> bool:
+    """Check whether partition flip rate exceeds the configured limit.
+
+    Args:
+        flips: Number of flips observed.
+        elapsed_sec: Elapsed time in seconds.
+        cfg: Threshold configuration.
+
+    Returns:
+        True if flips/hour exceeds ``cfg.max_partition_flips_per_hour``.
+    """
     return flips_per_hour(flips, elapsed_sec) > cfg.max_partition_flips_per_hour
 
 
 def invalid_flip_during_omega(
     flips_before: int, flips_after: int, cfg: SmellConfig
 ) -> bool:
+    """Check for partition changes during a frozen Ω window.
+
+    Args:
+        flips_before: Flip count before Ω.
+        flips_after: Flip count after Ω.
+        cfg: Threshold configuration.
+
+    Returns:
+        True if any flip occurred during Ω and flips are forbidden.
+    """
     if not cfg.forbid_partition_flip_during_omega:
         return False
     return (flips_after - flips_before) > 0
@@ -66,12 +139,11 @@ def invalid_by_ci_history(
     cfg: SmellConfig,
     baseline_medians: Optional[Tuple[float, float]] = None,
 ) -> bool:
-    """
-    Evaluate CI health over a look-back window.
-    - If median relative half-width over the last N windows exceeds max_ci_halfwidth → invalid
-    - If baseline medians are provided and current medians inflate ≥ factor → invalid
-    ci_*_hist: list of (lo, hi) tuples
-    baseline_medians: optional (median_halfwidth_loop, median_halfwidth_ex)
+    """Evaluate CI health over a look-back window.
+
+    Invalid if either median half-width over the last N windows exceeds the
+    absolute limit, or if baseline medians are provided and inflated by the
+    configured factor.
     """
     try:
         n = cfg.ci_lookback_windows
@@ -97,9 +169,13 @@ def invalid_by_ci_history(
 
 
 def audit_contains_raw_lreg_values(audit_path: str) -> bool:
-    """
-    Returns True if any audit record appears to include raw LREG values or CI bounds
-    (keys like L_loop, L_ex, ci_loop, ci_ex) in its details.
+    """Detect raw LREG fields in audit records.
+
+    Args:
+        audit_path: Path to audit JSONL file.
+
+    Returns:
+        True if any record details contain raw LREG keys.
     """
     if not os.path.exists(audit_path):
         return False
@@ -127,10 +203,10 @@ def exogenous_subsidy_red_flag(
     Hs: Sequence[float],
     cfg: SmellConfig,
 ) -> bool:
-    """
-    Heuristic flags for exogenous subsidy:
-    - M rising over lookback while io is high/increasing toward threshold
-    - E (SoC) rising while harvest H is ~0 (below min_harvest_for_soc_gain)
+    """Heuristics for detecting exogenous subsidy conditions.
+
+    Flags when M is rising while I/O is high and increasing, or when SoC is
+    rising while harvest is ~0 over a look-back window.
     """
     try:
         n = cfg.M_rise_lookback
@@ -160,9 +236,13 @@ def exogenous_subsidy_red_flag(
 
 
 def audit_chain_broken(audit_path: str) -> bool:
-    """
-    Returns True if the JSONL audit chain shows a counter gap or hash-chain break
-    or non-monotonic timestamps.
+    """Validate audit chain counters, hashes, and timestamps.
+
+    Args:
+        audit_path: Path to audit JSONL file.
+
+    Returns:
+        True if the chain is broken; otherwise False.
     """
     if not os.path.exists(audit_path):
         return True

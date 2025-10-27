@@ -1,3 +1,8 @@
+"""Tests: Attestation keys, audit chain, and signing.
+
+Covers key generation, audit integration, and building/signed bundles.
+"""
+
 from __future__ import annotations
 
 from ldtc.attest.keys import ensure_keys, KeyPaths

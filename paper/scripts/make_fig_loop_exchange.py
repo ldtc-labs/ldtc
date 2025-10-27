@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate Closed loop vs exchange causal structure (numberless names).
 
-Outputs: paper/figures/fig_loop_exchange.{pdf,png,svg}
+Creates Graphviz diagrams for the C/Ex causal structure and writes
+``paper/figures/fig_loop_exchange.{pdf,png,svg}``.
 """
 from pathlib import Path
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph

@@ -1,3 +1,9 @@
+"""Tests: Estimator properties and metrics behavior.
+
+Checks monotonicity with intra-loop coupling, CI shrinkage with sample size,
+and agreement across linear/MI/Kraskov estimators.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -9,11 +15,16 @@ from ldtc.lmeas.metrics import m_db
 def _gen_var2_with_exchange(
     T: int, c_intra: float, k_ex: float, seed: int = 0
 ) -> np.ndarray:
-    """
-    Generate a simple 3-node linear dynamical system:
-      - Nodes 0 and 1 are in the loop (C); symmetric coupling c_intra between them + AR(1) self term.
-      - Node 2 is exchange (Ex); AR(1) and drives both 0 and 1 with fixed coupling k_ex.
-    Returns X with shape (T, 3).
+    """Generate a 3-node linear system with loop and exchange nodes.
+
+    Args:
+        T: Number of time steps to simulate.
+        c_intra: Symmetric coupling between loop nodes (C).
+        k_ex: Coupling strength from exchange node (Ex) to loop nodes.
+        seed: RNG seed for reproducibility.
+
+    Returns:
+        Array ``X`` with shape ``(T, 3)`` where columns are loop0, loop1, exchange.
     """
     rng = np.random.default_rng(seed)
     a_self = 0.4
@@ -31,6 +42,15 @@ def _gen_var2_with_exchange(
 
 
 def _compute_M_db(X: np.ndarray, method: str) -> float:
+    """Compute loop-dominance M(dB) for a dataset and estimator.
+
+    Args:
+        X: Telemetry matrix of shape ``(T, N)``.
+        method: Estimator name (e.g., "linear", "mi", "mi_kraskov").
+
+    Returns:
+        Loop-dominance in decibels.
+    """
     kwargs = {"p": 2, "n_boot": 32}
     if method.startswith("mi"):
         kwargs.update({"lag_mi": 1})
@@ -41,6 +61,7 @@ def _compute_M_db(X: np.ndarray, method: str) -> float:
 
 
 def test_monotonicity_increasing_intra_coupling_raises_M_db():
+    """Increasing intra-loop coupling should raise loop dominance M (dB)."""
     # Increasing intra-loop coupling should raise loop dominance M (dB)
     ks = [0.0, 0.2, 0.4, 0.6]
     Ms = []
@@ -53,6 +74,7 @@ def test_monotonicity_increasing_intra_coupling_raises_M_db():
 
 
 def test_bootstrap_ci_shrinks_with_more_samples():
+    """Bootstrap CI widths should shrink as the sample size increases."""
     # For fixed dynamics, bootstrap CI width should shrink as T increases
     X_small = _gen_var2_with_exchange(T=400, c_intra=0.4, k_ex=0.2, seed=7)
     X_big = _gen_var2_with_exchange(T=2400, c_intra=0.4, k_ex=0.2, seed=7)
@@ -68,6 +90,7 @@ def test_bootstrap_ci_shrinks_with_more_samples():
 
 
 def test_mi_and_linear_estimators_agree_on_linear_system():
+    """Different estimators should share the monotonic trend on linear data."""
     # Both estimators should reflect the same ordering as intra-loop coupling increases
     ks = [0.1, 0.4, 0.7]
     Ms_lin = []

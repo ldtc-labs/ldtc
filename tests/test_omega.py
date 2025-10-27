@@ -1,3 +1,8 @@
+"""Tests: Omega stimuli wrappers.
+
+Covers power_sag, ingress_flood, and command_conflict adapters.
+"""
+
 from __future__ import annotations
 
 from ldtc.plant.adapter import PlantAdapter
@@ -7,6 +12,7 @@ from ldtc.omega.command_conflict import apply as conflict
 
 
 def test_omega_calls():
+    """Adapters should accept each omega and return expected keys/values."""
     a = PlantAdapter()
     r1 = sag(a, drop=0.2)
     assert "H_new" in r1

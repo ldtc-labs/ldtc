@@ -1,3 +1,11 @@
+"""Attest: Key management helpers.
+
+Load or generate Ed25519 keys stored as PEM files for device-signed indicators.
+
+See Also:
+    paper/main.tex — Methods: Measurement & Attestation.
+"""
+
 from __future__ import annotations
 
 import os
@@ -13,11 +21,29 @@ from cryptography.hazmat.primitives import serialization
 
 @dataclass
 class KeyPaths:
+    """Filesystem locations for key files.
+
+    Attributes:
+        priv_path: Path to the private key PEM file.
+        pub_path: Path to the public key PEM file.
+    """
+
     priv_path: str
     pub_path: str
 
 
 def ensure_keys(paths: KeyPaths) -> Tuple[Ed25519PrivateKey, Ed25519PublicKey]:
+    """Load or generate Ed25519 keys at the provided paths.
+
+    If no keys exist, generates a new keypair and writes them as PEM. If keys
+    exist but are not Ed25519, regenerates an Ed25519 pair in place.
+
+    Args:
+        paths: Private and public key filesystem paths.
+
+    Returns:
+        Tuple ``(private_key, public_key)``.
+    """
     os.makedirs(os.path.dirname(paths.priv_path), exist_ok=True)
     if not os.path.exists(paths.priv_path):
         priv = Ed25519PrivateKey.generate()

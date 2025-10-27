@@ -1,3 +1,11 @@
+"""Reporting: Plot and graph styles.
+
+Matplotlib and Graphviz theming for consistent, publication-ready figures.
+
+See Also:
+    paper/main.tex — Reporting & Figures.
+"""
+
 from __future__ import annotations
 
 from typing import Dict, Any
@@ -28,12 +36,13 @@ COLORS: Dict[str, str] = {
 
 
 def apply_matplotlib_theme(kind: str = "paper") -> None:
-    """
-    Apply a consistent Matplotlib style suitable for arXiv CS papers.
+    """Apply a consistent Matplotlib style.
 
-    - Sans-serif fonts (Helvetica fallback chain), consistent label sizes
-    - Vector-friendly outputs (Type 42 fonts for PDF/PS; real text in SVG)
-    - No top/right spines; tight layout handled by callers
+    Configures fonts, spine visibility, label sizes, and vector-friendly output
+    settings for consistent figures in the docs and paper.
+
+    Args:
+        kind: Optional style variant; currently informational only.
     """
     mpl.rcParams.update(
         {
@@ -92,8 +101,12 @@ def _graph_defaults(rankdir: str = "LR") -> Dict[str, Dict[str, str]]:
 def apply_graphviz_theme(
     dot: Any, rankdir: str = "LR", overrides: Dict[str, Dict[str, str]] | None = None
 ) -> None:
-    """
-    Apply consistent Graphviz attributes to a Digraph.
+    """Apply consistent Graphviz attributes to a Digraph.
+
+    Args:
+        dot: A :class:`graphviz.Digraph` instance.
+        rankdir: Graph layout direction ("LR" or "TB").
+        overrides: Optional nested dict overriding default graph/node/edge attrs.
     """
     defaults = _graph_defaults(rankdir=rankdir)
     if overrides:
@@ -109,8 +122,18 @@ def apply_graphviz_theme(
 
 
 def new_graph(name: str, rankdir: str = "LR", engine: str = "dot") -> Any:
-    """
-    Create a Digraph preconfigured with this project's theme.
+    """Create a themed Graphviz Digraph.
+
+    Args:
+        name: Graph name.
+        rankdir: Layout direction.
+        engine: Graphviz engine (e.g., "dot", "neato").
+
+    Returns:
+        A configured :class:`graphviz.Digraph`.
+
+    Raises:
+        RuntimeError: If graphviz is not available.
     """
     if Digraph is None:
         raise RuntimeError("graphviz is required to build themed graphs")

@@ -1,3 +1,15 @@
+"""Lmeas: Estimators for loop and exchange influence (L).
+
+Lightweight predictive-dependence estimators used to compute loop influence
+``L_loop`` and exchange influence ``L_ex`` over a C/Ex partition. Includes
+linear (Granger-like) and mutual information methods, with optional TE/DI
+proxies. Confidence intervals are computed via circular block bootstrap per
+window.
+
+See Also:
+    paper/main.tex — Criterion; Methods: Measurement & Attestation.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,6 +36,15 @@ from .diagnostics import var_nt_ratio
 
 @dataclass
 class LResult:
+    """Result container for loop/exchange influence and CI bounds.
+
+    Attributes:
+        L_loop: Point estimate of loop influence.
+        L_ex: Point estimate of exchange influence.
+        ci_loop: Tuple of (lo, hi) CI bounds for ``L_loop``.
+        ci_ex: Tuple of (lo, hi) CI bounds for ``L_ex``.
+    """
+
     L_loop: float
     L_ex: float
     ci_loop: Tuple[float, float]
@@ -31,6 +52,19 @@ class LResult:
 
 
 def _lag_matrix(x: np.ndarray, p: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Construct lagged design matrix and targets for VAR-like regression.
+
+    Args:
+        x: Array of shape (T, N), time major.
+        p: Number of lags to include (p >= 1).
+
+    Returns:
+        A tuple ``(X, Y)`` where ``X`` has shape (T - p, N*p) and ``Y`` has
+        shape (T - p, N) containing the aligned, non-overlapping targets.
+
+    Raises:
+        ValueError: If there are not enough samples (T <= p).
+    """
     T, N = x.shape
     if T <= p:
         raise ValueError("Not enough samples for lagged model")
@@ -49,11 +83,21 @@ def _dir_influence_linear_conditional(
     base_sources: Sequence[int],
     targets: Sequence[int],
 ) -> float:
-    """
-    Linear regression improvement from adding lagged add_sources when predicting targets,
-    conditioned on target AR lags and base_sources lags present in both baseline and full models.
+    """Partial R^2 improvement from additional lagged sources to targets.
 
-    Returns mean R^2 improvement across target dims.
+    Computes the average improvement in explained variance for target signals
+    when adding lagged predictors from ``add_sources`` on top of an AR baseline
+    and lagged ``base_sources``.
+
+    Args:
+        x: Array of shape (T, N) with time along the first dimension.
+        p: Number of lags for the linear model.
+        add_sources: Indices of candidate source signals to add.
+        base_sources: Indices included in the baseline model (besides AR of target).
+        targets: Target signal indices to evaluate.
+
+    Returns:
+        Mean partial R^2 improvement across ``targets``.
     """
     X, Y = _lag_matrix(x, p)
     Tm, N = Y.shape
@@ -118,6 +162,11 @@ def _dir_influence_linear_conditional(
 def _dir_influence_linear(
     x: np.ndarray, p: int, sources: Sequence[int], targets: Sequence[int]
 ) -> float:
+    """Convenience wrapper for linear influence without baseline sources.
+
+    Equivalent to calling :func:`_dir_influence_linear_conditional` with an empty
+    ``base_sources`` list.
+    """
     # Backward-compatible wrapper: add_sources vs AR-only baseline
     return _dir_influence_linear_conditional(
         x=x, p=p, add_sources=sources, base_sources=[], targets=targets
@@ -127,9 +176,19 @@ def _dir_influence_linear(
 def _dir_influence_mi(
     x: np.ndarray, sources: Sequence[int], targets: Sequence[int], lag: int = 1
 ) -> float:
-    """
-    Mutual information between sources at t-lag and targets at t.
-    Averages across all pairs (s in sources, t in targets).
+    """Average pairwise mutual information from sources to targets.
+
+    Computes MI between ``sources`` at time ``t-lag`` and ``targets`` at time
+    ``t`` using sklearn's kNN-based estimator.
+
+    Args:
+        x: Array of shape (T, N), time major.
+        sources: Indices of source signals.
+        targets: Indices of target signals.
+        lag: Positive lag between sources and targets (default 1 sample).
+
+    Returns:
+        Mean mutual information across all source-target pairs.
     """
     T, N = x.shape
     if T <= lag:
@@ -148,11 +207,18 @@ def _dir_influence_mi(
 
 
 def _mi_ksg(x: np.ndarray, y: np.ndarray, k: int = 5) -> float:
-    """
-    Kraskov–Stögbauer–Grassberger kNN MI estimator (KSG, estimator I) for
-    continuous variables using Chebyshev (\u221e-norm) neighborhoods.
+    """Kraskov–Stögbauer–Grassberger (KSG-I) mutual information.
 
-    Returns MI in nats.
+    Estimates MI between two continuous variables using k-nearest neighbors with
+    Chebyshev metric.
+
+    Args:
+        x: Array-like, will be coerced to shape (T, 1).
+        y: Array-like, will be coerced to shape (T, 1).
+        k: Neighborhood size for KSG (default 5).
+
+    Returns:
+        Estimated mutual information in nats.
     """
     x = np.asarray(x, dtype=float).reshape(-1, 1)
     y = np.asarray(y, dtype=float).reshape(-1, 1)
@@ -195,8 +261,17 @@ def _dir_influence_mi_kraskov(
     lag: int = 1,
     k: int = 5,
 ) -> float:
-    """
-    Average pairwise Kraskov MI between sources at t-lag and targets at t.
+    """Average pairwise KSG MI from sources to targets.
+
+    Args:
+        x: Array of shape (T, N), time major.
+        sources: Indices of source signals.
+        targets: Indices of target signals.
+        lag: Positive lag between sources and targets (default 1 sample).
+        k: k-NN parameter for the KSG estimator.
+
+    Returns:
+        Mean KSG MI across all source-target pairs.
     """
     T, N = x.shape
     if T <= lag:
@@ -215,13 +290,10 @@ def _dir_influence_mi_kraskov(
 def _maybe_te_backend() -> (
     Callable[[np.ndarray, Sequence[int], Sequence[int], int], float] | None
 ):
-    """
-    Try to load an optional transfer entropy backend. Returns a function
-    te(arr, sources, targets, lag) -> float if available, else None.
+    """Optionally provide a transfer-entropy-like backend.
 
-    Supported (optional):
-      - tigramite (time series TE via conditional MI) if installed.
-      - idtxl (requires rich setup; not attempted here).
+    Tries to import a light-weight proxy using ``tigramite``. If available,
+    returns a callable ``te(arr, sources, targets, lag)``; otherwise ``None``.
     """
     # Placeholder: detect tigramite and use its ParCorr-based CMI TE if present.
     try:
@@ -269,11 +341,9 @@ def _maybe_te_backend() -> (
 def _maybe_di_backend() -> (
     Callable[[np.ndarray, Sequence[int], Sequence[int], int], float] | None
 ):
-    """
-    Try to load an optional directed information backend. Returns a function
-    di(arr, sources, targets, lag) -> float if available, else None.
+    """Optionally provide a directed-information backend.
 
-    If unavailable, caller should fall back to MI proxy.
+    Currently returns ``None`` to trigger MI-based proxy.
     """
     # No lightweight DI backend by default; return None to trigger fallback.
     return None
@@ -285,6 +355,20 @@ def _bootstrap(
     n_draws: int = 64,
     block: int | None = None,
 ) -> Tuple[float, float]:
+    """Bootstrap confidence interval (percentile, ~95%).
+
+    Performs circular block bootstrap resampling of the time axis.
+
+    Args:
+        x: Array of shape (T, N) or (T, ...). Only the first dimension (time)
+            is resampled; the array is passed to ``fn`` after indexing.
+        fn: Estimator function mapping an array like ``x[idx]`` to a scalar.
+        n_draws: Number of bootstrap replicates.
+        block: Block length; defaults to ``max(4, T//4)``.
+
+    Returns:
+        Tuple of (lo, hi) percentile CI bounds.
+    """
     T = x.shape[0]
     if T < 12:
         return (np.nan, np.nan)
@@ -309,16 +393,26 @@ def estimate_L(
     n_boot: int = 64,
     mi_k: int = 5,
 ) -> LResult:
-    """
-    Compute loop and exchange influence using chosen method.
+    """Estimate loop and exchange influence.
 
-    Parameters
-    ----------
-    X : np.ndarray
-        Time x Signal matrix (T, N)
-    C : indices for "loop" partition
-    Ex : indices for "exchange" partition
-    method : one of {"linear", "mi", "mi_kraskov", "transfer_entropy", "directed_information"}
+    Computes ``L_loop`` over partition ``C`` and ``L_ex`` from ``Ex -> C`` using
+    the selected predictive dependence metric.
+
+    Args:
+        X: Time-by-signal matrix of shape (T, N).
+        C: Indices of the loop partition.
+        Ex: Indices of the exchange partition.
+        method: One of ``{"linear", "mi", "mi_kraskov", "transfer_entropy", "directed_information"}``.
+        p: VAR order for linear estimator.
+        lag_mi: Lag between sources and targets for MI/TE/DI methods.
+        n_boot: Number of bootstrap draws for CI estimation.
+        mi_k: k-NN parameter for Kraskov MI.
+
+    Returns:
+        ``LResult`` with point estimates and (lo, hi) CI bounds for each metric.
+
+    Raises:
+        ValueError: If ``method`` is not supported.
     """
     if method not in (
         "linear",

@@ -1,3 +1,12 @@
+"""Runtime: Fixed-interval scheduler.
+
+Lightweight Δt-enforcing scheduler with jitter metrics and optional audit
+hooks, used by CLI runs and verification harness loops.
+
+See Also:
+    paper/main.tex — Methods: Measurement & Attestation Guardrails.
+"""
+
 from __future__ import annotations
 
 import threading
@@ -47,12 +56,24 @@ class TickStats:
 
 
 class FixedScheduler:
-    """
-    Fixed-interval scheduler that enforces Δt using perf_counter sleep.
-    Calls `tick_fn(now)` every Δt seconds until `stop()` is invoked.
+    """Fixed-interval scheduler.
 
-    - Records jitter metrics.
-    - Provides hooks for 'on_start' and 'on_stop'.
+    Enforces a constant sampling interval Δt and invokes a tick callback every
+    period until stopped. Tracks jitter statistics and emits optional audit
+    events through a user-provided hook.
+
+    Args:
+        dt: Target period in seconds (Δt > 0).
+        tick_fn: Callback invoked each tick with the current ``perf_counter``
+            timestamp.
+        on_start: Optional hook executed before the worker thread begins.
+        on_stop: Optional hook executed after stop; receives final ``TickStats``.
+        audit_hook: Optional callable taking ``(event: str, details: Dict)`` for
+            emitting audit records.
+
+    Notes:
+        - Jitter metrics are accessible on the ``stats`` attribute.
+        - Thread-safe updates to Δt can be made via ``set_dt``.
     """
 
     def __init__(
@@ -131,10 +152,15 @@ class FixedScheduler:
                 time.sleep(max(0.0, next_t - now))
 
     def set_dt(self, new_dt: float) -> float:
-        """
-        Change the enforced Δt at runtime in a thread-safe way.
+        """Change Δt at runtime.
 
-        Returns the previous dt.
+        Thread-safe update of the enforced period.
+
+        Args:
+            new_dt: New period in seconds (Δt > 0).
+
+        Returns:
+            The previous ``dt`` value.
         """
         assert new_dt > 0.0
         with self._dt_lock:

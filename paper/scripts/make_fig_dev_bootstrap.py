@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate developmental bootstrapping flow (numberless names).
 
-Outputs: paper/figures/fig_dev_bootstrap.{pdf,png,svg}
+Creates Graphviz diagrams for developmental stages and writes
+``paper/figures/fig_dev_bootstrap.{pdf,png,svg}``.
 """
 from pathlib import Path
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph

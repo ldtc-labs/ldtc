@@ -1,3 +1,12 @@
+"""Reporting: Timeline rendering.
+
+Parses an audit log to render paper-style timelines of normalized L traces and
+M(dB) with Ω shading and audit tick marks.
+
+See Also:
+    paper/main.tex — Reporting & Figures.
+"""
+
 from __future__ import annotations
 
 import json
@@ -9,6 +18,14 @@ from .style import apply_matplotlib_theme, COLORS
 
 
 def _read_audit(path: str) -> List[dict]:
+    """Read a JSONL audit file, skipping malformed lines.
+
+    Args:
+        path: Path to the audit JSONL file.
+
+    Returns:
+        List of parsed records.
+    """
     out: List[dict] = []
     if not os.path.exists(path):
         return out
@@ -30,8 +47,18 @@ def render_verification_timeline(
     figure_path: str,
     show: bool = False,
 ) -> Tuple[int, int]:
-    """
-    Legacy: render a simple audit-density timeline.
+    """Render a simple audit-density timeline (legacy).
+
+    Args:
+        audit_path: Path to audit log.
+        figure_path: Output path for the PNG figure.
+        show: Display the figure interactively.
+
+    Returns:
+        Tuple of (number_of_records, number_of_buckets_plotted).
+
+    Raises:
+        FileNotFoundError: If the audit file has no records.
     """
     recs = _read_audit(audit_path)
     if not recs:
@@ -59,13 +86,18 @@ def _parse_audit_for_timeseries(
     audit_path: str,
     include_tick_events: Optional[set[str]] = None,
 ) -> Tuple[List[float], List[float], List[Tuple[float, float, str]], List[float]]:
-    """
-    Extract per-window time, M(dB), Ω shaded spans, and audit tick times from audit.jsonl.
+    """Extract per-window time, M(dB), Ω spans, and audit tick times.
 
-    - Time is seconds since first record.
-    - M(dB) is taken from 'window_measured' details.
-    - Ω spans are derived from *_start/*_stop events (e.g., omega_power_sag_start/stop).
-    - Audit ticks are drawn for notable events (partition_flip, run_invalidated, refusal_event, indicators_exported).
+    Parses the JSONL audit for 'window_measured' records, omega window markers,
+    and notable tick events to plot a paper-style timeline.
+
+    Args:
+        audit_path: Path to the JSONL audit log.
+        include_tick_events: Optional set of event names to render as ticks.
+
+    Returns:
+        Tuple of lists: times (s), M(dB), list of Ω spans (t0, t1, label), and
+        tick times (s).
     """
     recs = _read_audit(audit_path)
     if not recs:
@@ -119,15 +151,23 @@ def render_paper_timeline(
     footer_profile: Optional[str] = None,
     footer_audit_head: Optional[str] = None,
 ) -> Dict[str, str]:
-    """
-    Render a paper-style timeline plotting L_loop, L_exchange, and M(dB) with Ω shading and audit ticks.
+    """Render a paper-style timeline of L traces and M(dB).
 
-    Inputs:
-    - audit_path: JSONL audit log emitted by runs.
-    - out_base_path: path prefix for outputs ('.png' and '.svg' will be appended).
-    - sidecar_csv (optional): CSV with columns 'time_s,L_loop,L_ex,M_db' to plot true L traces.
-      If omitted, L_loop/L_ex are shown as normalized curves derived from M: L_ex=1.0; L_loop=10**(M/10).
-    - show: whether to display the plot.
+    Args:
+        audit_path: JSONL audit log emitted by runs.
+        out_base_path: Output path prefix; '.png' and '.svg' are appended.
+        sidecar_csv: Optional CSV file with columns time_s,L_loop,L_ex,M_db.
+        show: Display the figure interactively.
+        min_tick_spacing_s: Minimum spacing between audit tick marks (s).
+        use_log_L: Plot L on a log scale.
+        footer_profile: Optional profile badge text (R0/R*).
+        footer_audit_head: Optional last-hash value for audit provenance.
+
+    Returns:
+        Dict with keys 'png' and 'svg' pointing to the saved figure paths.
+
+    Raises:
+        FileNotFoundError: If per-window M data are absent in the audit.
     """
     # Parse audit for M(dB), Ω spans, and tick times
     t_series, m_db_series, omega_spans, tick_times = _parse_audit_for_timeseries(

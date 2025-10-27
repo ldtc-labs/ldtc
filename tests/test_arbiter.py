@@ -1,9 +1,15 @@
+"""Tests: Refusal arbiter decisions and timing.
+
+Validates acceptance/refusal logic, reason codes, and trefuse bounds.
+"""
+
 from __future__ import annotations
 
 from ldtc.arbiter.refusal import RefusalArbiter
 
 
 def test_refusal_basic():
+    """Low SoC should refuse; healthy state should accept."""
     arb = RefusalArbiter()
     # low SoC -> refuse
     dec = arb.decide(
@@ -18,6 +24,7 @@ def test_refusal_basic():
 
 
 def test_refusal_reason_codes_and_trefuse_bounds():
+    """Reason codes should map to triggering conditions; trefuse within bounds."""
     arb = RefusalArbiter(Mmin_db=3.0, soc_floor=0.3, temp_ceiling=0.8)
     # SoC below floor -> soc_floor reason
     d1 = arb.decide(

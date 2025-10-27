@@ -1,3 +1,8 @@
+"""Tests: Estimator outputs and SC1 evaluation.
+
+Covers SC1 pass/fail logic and basic shape/non-negativity of estimates.
+"""
+
 from __future__ import annotations
 import numpy as np
 
@@ -6,6 +11,7 @@ from ldtc.lmeas.metrics import sc1_evaluate
 
 
 def test_sc1_evaluate_basic():
+    """SC1 should pass under moderate dip, fast recovery, and sufficient margin."""
     ok, stats = sc1_evaluate(
         L_loop_baseline=1.0,
         L_loop_trough=0.9,
@@ -21,6 +27,7 @@ def test_sc1_evaluate_basic():
 
 
 def test_sc1_evaluate_edge_failures():
+    """SC1 should fail on excessive delta, long recovery, or low post margin."""
     # Too large delta
     ok1, stats1 = sc1_evaluate(
         L_loop_baseline=1.0,
@@ -60,6 +67,7 @@ def test_sc1_evaluate_edge_failures():
 
 
 def test_estimate_L_shapes():
+    """Basic shape and non-negativity checks for linear estimator outputs."""
     # White noise with slight causal link 1->0
     rng = np.random.default_rng(0)
     T = 400

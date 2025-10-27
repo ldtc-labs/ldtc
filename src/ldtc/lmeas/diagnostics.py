@@ -1,3 +1,12 @@
+"""Lmeas: Diagnostic helpers for measurement stability.
+
+Wrappers for ADF/KPSS tests, stationarity summaries, and a VAR N/T ratio
+heuristic used to annotate audit records and guard measurement stability.
+
+See Also:
+    paper/main.tex — Methods: Measurement; Smell-tests & invalidation.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,14 +20,26 @@ from statsmodels.tools.sm_exceptions import InterpolationWarning
 
 @dataclass
 class StationaritySummary:
+    """Summary of per-series stationarity flags.
+
+    Attributes:
+        adf_nonstationary_frac: Fraction flagged non-stationary by ADF (fail to
+            reject unit root at 5%).
+        kpss_nonstationary_frac: Fraction flagged non-stationary by KPSS
+            (reject stationarity at 5%).
+        per_series: List of tuples ``(adf_nonstat, kpss_nonstat)`` per column.
+    """
+
     adf_nonstationary_frac: float
     kpss_nonstationary_frac: float
     per_series: List[Tuple[bool, bool]]  # (adf_nonstat, kpss_nonstat) per column
 
 
 def _safe_adf(x: np.ndarray) -> bool:
-    """
-    Returns True if series appears non-stationary under ADF at 5% (fail to reject unit root).
+    """ADF non-stationarity flag with error handling.
+
+    Returns True if the series appears non-stationary at 5% (fail to reject
+    unit root), and True on errors as a conservative default.
     """
     try:
         with warnings.catch_warnings():
@@ -32,8 +53,11 @@ def _safe_adf(x: np.ndarray) -> bool:
 
 
 def _safe_kpss(x: np.ndarray) -> bool:
-    """
-    Returns True if series appears non-stationary under KPSS at 5% (reject stationarity).
+    """KPSS non-stationarity flag with error handling.
+
+    Returns True if the series appears non-stationary at 5% (reject
+    stationarity). On failures (common on short series), returns False to avoid
+    double penalization with ADF.
     """
     try:
         # Suppress noisy interpolation warnings about p-value table bounds
@@ -48,8 +72,16 @@ def _safe_kpss(x: np.ndarray) -> bool:
 
 
 def stationarity_checks(X: np.ndarray) -> StationaritySummary:
-    """
-    Run ADF and KPSS per column of X (T, N). Return per-series flags and fractions.
+    """Run ADF and KPSS per column and summarize.
+
+    Args:
+        X: Array of shape (T, N) with time along axis 0.
+
+    Returns:
+        :class:`StationaritySummary` with per-series flags and overall fractions.
+
+    Raises:
+        ValueError: If ``X`` is not a 2D array.
     """
     if X.ndim != 2:
         raise ValueError("X must be (T, N)")
@@ -70,9 +102,11 @@ def stationarity_checks(X: np.ndarray) -> StationaritySummary:
 
 
 def var_nt_ratio(T: int, N: int, p: int) -> float:
-    """
-    Rule-of-thumb samples-per-parameter ratio for a VAR(p) with N signals.
-    Returns (T - p) / (N * p). Lower values are more marginal.
+    """Rule-of-thumb samples-per-parameter ratio for VAR(p).
+
+    Computes ``(T - p) / (N * p)`` where ``T`` is time samples, ``N`` is the
+    number of signals, and ``p`` is the lag order. Lower values indicate a more
+    marginal regression setting.
     """
     if N <= 0 or p <= 0:
         return float("inf")

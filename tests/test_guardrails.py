@@ -1,3 +1,8 @@
+"""Tests: Guardrails and governance.
+
+Exercises LREG derivation, Δt rate limits, audit chain checks, and jitter.
+"""
+
 from __future__ import annotations
 
 from ldtc.guardrails.lreg import LREG, LEntry
@@ -18,6 +23,7 @@ import time
 
 
 def test_lreg_derive():
+    """Derived indicators from LREG should include nc1 flag and counter."""
     lr = LREG()
     lr.write(LEntry(0.2, 0.1, (0.1, 0.3), (0.05, 0.2), M_db=3.0, nc1_pass=True))
     d = lr.derive()
@@ -26,6 +32,7 @@ def test_lreg_derive():
 
 
 def test_partition_flip_rate_invalidation():
+    """Partition flips should invalidate when rate exceeds configured threshold."""
     cfg = SmellConfig()
     # 3 flips in one hour exceeds default max_partition_flips_per_hour=2
     assert invalid_by_partition_flips(flips=3, elapsed_sec=3600.0, cfg=cfg) is True
@@ -37,6 +44,7 @@ def test_partition_flip_rate_invalidation():
 
 
 def test_flip_during_omega_invalidation():
+    """Partition change during Ω should invalidate when forbidden by config."""
     cfg = SmellConfig(forbid_partition_flip_during_omega=True)
     assert invalid_flip_during_omega(5, 6, cfg) is True
     assert invalid_flip_during_omega(5, 5, cfg) is False
@@ -46,6 +54,7 @@ def test_flip_during_omega_invalidation():
 
 
 def test_dt_guard_rate_limited(tmp_path):
+    """Δt changes should be rate-limited and immediate back-to-back refused."""
     audit_path = tmp_path / "audit.jsonl"
     audit = AuditLog(str(audit_path))
     cfg = DtGuardConfig(max_changes_per_hour=1, min_seconds_between_changes=10.0)
@@ -69,6 +78,7 @@ def test_dt_guard_rate_limited(tmp_path):
 
 
 def test_audit_chain_and_raw_lreg_detection(tmp_path):
+    """Detect audit chain break and raw LREG leakage in audit logs."""
     audit_path = tmp_path / "audit.jsonl"
     audit = AuditLog(str(audit_path))
     # two valid sequential entries
@@ -90,6 +100,7 @@ def test_audit_chain_and_raw_lreg_detection(tmp_path):
 
 
 def test_scheduler_jitter_p95_within_bounds(tmp_path):
+    """Scheduler jitter p95 should be within bounds; audit should record metrics."""
     audit_path = tmp_path / "audit_jitter.jsonl"
     audit = AuditLog(str(audit_path))
 
@@ -130,6 +141,7 @@ def test_scheduler_jitter_p95_within_bounds(tmp_path):
 
 
 def test_dt_guard_refusal_is_audited(tmp_path):
+    """Refused Δt change should be logged with run_invalidated and reason."""
     audit_path = tmp_path / "audit_dt.jsonl"
     audit = AuditLog(str(audit_path))
     cfg = DtGuardConfig(max_changes_per_hour=1, min_seconds_between_changes=10.0)

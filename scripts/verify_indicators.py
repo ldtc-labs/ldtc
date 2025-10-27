@@ -1,3 +1,12 @@
+"""Scripts: Verify device-signed indicators and audit chain.
+
+Validates indicator signatures against the Ed25519 public key, checks that
+any available CBOR sidecar bytes match a canonical reconstruction, and
+verifies that the `audit_prev_hash` values appear in the audit chain.
+
+Outputs a one-line certificate summary and exits non-zero on failure.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -15,17 +24,30 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
 def load_pubkey(path: str) -> Ed25519PublicKey:
+    """Load an Ed25519 public key from a PEM file.
+
+    Args:
+        path: Filesystem path to the PEM public key file.
+
+    Returns:
+        Loaded :class:`Ed25519PublicKey` instance.
+    """
     with open(path, "rb") as f:
         return serialization.load_pem_public_key(f.read())  # type: ignore[return-value]
 
 
 def audit_chain_status(audit_path: str) -> Tuple[bool, str, int, List[str], str]:
-    """
-    Returns (chain_ok, last_hash, last_counter, all_hashes_in_order, diag)
-    - chain_ok: whether the chain is continuous (counters, prev_hash, timestamps)
-    - last_hash/last_counter: from the last line
-    - all_hashes_in_order: collects all 'hash' values even if broken (for prev_hash matching)
-    - diag: description of where the first break occurred (if any)
+    """Check audit JSONL chain continuity and collect hashes.
+
+    Returns ``(chain_ok, last_hash, last_counter, all_hashes_in_order, diag)``.
+
+    - chain_ok: whether counters, prev_hash links, and timestamps are monotonic
+    - last_hash/last_counter: values from the last record
+    - all_hashes_in_order: every ``hash`` value encountered (even after break)
+    - diag: description of the first break, if any
+
+    Args:
+        audit_path: Path to the audit JSONL file.
     """
     if not os.path.exists(audit_path):
         return False, "", 0, [], "missing_audit"
@@ -70,6 +92,16 @@ def audit_chain_status(audit_path: str) -> Tuple[bool, str, int, List[str], str]
 def verify_indicators(
     ind_dir: str, pub: Ed25519PublicKey, audit_hashes: List[str]
 ) -> Dict[str, int | bool | str]:
+    """Verify indicator packets in a directory.
+
+    Args:
+        ind_dir: Directory containing JSONL/CBOR indicator files.
+        pub: Ed25519 public key used for signature verification.
+        audit_hashes: Ordered list of audit chain hashes.
+
+    Returns:
+        Stats dictionary containing counts for signature, CBOR match, and prev-hash checks.
+    """
     total = 0
     ok_sig = 0
     ok_cbor_match = 0
@@ -177,6 +209,14 @@ def verify_indicators(
 
 
 def pub_fingerprint(pub: Ed25519PublicKey) -> str:
+    """Return a short SHA-256 fingerprint of the public key (DER).
+
+    Args:
+        pub: Ed25519 public key.
+
+    Returns:
+        Hex string with 16 characters.
+    """
     der = pub.public_bytes(
         serialization.Encoding.DER,
         serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -185,6 +225,11 @@ def pub_fingerprint(pub: Ed25519PublicKey) -> str:
 
 
 def main() -> None:
+    """CLI entrypoint: verify indicators and print a one-line certificate.
+
+    Parses arguments for indicator directory, audit path, and public key,
+    then checks signatures, CBOR equality (if sidecars exist), and audit prev-hash membership.
+    """
     parser = argparse.ArgumentParser(
         description="Verify signed indicators and audit chain."
     )

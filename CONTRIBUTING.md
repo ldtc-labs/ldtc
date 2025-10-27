@@ -44,6 +44,7 @@ make omega-power-sag   # Ω power-sag demo
 ## Coding guidelines
 
 - Style: Black; lint: Ruff; typing: MyPy (settings in `pyproject.toml`).
+- Docstrings: Google-style (summary, optional sections like Args/Returns). See Google Python Style Guide §3.8 Comments and Docstrings: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 - Prefer explicit, descriptive names; follow repository symbol mapping to the paper.
 - Add/extend tests in `tests/` for new behavior; keep fast unit tests (no network/large IO).
 - Keep artifacts under `artifacts/` only; do not commit generated files.

@@ -1,3 +1,12 @@
+"""Lmeas: Partition management and greedy regrowth.
+
+Deterministic C/Ex partition representation with hysteresis and a greedy
+suggestor to increase loop influence under sparsity penalties.
+
+See Also:
+    paper/main.tex — Criterion; Methods: Partitioning algorithm.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +15,15 @@ from typing import List, Optional, Sequence, Tuple, Dict, Any, Callable
 
 @dataclass
 class Partition:
+    """C/Ex partition state with freeze flag and flip counter.
+
+    Attributes:
+        C: Indices belonging to the loop (closed) set.
+        Ex: Indices belonging to the exchange set.
+        frozen: If True, updates are suppressed (e.g., during Ω windows).
+        flips: Number of accepted partition flips since creation.
+    """
+
     C: List[int]
     Ex: List[int]
     frozen: bool = False
@@ -13,12 +31,15 @@ class Partition:
 
 
 class PartitionManager:
-    """
-    Deterministic C/Ex partition with simple hysteresis:
-    - Start from seeded C.
-    - Periodically 're-grows' by moving nodes that increase L_loop more than a threshold.
-      (For this reference implementation we keep a simple fixed assignment with an optional flip hook.)
-    - Can be 'frozen' during Ω.
+    """Deterministic C/Ex partition with simple hysteresis.
+
+    Provides a minimal manager that can be frozen and updated only when a
+    suggested partition yields a sufficient decibel gain ``ΔM`` for a required
+    number of consecutive windows.
+
+    Args:
+        N_signals: Total number of signals ``N``.
+        seed_C: Initial indices for the ``C`` set; remainder form ``Ex``.
     """
 
     def __init__(self, N_signals: int, seed_C: Sequence[int]) -> None:
@@ -36,13 +57,27 @@ class PartitionManager:
         self.last_flip_info: Optional[dict] = None
 
     def get(self) -> Partition:
+        """Return the current partition state.
+
+        Returns:
+            The :class:`Partition` dataclass instance.
+        """
         return self.part
 
     def freeze(self, on: bool) -> None:
+        """Enable or disable freeze to suppress updates.
+
+        Args:
+            on: True to freeze, False to unfreeze.
+        """
         self.part.frozen = on
 
     def update_current_M(self, M_db: float) -> None:
-        """Record the latest measured M for the current (C, Ex)."""
+        """Record the latest measured M for the current partition.
+
+        Args:
+            M_db: Decibel loop-dominance value.
+        """
         self._last_M_db = float(M_db)
 
     def maybe_regrow(
@@ -52,13 +87,17 @@ class PartitionManager:
         delta_M_min_db: float = 0.5,
         consecutive_required: int = 3,
     ) -> None:
-        """
-        Consider adopting `suggested_C` using hysteresis on the loop-dominance gain.
+        """Consider adopting ``suggested_C`` using hysteresis on the ΔM gain.
 
-        - Changes are ignored when frozen.
-        - Accept only if the same suggestion persists and its ΔM ≥ delta_M_min_db
-          for `consecutive_required` consecutive ready windows.
-        - On accept, recompute Ex deterministically and count a flip.
+        Updates are ignored when frozen. Accept only if the same suggestion
+        persists for ``consecutive_required`` calls and the gain exceeds
+        ``delta_M_min_db``.
+
+        Args:
+            suggested_C: Candidate list of indices for C.
+            delta_M_db: Decibel gain relative to baseline.
+            delta_M_min_db: Minimum required ΔM to count toward acceptance.
+            consecutive_required: Number of consecutive ready windows required.
         """
         if self.part.frozen:
             return
@@ -109,16 +148,29 @@ def greedy_suggest_C(
     theta: float = 0.0,
     kappa: int | None = None,
 ) -> Tuple[List[int], float, Dict[str, Any]]:
-    """
-    Deterministic greedy regrowth of C using ΔL_loop gain with sparsity penalty.
+    """Greedy regrowth of C using ΔL_loop gain with sparsity penalty.
 
-    - Start from current C, Ex.
-    - At each step, evaluate all n in Ex: Δ = L_loop(C∪{n}) − L_loop(C) − lam·pen(n).
-      Use lexicographic tie-break (sorted Ex) and add argmax if Δ ≥ theta.
-    - Stop if no candidate meets theta or |C| reaches kappa (if provided).
-    - Return (suggested_C, delta_M_db, details).
+    Starting from the current C/Ex, iteratively add the candidate from Ex that
+    maximizes the penalized gain in ``L_loop`` until the marginal gain falls
+    below ``theta`` or a cap ``kappa`` is reached.
 
-    Hysteresis over ΔM (dB) is applied by the caller via PartitionManager.maybe_regrow.
+    Args:
+        X: Telemetry matrix (T, N) consumed by ``estimator``.
+        C: Current loop set indices.
+        Ex: Current exchange set indices.
+        estimator: Callable compatible with :func:`ldtc.lmeas.estimators.estimate_L`.
+        method: Estimation method forwarded to ``estimator``.
+        p: VAR order for linear estimator.
+        lag_mi: Lag for MI-based estimators.
+        n_boot_candidates: Number of bootstrap draws used during candidate eval.
+        mi_k: k-NN parameter for Kraskov MI.
+        lam: Sparsity penalty per added node.
+        theta: Minimum penalized gain to accept a candidate.
+        kappa: Optional cap on |C|.
+
+    Returns:
+        Tuple ``(suggested_C, delta_M_db, details)`` where ``details`` contains
+        provenance about added indices and intermediate gains.
     """
     from .metrics import m_db as _m_db
 

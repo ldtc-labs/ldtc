@@ -1,3 +1,12 @@
+"""Guardrails: Append-only audit log.
+
+Hash-chained JSONL records with monotonic counters used to attest measurement
+and policy events, providing tamper-evident provenance for runs.
+
+See Also:
+    paper/main.tex — Methods: Measurement & Attestation; Audit chain.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -11,6 +20,17 @@ from typing import Any, Dict, Optional
 
 @dataclass
 class AuditRecord:
+    """Serialized audit record structure.
+
+    Attributes:
+        counter: Monotonic counter for this record.
+        ts: UNIX timestamp (float seconds).
+        event: Event name.
+        details: Arbitrary JSON-serializable details (policy filters applied).
+        prev_hash: Hash of the previous record ("GENESIS" for the first).
+        hash: SHA-256 hash of this record's canonical JSON.
+    """
+
     counter: int
     ts: float
     event: str
@@ -20,8 +40,13 @@ class AuditRecord:
 
 
 class AuditLog:
-    """
-    Append-only, hash-chained audit log (JSONL).
+    """Append-only, hash-chained audit log (JSONL).
+
+    Ensures monotonic counters and a verifiable hash chain across records. Used
+    throughout the CLI to record measurement and governance events.
+
+    Args:
+        path: Filesystem path to the JSONL audit file.
     """
 
     def __init__(self, path: str) -> None:
@@ -34,6 +59,16 @@ class AuditLog:
     def append(
         self, event: str, details: Optional[Dict[str, Any]] = None
     ) -> AuditRecord:
+        """Append an event to the audit log.
+
+        Args:
+            event: Event name.
+            details: Optional dict of additional fields; raw LREG keys are
+                blocked by policy and will raise an error.
+
+        Returns:
+            The :class:`AuditRecord` that was written.
+        """
         with self._lock:
             self._counter += 1
             ts = time.time()
@@ -68,8 +103,18 @@ class AuditLog:
 
     @property
     def last_hash(self) -> str:
+        """Return the current hash head of the audit chain.
+
+        Returns:
+            Hex-encoded hash string.
+        """
         return self._prev_hash
 
     @property
     def counter(self) -> int:
+        """Return the last written counter value.
+
+        Returns:
+            Monotonic counter for the last record written.
+        """
         return self._counter

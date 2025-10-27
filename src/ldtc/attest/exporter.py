@@ -1,3 +1,12 @@
+"""Attest: Indicator exporter.
+
+Rate-limited writer for device-signed indicator bundles in JSONL and CBOR,
+with strict enforcement of the no-raw-LREG export policy.
+
+See Also:
+    paper/main.tex — Methods: Measurement & Attestation; Export policy.
+"""
+
 from __future__ import annotations
 
 import json
@@ -15,9 +24,10 @@ _BANNED_RAW_KEYS = {"L_loop", "L_ex", "ci_loop", "ci_ex"}
 
 
 def _assert_no_raw_lreg(obj: Any) -> None:
-    """
-    Defense-in-depth: reject any payload containing raw LREG fields.
-    Recurses through dicts/lists/tuples.
+    """Defense-in-depth: reject any payload containing raw LREG fields.
+
+    Recurses through dicts/lists/tuples and raises ``ValueError`` if any
+    forbidden key is encountered.
     """
     stack = [obj]
     while stack:
@@ -34,8 +44,14 @@ def _assert_no_raw_lreg(obj: Any) -> None:
 
 
 class IndicatorExporter:
-    """
-    Rate-limited export of device-signed indicator packets to JSONL and CBOR.
+    """Rate-limited export of device-signed indicator packets.
+
+    Writes JSONL and CBOR artifacts side-by-side after signing a derived
+    indicator payload. Enforces the no-raw-LREG policy.
+
+    Args:
+        out_dir: Output directory for indicator artifacts.
+        rate_hz: Maximum export rate in Hz.
     """
 
     def __init__(self, out_dir: str, rate_hz: float = 2.0) -> None:
@@ -52,6 +68,19 @@ class IndicatorExporter:
         cfg: IndicatorConfig,
         last_sc1_pass: bool,
     ) -> Tuple[bool, str]:
+        """Export a signed indicator bundle if rate limit allows.
+
+        Args:
+            priv: Ed25519 private key.
+            audit: Audit log instance (provides last hash head).
+            derived: Derived indicators from LREG (no raw L fields).
+            cfg: Indicator configuration including profile id.
+            last_sc1_pass: Whether SC1 passed in the last evaluation.
+
+        Returns:
+            Tuple ``(exported, base_path)`` where ``base_path`` is the file path
+            prefix for generated artifacts.
+        """
         now = time.time()
         if now - self._last < self.min_interval:
             return False, ""

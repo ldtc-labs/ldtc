@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate perturbation–recovery timeline (numberless names).
 
-Outputs: paper/figures/fig_perturbation_recovery.{pdf,png,svg}
+Creates a Matplotlib figure showing a dip and recovery of loop power and writes
+``paper/figures/fig_perturbation_recovery.{pdf,png,svg}``.
 """
 from pathlib import Path
 

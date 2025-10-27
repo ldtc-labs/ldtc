@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate exploded adaptive boundary (numberless names).
 
-Outputs: paper/figures/fig_adaptive_boundary.{pdf,png,svg}
+Creates Graphviz diagrams for an exploded view of the adaptive boundary and
+writes ``paper/figures/fig_adaptive_boundary.{pdf,png,svg}``.
 """
 from pathlib import Path
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph

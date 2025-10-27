@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""Generate a simple demo plot.
+
+Creates a damped sinusoid and writes ``paper/figures/fig_hello.{pdf,png,svg}``.
+"""
 from pathlib import Path
 
 import matplotlib.pyplot as plt

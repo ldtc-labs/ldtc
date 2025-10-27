@@ -1,3 +1,14 @@
+"""LDTC CLI: run baseline and Ω perturbation demos.
+
+Defines the ``ldtc`` command with subcommands for the baseline run and omega
+perturbations (power sag, ingress flood, command conflict, exogenous subsidy).
+It orchestrates runtime scheduling, measurement, guardrails, attestation, and
+reporting.
+
+See Also:
+    paper/main.tex — Verification Pipeline; CLI orchestration.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -44,6 +55,12 @@ if TYPE_CHECKING:
 
 
 class AdapterProtocol(Protocol):
+    """Protocol for plant adapters used by the CLI.
+
+    Implementations must support reading state, writing actuators, and
+    applying omega stimuli.
+    """
+
     def read_state(self) -> Dict[str, float]: ...
 
     def write_actuators(self, action: "PlantAction") -> None:  # noqa: F821
@@ -53,12 +70,28 @@ class AdapterProtocol(Protocol):
 
 
 def _load_yaml(path: str) -> Dict:
+    """Load a YAML configuration file.
+
+    Args:
+        path: Filesystem path to a YAML file.
+
+    Returns:
+        Parsed configuration dictionary.
+    """
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def _set_seeds(prof: Dict) -> Dict[str, int]:
-    """Configure global RNG seeds from config dict."""
+    """Configure global RNG seeds from a config dict.
+
+    Args:
+        prof: Configuration dictionary possibly containing ``seed``,
+            ``seed_py``, and ``seed_np``.
+
+    Returns:
+        Dict with concrete ``seed_py`` and ``seed_np`` values.
+    """
     seed = prof.get("seed")
     seed_py = int(prof.get("seed_py", seed if seed is not None else 12345))
     seed_np = int(prof.get("seed_np", seed if seed is not None else 12345))

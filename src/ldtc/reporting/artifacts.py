@@ -1,3 +1,11 @@
+"""Reporting: Artifact bundling for verification outputs.
+
+Builds paper-style timelines, SC1 tables, and a manifest from the audit log.
+
+See Also:
+    paper/main.tex — Reporting & Figures; Verification Pipeline.
+"""
+
 from __future__ import annotations
 
 import json
@@ -10,6 +18,14 @@ from .tables import write_sc1_table
 
 
 def _read_audit(path: str) -> List[dict]:
+    """Read a JSONL audit file into a list of dicts.
+
+    Args:
+        path: Path to the audit JSONL file.
+
+    Returns:
+        List of parsed JSON objects; malformed lines are skipped.
+    """
     recs: List[dict] = []
     if not os.path.exists(path):
         return recs
@@ -26,7 +42,15 @@ def _read_audit(path: str) -> List[dict]:
 
 
 def _extract_header(recs: List[dict]) -> Tuple[Dict[str, Any], int]:
-    """Return (header_dict, index_of_header) for the last run_header in recs."""
+    """Extract the last run_header record.
+
+    Args:
+        recs: Parsed audit records.
+
+    Returns:
+        Tuple of (header_details_dict, index_of_last_header) or ({{}}, -1) if
+        not found.
+    """
     last_idx = -1
     last_details: Dict[str, Any] = {}
     for i, r in enumerate(recs):
@@ -61,6 +85,16 @@ def _extract_header(recs: List[dict]) -> Tuple[Dict[str, Any], int]:
 def _extract_sc1_rows(
     recs: List[dict], eta_label: str | None, start_index: int
 ) -> List[Dict[str, Any]]:
+    """Extract SC1 results into table rows.
+
+    Args:
+        recs: Parsed audit records.
+        eta_label: Label for Ω stimulus.
+        start_index: Only consider records from this index onward.
+
+    Returns:
+        List of dict rows ready for CSV writing.
+    """
     rows: List[Dict[str, Any]] = []
     for r in recs[max(0, int(start_index)) :]:
         if r.get("event") == "sc1_result":
@@ -77,12 +111,28 @@ def _extract_sc1_rows(
 
 
 def _audit_hash_head(recs: List[dict]) -> str:
+    """Return the last hash value in the provided records or empty string.
+
+    Args:
+        recs: Parsed audit records.
+
+    Returns:
+        Last record's ``hash`` or an empty string.
+    """
     if not recs:
         return ""
     return str(recs[-1].get("hash", ""))
 
 
 def _pubkey_hash_or_none(pubkey_path: str) -> str | None:
+    """Compute SHA-256 of a PEM public key file, if present.
+
+    Args:
+        pubkey_path: Filesystem path to PEM public key.
+
+    Returns:
+        Hex-encoded SHA-256 string or None.
+    """
     try:
         import hashlib
 
@@ -96,13 +146,22 @@ def _pubkey_hash_or_none(pubkey_path: str) -> str | None:
 
 
 def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
-    """
-    Emit a single verification bundle for a trial consisting of:
-      - Paper-style timeline image (PNG+SVG)
-      - SC1 table (if present) with columns: eta, delta, tau_rec, M_post, pass
-      - JSON manifest with profile, seeds, Δt, method, CI coverage, and audit hash head
+    """Create a verification artifact bundle from an audit log.
 
-    Returns paths of generated artifacts.
+    Generates a paper-style timeline (PNG+SVG), an optional SC1 CSV table, and
+    a manifest JSON describing profile thresholds and artifact paths.
+
+    Args:
+        artifact_dir: Output directory for generated artifacts.
+        audit_path: Path to the JSONL audit log.
+
+    Returns:
+        Dict with keys for produced files: ``timeline_png``, ``timeline_svg``,
+        ``sc1_table`` (optional), ``manifest``, ``config_snapshot`` (optional),
+        and a policy ``notice``.
+
+    Raises:
+        FileNotFoundError: If the audit log is missing or empty.
     """
     os.makedirs(artifact_dir, exist_ok=True)
     recs = _read_audit(audit_path)

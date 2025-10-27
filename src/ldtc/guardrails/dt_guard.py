@@ -1,3 +1,12 @@
+"""Guardrails: Δt governance.
+
+Privileged, rate-limited interface to mutate scheduler Δt with audit logging
+and run invalidation on policy violations.
+
+See Also:
+    paper/main.tex — Smell-tests & invalidation; Δt governance.
+"""
+
 from __future__ import annotations
 
 import time
@@ -9,17 +18,26 @@ from .audit import AuditLog
 
 @dataclass
 class DtGuardConfig:
+    """Configuration for Δt governance constraints.
+
+    Attributes:
+        max_changes_per_hour: Maximum permitted changes in any rolling hour.
+        min_seconds_between_changes: Minimum spacing between edits.
+    """
+
     max_changes_per_hour: int = 3
     min_seconds_between_changes: float = 1.0
 
 
 class DeltaTGuard:
-    """
-    Privileged Δt governance:
-    - Single API to change Δt
-    - Appends audit records (old/new/policy digest placeholder)
-    - Monotonic counter is provided by AuditLog
-    - Rate-limits changes; emits invalidation events on violations
+    """Privileged Δt governance wrapper.
+
+    Single, rate-limited pathway to update scheduler Δt with audit records and
+    invalidation signaling when limits are exceeded.
+
+    Args:
+        audit: AuditLog instance used for recording events.
+        cfg: Optional configuration for rate limits.
     """
 
     def __init__(self, audit: AuditLog, cfg: Optional[DtGuardConfig] = None) -> None:
@@ -36,6 +54,14 @@ class DeltaTGuard:
             self._changes_in_window = 0
 
     def can_change(self, now: Optional[float] = None) -> bool:
+        """Check whether a Δt change is permissible.
+
+        Args:
+            now: Optional timestamp override for rate-limit accounting.
+
+        Returns:
+            True if within hourly and spacing limits; otherwise False.
+        """
         now = now or time.time()
         self._reset_window_if_needed(now)
         if self._changes_in_window >= self.cfg.max_changes_per_hour:
@@ -50,9 +76,16 @@ class DeltaTGuard:
     def change_dt(
         self, scheduler: Any, new_dt: float, policy_digest: Optional[str] = None
     ) -> bool:
-        """
-        The only supported way to change Δt. Returns True if committed; False if refused
-        and an invalidation audit event was written.
+        """Attempt to change Δt; audit and invalidate on violations.
+
+        Args:
+            scheduler: Object exposing ``set_dt(new_dt) -> old_dt``.
+            new_dt: Desired new Δt in seconds.
+            policy_digest: Optional identifier of the policy authorizing the change.
+
+        Returns:
+            True if the change was committed; False if refused and the run was
+            invalidated by audit.
         """
         now = time.time()
         self._reset_window_if_needed(now)
@@ -89,4 +122,9 @@ class DeltaTGuard:
 
     @property
     def invalidated(self) -> bool:
+        """Whether a Δt governance violation invalidated the run.
+
+        Returns:
+            True if invalidated; otherwise False.
+        """
         return self._invalidated
