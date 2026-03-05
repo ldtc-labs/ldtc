@@ -68,3 +68,30 @@ exclude = [
 ]
 explicit_package_bases = true
 packages = ["src/ldtc"]
+
+# ── Semantic Release ────────────────────────────────────────────────
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = ["src/ldtc/__init__.py:__version__"]
+commit_message = "chore(release): v{version}"
+tag_format = "v{version}"
+major_on_zero = false
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+]
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build", "chore", "ci", "docs", "feat", "fix",
+    "perf", "refactor", "revert", "style", "test",
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]

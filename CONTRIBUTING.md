@@ -232,6 +232,7 @@ Co-authored-by: Name <email>
 
 ## Pull request checklist
 
+- PR title: Conventional Commits format (CI-enforced by `pr-lint.yml`).
 - Tests: added/updated; `make test` passes.
 - Lint/format/type-check: `make lint`, `make fmt`, `make typecheck` pass.
 - Docs: update `docs/` and `README.md` if behavior, symbols, or indicators change.
@@ -246,12 +247,17 @@ Co-authored-by: Name <email>
 
 ## Versioning and releases
 
-- The version is tracked in `pyproject.toml` (`project.version`) and mirrored in `src/ldtc/__init__.py` as `__version__`. Use SemVer.
-- Workflow (single `main` branch):
-  - Contributors: branch off `main` and open PRs.
-  - Maintainer (release): bump version, tag, and publish to PyPI.
-  - Tag on `main`: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags`.
-  - A GitHub Action publishes the package to PyPI when a `v*.*.*` tag is pushed.
+- The version is tracked in `pyproject.toml` (`project.version`) and mirrored in `src/ldtc/__init__.py` as `__version__`. Both files are updated automatically by [python-semantic-release](https://python-semantic-release.readthedocs.io/).
+- **Automated release pipeline** (on every merge to `main`):
+  1. `python-semantic-release` scans Conventional Commit messages since the last tag.
+  2. It determines the next SemVer bump: `feat` → **minor**, `fix`/`perf` → **patch**, `BREAKING CHANGE` → **major**.
+  3. Version files are updated, `CHANGELOG.md` is generated, and a tagged release commit (`chore(release): vX.Y.Z`) is pushed.
+  4. A GitHub Release is created with auto-generated release notes and the built sdist/wheel attached.
+  5. When drafts are disabled, the package is also published to PyPI via Trusted Publishing.
+- **Draft / published toggle**: the `DRAFT_RELEASE` variable at the top of `.github/workflows/release.yml` controls release mode. Set to `"true"` (the default) for draft GitHub Releases with PyPI publishing skipped; flip to `"false"` to publish releases and upload to PyPI immediately.
+- Commit types that trigger a release: `feat` (minor), `fix` and `perf` (patch), `BREAKING CHANGE` (major). All other types (`build`, `chore`, `ci`, `docs`, `refactor`, `revert`, `style`, `test`) are recorded in the changelog but do **not** trigger a release on their own.
+- Tag format: `v`-prefixed (e.g., `v1.1.0`).
+- Manual version bumps are no longer needed — just merge PRs with valid Conventional Commit titles. For ad-hoc runs, use the workflow's **Run workflow** button (`workflow_dispatch`).
 
 ### Branching rules
 
@@ -292,7 +298,11 @@ hotfix/attest-sig-verify
 
 ### CI
 
-- PRs to `main` run lint (ruff), type-checks (mypy), tests (pytest), and a build check.
+- **CI** (`ci.yml`): runs Black, Ruff, MyPy, pytest, and indicator verification on pushes to `main` and PRs.
+- **PR Lint** (`pr-lint.yml`): validates the PR title against Conventional Commits format (protects squash merges) and checks individual commit messages via commitlint (protects rebase merges). Recommended: add the **PR title** job as a required status check in branch-protection settings.
+- **Release** (`release.yml`): runs on merge to `main`; computes version, generates changelog, tags, creates GitHub Release, and (when `DRAFT_RELEASE` is `"false"`) publishes to PyPI.
+- **Docs** (`docs.yml`): deploys documentation to GitHub Pages on push to `main`.
+- **Build Paper** (`build-paper.yml`): compiles the LaTeX manuscript.
 
 ## Security and provenance
 
