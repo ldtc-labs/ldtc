@@ -1,0 +1,34 @@
+{
+  "title": "LDTC: Loop‑Dominance (NC1/SC1) verification harness",
+  "description": "LDTC is a single‑machine verification harness that implements the Loop‑Dominance (NC1/SC1) pipeline from the accompanying paper. It computes Lloop and Lexchange at fixed Δt using VAR‑Granger and Kraskov k‑NN MI, performs deterministic C/Ex partitioning with hysteresis, enforces guardrails/attestation (LREG, Δt governance, audit chain), and provides an Ω perturbation battery (power sag, ingress flood, command conflict, exogenous subsidy) with a CLI and reporting/figures.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Carey, Owen",
+      "orcid": "0009-0001-4580-2037"
+    }
+  ],
+  "keywords": [
+    "loop-dominance",
+    "consciousness",
+    "verification",
+    "NC1",
+    "SC1",
+    "real-time",
+    "Python"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.17073880",
+      "relation": "continues",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/ldtc-labs/ldtc",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
