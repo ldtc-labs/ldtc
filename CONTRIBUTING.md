@@ -262,38 +262,35 @@ Co-authored-by: Name <email>
 ### Branching rules
 
 - `main`: default branch; protected; mirrors PyPI.
-- Feature branches: `feature/...` from `main`; hotfixes: `hotfix/...` from `main`.
+- All work branches are created from `main`.
 
 #### Branch naming
 
 - Use lowercase kebab-case; no spaces; keep names concise (aim ≤ 40 chars).
-- Prefix conventions (align with Conventional Commit categories):
-  - `feature/<scope>-<short-desc>` (from `main`)
-  - `fix/<issue-or-bug>-<short-desc>` (from `main`)
-  - `chore/<short-desc>` (from `main`)
-  - `docs/<short-desc>` (from `main`)
-  - `ci/<short-desc>` (from `main`)
-  - `refactor/<scope>-<short-desc>` (from `main`)
-  - `test/<short-desc>` (from `main`)
-  - `perf/<short-desc>` (from `main`)
-  - `build/<short-desc>` (from `main`)
-  - `release/vX.Y.Z` (from `main`, for release prep PRs)
-  - `hotfix/<short-desc>` (from `main`, for urgent fixes)
+- Branch prefixes match Conventional Commit types:
+  - `feat/<scope>-<short-desc>`
+  - `fix/<issue-or-bug>-<short-desc>`
+  - `chore/<short-desc>`
+  - `docs/<short-desc>`
+  - `ci/<short-desc>`
+  - `refactor/<scope>-<short-desc>`
+  - `test/<short-desc>`
+  - `perf/<short-desc>`
+  - `build/<short-desc>`
 - Optionally append an issue ID at the end (e.g., `feat/cli-figures-123`).
 - Delete remote and local branches after merge.
 
 Examples:
 
 ```text
-feature/cli-figures
+feat/cli-figures
 fix/omega-duration-units-123
 docs/contributing-branch-naming
 ci/mplbackend-agg-headless
 build/lock-filters-ldtc
 refactor/runtime-jitter-accounting
 test/omega-suite
-release/v0.2.0
-hotfix/attest-sig-verify
+fix/attest-sig-verify
 ```
 
 ### CI
