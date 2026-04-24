@@ -1,11 +1,11 @@
-"""Omega: Power-sag stimulus.
+"""Power-sag stimulus.
 
-Reduces harvest/power input for a bounded interval to test resilience (SC1)
-and loop-dominance recovery. The CLI uses this omega to produce verification
-timelines and SC1 tables.
+Reduces harvest / power input for a bounded interval to test resilience
+(SC1) and loop-dominance recovery. The CLI uses this `Ω` to produce
+verification timelines and SC1 tables.
 
 See Also:
-    paper/main.tex — SC1 and the Ω battery.
+    `paper/main.tex`: SC1 and the `Ω` battery.
 """
 
 from __future__ import annotations
@@ -19,15 +19,19 @@ def apply(adapter: PlantAdapter, drop: float = 0.3) -> Dict[str, float | str]:
     """Apply a power-sag event via the plant adapter.
 
     Args:
-        adapter: Plant interface to which the omega stimulus will be applied.
-        drop: Fractional reduction (0..1) in harvest power during the sag.
+        adapter: Plant interface to which the `Ω` stimulus will be
+            applied.
+        drop: Fractional reduction in `[0, 1]` of harvest power during
+            the sag.
 
     Returns:
-        Dict with pre/post harvest values, e.g., ``{"H_old": float,
-        "H_new": float}``.
+        Dict with pre / post harvest values, e.g., `{"H_old": float,
+        "H_new": float}`. The exact keys depend on the adapter
+        implementation.
 
     Notes:
-        Higher-level orchestration (CLI) controls the sag duration and recovery
-        observation window; this function triggers the sag at the adapter.
+        Higher-level orchestration (the CLI) controls the sag duration
+        and recovery observation window; this function only triggers
+        the sag at the adapter.
     """
     return adapter.apply_omega("power_sag", drop=drop)

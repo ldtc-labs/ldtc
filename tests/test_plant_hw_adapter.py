@@ -6,9 +6,9 @@ Verifies telemetry ingest/read_state and basic actuator/omega forwarding.
 from __future__ import annotations
 
 import json
+import math
 import socket
 import time
-import math
 
 from ldtc.plant.hw_adapter import HardwarePlantAdapter
 from ldtc.plant.models import Action
@@ -40,10 +40,7 @@ def test_hw_adapter_udp_ingest_and_read_state():
         while time.time() - t0 < 1.5:
             state = adapter.read_state()
             if state and all(
-                (k in state)
-                and (not math.isnan(state[k]))
-                and (abs(state[k] - msg[k]) < 1e-6)
-                for k in msg.keys()
+                (k in state) and (not math.isnan(state[k])) and (abs(state[k] - msg[k]) < 1e-6) for k in msg.keys()
             ):
                 break
             time.sleep(0.01)
@@ -53,9 +50,7 @@ def test_hw_adapter_udp_ingest_and_read_state():
             assert abs(state[k] - v) < 1e-6
 
         # Exercise actuator emit path (no assertion; just ensure no exception)
-        adapter.write_actuators(
-            Action(throttle=0.1, cool=0.0, repair=0.0, accept_cmd=True)
-        )
+        adapter.write_actuators(Action(throttle=0.1, cool=0.0, repair=0.0, accept_cmd=True))
         # Exercise omega forward path
         adapter.apply_omega("power_sag", drop=0.3)
     finally:

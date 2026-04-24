@@ -5,10 +5,10 @@ Covers power_sag, ingress_flood, and command_conflict adapters.
 
 from __future__ import annotations
 
-from ldtc.plant.adapter import PlantAdapter
-from ldtc.omega.power_sag import apply as sag
-from ldtc.omega.ingress_flood import apply as flood
 from ldtc.omega.command_conflict import apply as conflict
+from ldtc.omega.ingress_flood import apply as flood
+from ldtc.omega.power_sag import apply as sag
+from ldtc.plant.adapter import PlantAdapter
 
 
 def test_omega_calls():

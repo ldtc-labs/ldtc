@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean
+.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean
 
 help:
 	@echo "Targets:"
@@ -13,6 +13,8 @@ help:
 	@echo "  lint           - run ruff (if installed)"
 	@echo "  typecheck      - run mypy type checks (if installed)"
 	@echo "  fmt            - run black (if installed)"
+	@echo "  docs           - build the MkDocs site in strict mode"
+	@echo "  docs-serve     - serve the MkDocs site locally with live reload"
 	@echo "  run            - run baseline loop with R0 profile"
 	@echo "  omega-power-sag - run Ω power-sag demo"
 	@echo "  omega-ingress  - run Ω ingress-flood demo"
@@ -64,6 +66,12 @@ typecheck:
 
 fmt:
 	-black src tests examples scripts paper/scripts
+
+docs:
+	$(PY) -m mkdocs build --strict
+
+docs-serve:
+	$(PY) -m mkdocs serve
 
 run:
 	$(PY) -m ldtc.cli.main run --config configs/profile_r0.yml

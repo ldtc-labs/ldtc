@@ -29,7 +29,9 @@ dev = [
 docs = [
   "mkdocs>=1.5",
   "mkdocs-material[imaging]>=9.5",
-  "mkdocstrings[python]>=0.24"
+  "mkdocstrings[python]>=0.24",
+  "mkdocs-autorefs>=1.0",
+  "pymdown-extensions>=10.7"
 ]
 
 [project.scripts]
@@ -49,6 +51,39 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["ldtc*"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+
+[tool.ruff.lint]
+# Docstring (D) rules use the Google convention; see [tool.ruff.lint.pydocstyle].
+# Selectively enabled so tests / examples / scripts aren't penalised (see
+# per-file-ignores below).
+select = ["E", "F", "I", "D"]
+# D107 (missing __init__ docstring): mkdocstrings is configured to merge
+#   __init__ into the class docstring, so the class docstring is the source of
+#   truth and we don't want to require both.
+# D105 (magic method docstring): most are self-explanatory (__repr__, __eq__, etc.).
+# D203 / D213: conflict with the Google convention defaults; ruff auto-suppresses
+#   these via convention = "google" but we list them defensively.
+ignore = ["D107", "D105", "D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D"]
+"examples/**/*.py" = ["D"]
+"scripts/**/*.py" = ["D"]
+"paper/scripts/**/*.py" = ["D"]
+"notebooks/**/*.py" = ["D"]
+"setup.py" = ["D"]
+"conftest.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
 
 [tool.mypy]
 python_version = "3.9"

@@ -1,21 +1,23 @@
-"""Lmeas: Diagnostic helpers for measurement stability.
+"""Diagnostic helpers for measurement stability.
 
-Wrappers for ADF/KPSS tests, stationarity summaries, and a VAR N/T ratio
-heuristic used to annotate audit records and guard measurement stability.
+Wrappers for ADF / KPSS stationarity tests, a stationarity summary
+dataclass, and a VAR N/T ratio heuristic. These are used to annotate audit
+records and to guard the loop-influence estimators against ill-posed
+regimes (too few samples per parameter, non-stationary series, and so on).
 
 See Also:
-    paper/main.tex — Methods: Measurement; Smell-tests & invalidation.
+    `paper/main.tex`: Methods: Measurement; Smell-tests and invalidation.
 """
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import List, Tuple
 
 import numpy as np
-import warnings
-from statsmodels.tsa.stattools import adfuller, kpss
 from statsmodels.tools.sm_exceptions import InterpolationWarning
+from statsmodels.tsa.stattools import adfuller, kpss
 
 
 @dataclass
@@ -23,11 +25,11 @@ class StationaritySummary:
     """Summary of per-series stationarity flags.
 
     Attributes:
-        adf_nonstationary_frac: Fraction flagged non-stationary by ADF (fail to
-            reject unit root at 5%).
+        adf_nonstationary_frac: Fraction flagged non-stationary by ADF (fails
+            to reject the unit-root null at 5%).
         kpss_nonstationary_frac: Fraction flagged non-stationary by KPSS
-            (reject stationarity at 5%).
-        per_series: List of tuples ``(adf_nonstat, kpss_nonstat)`` per column.
+            (rejects stationarity at 5%).
+        per_series: List of tuples `(adf_nonstat, kpss_nonstat)` per column.
     """
 
     adf_nonstationary_frac: float
@@ -75,13 +77,14 @@ def stationarity_checks(X: np.ndarray) -> StationaritySummary:
     """Run ADF and KPSS per column and summarize.
 
     Args:
-        X: Array of shape (T, N) with time along axis 0.
+        X: Array of shape `(T, N)` with time along axis 0.
 
     Returns:
-        :class:`StationaritySummary` with per-series flags and overall fractions.
+        A [`StationaritySummary`][ldtc.lmeas.diagnostics.StationaritySummary]
+        with per-series flags and overall fractions.
 
     Raises:
-        ValueError: If ``X`` is not a 2D array.
+        ValueError: If `X` is not a 2D array.
     """
     if X.ndim != 2:
         raise ValueError("X must be (T, N)")
@@ -104,9 +107,21 @@ def stationarity_checks(X: np.ndarray) -> StationaritySummary:
 def var_nt_ratio(T: int, N: int, p: int) -> float:
     """Rule-of-thumb samples-per-parameter ratio for VAR(p).
 
-    Computes ``(T - p) / (N * p)`` where ``T`` is time samples, ``N`` is the
-    number of signals, and ``p`` is the lag order. Lower values indicate a more
-    marginal regression setting.
+    Computes `(T - p) / (N * p)` where `T` is the number of time samples,
+    `N` is the number of signals, and `p` is the VAR lag order. Lower
+    values indicate a more marginal regression setting; the linear
+    estimator in
+    [`estimate_L`][ldtc.lmeas.estimators.estimate_L] inflates its CIs when
+    this ratio drops below ~1.5.
+
+    Args:
+        T: Number of time samples.
+        N: Number of signals (columns).
+        p: VAR lag order.
+
+    Returns:
+        Samples-per-parameter ratio. Returns `inf` if `N` or `p` is
+        non-positive (ill-defined regression).
     """
     if N <= 0 or p <= 0:
         return float("inf")

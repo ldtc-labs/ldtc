@@ -1,14 +1,28 @@
-"""Reporting: Plot and graph styles.
+"""Plot and graph styles for LDTC figures.
 
-Matplotlib and Graphviz theming for consistent, publication-ready figures.
+Provides a small, opinionated theme that the rest of
+[`ldtc.reporting`][ldtc.reporting] uses to make figures consistent
+across the docs site, the paper, and per-run artifact bundles. Three
+helpers are exposed:
+
+- [`apply_matplotlib_theme`][ldtc.reporting.style.apply_matplotlib_theme]
+  sets fonts, axes, and DPI on the global Matplotlib `rcParams`.
+- [`apply_graphviz_theme`][ldtc.reporting.style.apply_graphviz_theme]
+  decorates a `Digraph` with the LDTC palette and layout defaults.
+- [`new_graph`][ldtc.reporting.style.new_graph] is a convenience
+  constructor that returns an already-themed `Digraph`.
+
+The shared `COLORS` palette in this module is colorblind-aware and
+anchored on the manuscript's existing colors so figures composed in
+the docs match the paper.
 
 See Also:
-    paper/main.tex — Reporting & Figures.
+    `paper/main.tex`: Reporting & Figures.
 """
 
 from __future__ import annotations
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 import matplotlib as mpl
 
@@ -18,7 +32,6 @@ except Exception:  # pragma: no cover - optional at import site
     Digraph = None
 
 
-# Unified, colorblind-aware palette (anchored on existing manuscript colors)
 COLORS: Dict[str, str] = {
     "blue": "#2874A6",
     "blue_light": "#D6EAF8",
@@ -38,20 +51,21 @@ COLORS: Dict[str, str] = {
 def apply_matplotlib_theme(kind: str = "paper") -> None:
     """Apply a consistent Matplotlib style.
 
-    Configures fonts, spine visibility, label sizes, and vector-friendly output
-    settings for consistent figures in the docs and paper.
+    Configures fonts, spine visibility, label sizes, and vector-friendly
+    output settings so that figures in the docs site and the paper share
+    a single visual language. The function mutates the global Matplotlib
+    `rcParams`; call it once at process start.
 
     Args:
-        kind: Optional style variant; currently informational only.
+        kind: Optional style variant. Currently informational; only the
+            default paper-style theme is implemented.
     """
     mpl.rcParams.update(
         {
-            # Fonts
             "font.family": "sans-serif",
             "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
             "text.usetex": False,
             "mathtext.fontset": "dejavusans",
-            # Axes and spines
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.grid": False,
@@ -60,12 +74,11 @@ def apply_matplotlib_theme(kind: str = "paper") -> None:
             "xtick.labelsize": 9,
             "ytick.labelsize": 9,
             "legend.fontsize": 9,
-            # DPI and vector font embedding
             "figure.dpi": 150,
             "savefig.dpi": 300,
             "pdf.fonttype": 42,
             "ps.fonttype": 42,
-            "svg.fonttype": "none",  # keep text as text
+            "svg.fonttype": "none",
         }
     )
 
@@ -98,19 +111,21 @@ def _graph_defaults(rankdir: str = "LR") -> Dict[str, Dict[str, str]]:
     }
 
 
-def apply_graphviz_theme(
-    dot: Any, rankdir: str = "LR", overrides: Dict[str, Dict[str, str]] | None = None
-) -> None:
+def apply_graphviz_theme(dot: Any, rankdir: str = "LR", overrides: Dict[str, Dict[str, str]] | None = None) -> None:
     """Apply consistent Graphviz attributes to a Digraph.
 
     Args:
-        dot: A :class:`graphviz.Digraph` instance.
-        rankdir: Graph layout direction ("LR" or "TB").
-        overrides: Optional nested dict overriding default graph/node/edge attrs.
+        dot: A `graphviz.Digraph` instance.
+        rankdir: Graph layout direction; either `"LR"` (left-to-right)
+            or `"TB"` (top-to-bottom).
+        overrides: Optional nested dict overriding default
+            graph/node/edge attributes. Top-level keys must be one of
+            `"graph"`, `"node"`, or `"edge"`; values are merged
+            shallowly into the defaults so callers can override only the
+            attributes they care about.
     """
     defaults = _graph_defaults(rankdir=rankdir)
     if overrides:
-        # Shallow merge
         for k, v in overrides.items():
             defaults.setdefault(k, {}).update(v)
     g = defaults["graph"]
@@ -125,15 +140,18 @@ def new_graph(name: str, rankdir: str = "LR", engine: str = "dot") -> Any:
     """Create a themed Graphviz Digraph.
 
     Args:
-        name: Graph name.
-        rankdir: Layout direction.
-        engine: Graphviz engine (e.g., "dot", "neato").
+        name: Graph name. Used by Graphviz for the rendered file's
+            top-level identifier.
+        rankdir: Layout direction; see
+            [`apply_graphviz_theme`][ldtc.reporting.style.apply_graphviz_theme].
+        engine: Graphviz engine (e.g., `"dot"`, `"neato"`).
 
     Returns:
-        A configured :class:`graphviz.Digraph`.
+        A `graphviz.Digraph` with the LDTC palette and layout defaults
+        already applied.
 
     Raises:
-        RuntimeError: If graphviz is not available.
+        RuntimeError: If `graphviz` is not installed.
     """
     if Digraph is None:
         raise RuntimeError("graphviz is required to build themed graphs")

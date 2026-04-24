@@ -7,7 +7,9 @@ Creates Graphviz diagrams for the meta-policy override flow and writes
 See Also:
     docs/concepts/architecture.md
 """
+
 from pathlib import Path
+
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
 
 
@@ -67,7 +69,12 @@ def main() -> None:
     )
     dot.node(
         "F",
-        label="<\n<B>Autonomy Routine Initiated</B><BR/>- Suspend peripheral tasks<BR/>- Reallocate energy to boundary<BR/>- Initiate resource foraging\n>",
+        label=(
+            "<\n<B>Autonomy Routine Initiated</B><BR/>"
+            "- Suspend peripheral tasks<BR/>"
+            "- Reallocate energy to boundary<BR/>"
+            "- Initiate resource foraging\n>"
+        ),
         shape="box",
         style="rounded,filled",
         color=blue_edge,

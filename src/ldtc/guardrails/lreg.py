@@ -1,10 +1,16 @@
-"""Guardrails: LREG enclave.
+"""LREG: enclave-like register for raw 𝓛 and CI bounds.
 
-In-memory enclave-like register for raw loop/exchange values and CIs, exposing
-only derived indicators externally to honor the no-raw-LREG policy.
+`LREG` ("loop register") holds the per-window raw loop / exchange
+influence values and their CIs in memory. By design, raw entries are
+write-only from outside the package: external callers go through
+[`derive`][ldtc.guardrails.lreg.LREG.derive], which returns only
+indicator-grade summaries (`nc1`, `M_db`, counters, invalidation flag).
+This honors LDTC's no-raw-LREG export policy: the only thing that ever
+leaves the enclave is the derived, device-signed indicator.
 
 See Also:
-    paper/main.tex — Methods: Measurement & Attestation; Export policy.
+    `paper/main.tex`: Methods: Measurement and Attestation; Export
+    policy.
 """
 
 from __future__ import annotations
@@ -21,9 +27,9 @@ class LEntry:
     Attributes:
         L_loop: Loop influence.
         L_ex: Exchange influence.
-        ci_loop: Confidence interval for ``L_loop`` (lo, hi).
-        ci_ex: Confidence interval for ``L_ex`` (lo, hi).
-        M_db: Decibel loop-dominance.
+        ci_loop: 95% confidence interval for `L_loop` as `(lo, hi)`.
+        ci_ex: 95% confidence interval for `L_ex` as `(lo, hi)`.
+        M_db: Decibel loop-dominance for this window.
         nc1_pass: Whether NC1 was met in this window.
     """
 
@@ -36,13 +42,17 @@ class LEntry:
 
 
 class LREG:
-    """Enclave-like store for raw L and CI with derived indicators.
+    """Enclave-like store for raw `𝓛` and CI bounds with derived indicators.
 
-    Raw entries are write-only; external callers should use :meth:`derive` to
-    access device-signed-style indicators only.
+    Raw entries are write-only from outside the package; external
+    callers should go through [`derive`][ldtc.guardrails.lreg.LREG.derive]
+    to access only the indicator-grade summary. Maintaining this
+    boundary is what gives LDTC's exported indicators their integrity
+    story.
     """
 
     def __init__(self) -> None:
+        """Initialize an empty LREG with a fresh counter and lock."""
         self._lock = threading.Lock()
         self._entries: Dict[int, LEntry] = {}
         self._counter = 0
@@ -51,23 +61,24 @@ class LREG:
 
     @property
     def invalidated(self) -> bool:
-        """Whether the run has been invalidated by a guardrail.
-
-        Returns:
-            True if invalidated; otherwise False.
-        """
+        """`True` once any guardrail has invalidated this run."""
         return self._invalidated
 
     @property
     def reason(self) -> Optional[str]:
-        """Reason code for invalidation, if any.
-
-        Returns:
-            Reason string or None.
-        """
+        """Reason code for the most recent invalidation, or `None`."""
         return self._reason
 
     def write(self, entry: LEntry) -> int:
+        """Append a raw entry and return its sequence index.
+
+        Args:
+            entry: Raw [`LEntry`][ldtc.guardrails.lreg.LEntry] for the
+                current window.
+
+        Returns:
+            Zero-based sequence index assigned to the entry.
+        """
         with self._lock:
             idx = self._counter
             self._entries[idx] = entry
@@ -75,28 +86,40 @@ class LREG:
             return idx
 
     def invalidate(self, reason: str) -> None:
+        """Mark the run invalidated with a short reason code.
+
+        Subsequent calls to [`derive`][ldtc.guardrails.lreg.LREG.derive]
+        will report `invalidated=True` and force `nc1=False`.
+
+        Args:
+            reason: Short, machine-readable reason (e.g.,
+                `"ci_inflation"`).
+        """
         with self._lock:
             self._invalidated = True
             self._reason = reason
 
     def latest(self) -> Optional[LEntry]:
+        """Return the most recently written entry, or `None` if empty."""
         with self._lock:
             if not self._entries:
                 return None
             return self._entries[max(self._entries.keys())]
 
-    # No raw read API exposed for external callers
-    # (Keep the "enclave" boundary intact.)
-
     def derive(self) -> Dict[str, float | int | bool]:
         """Return derived indicators suitable for export.
 
+        This is the *only* read API intended for external callers. The
+        returned dict never contains raw `L_loop` / `L_ex` / CI fields,
+        and `nc1` is forced `False` when the run has been invalidated.
+
         Returns:
-            Dict containing at minimum:
-            - ``nc1``: Boolean NC1 status after invalidation check.
-            - ``M_db``: Decibel loop-dominance of latest window.
-            - ``counter``: Number of windows written so far.
-            - ``invalidated``: Whether the run has been invalidated.
+            Dict with at minimum:
+
+            - `nc1`: Boolean NC1 status after invalidation check.
+            - `M_db`: Decibel loop-dominance of the latest window.
+            - `counter`: Number of windows written so far.
+            - `invalidated`: Whether the run has been invalidated.
         """
         ent = self.latest()
         if not ent:

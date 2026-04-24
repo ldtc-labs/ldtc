@@ -1,6 +1,6 @@
 ### Contributing to LDTC
 
-Thanks for your interest in contributing. This repository is a verification harness for the Loop‑Dominance (NC1/SC1) pipeline described in the manuscript. Contributions should keep the code reproducible, auditable, and consistent with the paper’s symbols and assumptions (Δt, M, ε, τmax, σ, C/Ex partition, Ω battery, LREG/attestation).
+Thanks for your interest in contributing. This repository is a verification harness for the Loop-Dominance (NC1/SC1) pipeline described in the manuscript. Contributions should keep the code reproducible, auditable, and consistent with the paper's symbols and assumptions (Δt, M, ε, τmax, σ, C/Ex partition, Ω battery, LREG/attestation).
 
 ## Quick start
 
@@ -43,19 +43,22 @@ make omega-power-sag   # Ω power-sag demo
 
 ## Coding guidelines
 
-- Style: Black; lint: Ruff; typing: MyPy (settings in `pyproject.toml`).
-- Docstrings: Google-style (summary, optional sections like Args/Returns). See Google Python Style Guide §3.8 Comments and Docstrings: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+- Style: Black; lint: Ruff (with the Google docstring convention enabled); typing: MyPy (settings in `pyproject.toml`).
+- Docstrings: Google-style throughout. See the project [documentation style guide](https://docs.ldtc.dev/meta/style-guide/) for the full conventions and examples, and the [Google Python Style Guide §3.8 Comments and Docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) for the upstream reference.
+- Prose follows the *Chicago Manual of Style* (17th ed.): no em dashes, straight ASCII quotes, serial commas, sentence-case headings. Keep Greek and mathematical symbols (Δt, 𝓛, M, ε, τ, σ, Ω) as Unicode.
 - Prefer explicit, descriptive names; follow repository symbol mapping to the paper.
-- Add/extend tests in `tests/` for new behavior; keep fast unit tests (no network/large IO).
+- Add or extend tests in `tests/` for new behavior; keep fast unit tests (no network or large IO).
 - Keep artifacts under `artifacts/` only; do not commit generated files.
 
 Common commands:
 
 ```bash
 make test            # pytest -q
-make lint            # ruff check .
+make lint            # ruff check . (includes Google-style docstring rules on src/ldtc)
 make typecheck       # mypy src tests scripts
 make fmt             # black src tests examples scripts
+make docs            # mkdocs build --strict
+make docs-serve      # mkdocs serve (live preview at http://127.0.0.1:8000)
 ```
 
 ## Conventional Commits
@@ -199,7 +202,7 @@ refactor(runtime,lmeas): decouple scheduler tick from windowing logic
   - Prefer one primary scope; use comma-separated scopes only when necessary.
 - PR description: include brief sections: What, Why, How (brief), Testing, Risks/Impact, Docs/Follow-ups.
   - Link issues with keywords (e.g., `Closes #123`).
-- Merging: use “Squash and merge” with “Pull request title and description”.
+- Merging: use "Squash and merge" with "Pull request title and description".
 - Keep PRs focused; avoid unrelated changes in the same PR.
 
 Conventional Commits applies to the subject line (your PR title) and optional footers. The PR body is free-form; when squashing, it becomes the commit body. Place any footers at the bottom of the description.
@@ -257,7 +260,7 @@ Co-authored-by: Name <email>
 - **Draft / published toggle**: the `DRAFT_RELEASE` variable at the top of `.github/workflows/release.yml` controls release mode. Set to `"true"` (the default) for draft GitHub Releases with PyPI publishing skipped; flip to `"false"` to publish releases and upload to PyPI immediately.
 - Commit types that trigger a release: `feat` (minor), `fix` and `perf` (patch), `BREAKING CHANGE` (major). All other types (`build`, `chore`, `ci`, `docs`, `refactor`, `revert`, `style`, `test`) are recorded in the changelog but do **not** trigger a release on their own.
 - Tag format: `v`-prefixed (e.g., `v1.1.0`).
-- Manual version bumps are no longer needed — just merge PRs with valid Conventional Commit titles. For ad-hoc runs, use the workflow's **Run workflow** button (`workflow_dispatch`).
+- Manual version bumps are no longer needed; just merge PRs with valid Conventional Commit titles. For ad-hoc runs, use the workflow's **Run workflow** button (`workflow_dispatch`).
 
 ### Branching rules
 
@@ -308,4 +311,4 @@ fix/attest-sig-verify
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the repository’s MIT License.
+By contributing, you agree that your contributions are licensed under the repository's MIT License.

@@ -4,11 +4,12 @@
 Writes PEM-encoded private and public keys under ``artifacts/keys`` using the
 same paths expected by the CLI and verification scripts.
 """
+
 from __future__ import annotations
 
 import os
 
-from ldtc.attest.keys import ensure_keys, KeyPaths
+from ldtc.attest.keys import KeyPaths, ensure_keys
 
 
 def main() -> None:

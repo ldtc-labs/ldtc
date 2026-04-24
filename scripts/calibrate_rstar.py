@@ -6,29 +6,30 @@ Runs baseline and power-sag Ω trials to derive calibrated thresholds
 comparison artifacts (CSV/figure) against R0 along with a JSON summary.
 
 See Also:
-    paper/main.tex — Methods: Threshold Calibration.
+    paper/main.tex: Methods: Threshold Calibration.
 """
+
 from __future__ import annotations
 
+import argparse
+import json
 import os
 import sys
-import json
 import time
-import argparse
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple, Mapping
+from typing import Any, Dict, List, Mapping, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import yaml
-import matplotlib.pyplot as plt
-from ldtc.reporting.style import apply_matplotlib_theme, COLORS
 
-from ldtc.runtime.windows import SlidingWindow
-from ldtc.lmeas.partition import PartitionManager
 from ldtc.lmeas.estimators import estimate_L
 from ldtc.lmeas.metrics import m_db
+from ldtc.lmeas.partition import PartitionManager
 from ldtc.plant.adapter import PlantAdapter
 from ldtc.plant.models import Action
+from ldtc.reporting.style import COLORS, apply_matplotlib_theme
+from ldtc.runtime.windows import SlidingWindow
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -202,11 +203,7 @@ def run_power_sag_once(inp: CalibInputs, seed_C: List[int]) -> Tuple[float, floa
     for step in range(settle_steps):
         L_loop, L_ex, M = step_once()
         if not np.isnan(L_loop):
-            L_loop_baseline = (
-                L_loop
-                if L_loop_baseline is None
-                else 0.9 * L_loop_baseline + 0.1 * L_loop
-            )
+            L_loop_baseline = L_loop if L_loop_baseline is None else 0.9 * L_loop_baseline + 0.1 * L_loop
         if (step % max(1, settle_steps // 20)) == 0:
             _print_progress("Ω trial settle", step, settle_steps)
     _print_progress("Ω trial settle", settle_steps, settle_steps)
@@ -219,11 +216,7 @@ def run_power_sag_once(inp: CalibInputs, seed_C: List[int]) -> Tuple[float, floa
     for step in range(sag_steps):
         L_loop, L_ex, M = step_once()
         if not np.isnan(L_loop):
-            L_loop_trough = (
-                L_loop
-                if (L_loop_trough is None or L_loop < L_loop_trough)
-                else L_loop_trough
-            )
+            L_loop_trough = L_loop if (L_loop_trough is None or L_loop < L_loop_trough) else L_loop_trough
         if (step % max(1, sag_steps // 20)) == 0:
             _print_progress("Ω trial sag", step, sag_steps)
     _print_progress("Ω trial sag", sag_steps, sag_steps)
@@ -307,9 +300,7 @@ def calibrate_R_star(inp: CalibInputs, seed_C: List[int]) -> CalibOutputs:
         t95 = float(np.percentile(np.asarray(taus), 95.0))
         tau_star = t95 + max(3.0 * inp.dt, 5.0)
 
-    return CalibOutputs(
-        Mmin_db=Mmin_db, epsilon=eps_star, tau_max=tau_star, sigma=sigma, profile_id=1
-    )
+    return CalibOutputs(Mmin_db=Mmin_db, epsilon=eps_star, tau_max=tau_star, sigma=sigma, profile_id=1)
 
 
 def write_profile_yaml(out_path: str, inp: CalibInputs, out: CalibOutputs) -> None:
@@ -383,9 +374,7 @@ def _write_compare_csv(out_csv: str, r0: Dict[str, float], rstar: CalibOutputs) 
             w.writerow([name, f"{r0v:.6g}" if np.isfinite(r0v) else "", f"{rsv:.6g}"])
 
 
-def _write_compare_figure(
-    out_png: str, r0: Dict[str, float], rstar: CalibOutputs
-) -> None:
+def _write_compare_figure(out_png: str, r0: Dict[str, float], rstar: CalibOutputs) -> None:
     """Write a PNG bar chart comparing R0 vs R* parameters.
 
     Args:
@@ -449,9 +438,7 @@ def main() -> None:
     ap.add_argument(
         "--summary",
         type=str,
-        default=os.path.join(
-            REPO_ROOT, "artifacts", "calibration", "rstar_summary.json"
-        ),
+        default=os.path.join(REPO_ROOT, "artifacts", "calibration", "rstar_summary.json"),
     )
     ap.add_argument(
         "--compare-csv",

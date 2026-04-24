@@ -1,9 +1,22 @@
-"""Reporting: Artifact bundling for verification outputs.
+"""End-to-end artifact bundling for verification runs.
 
-Builds paper-style timelines, SC1 tables, and a manifest from the audit log.
+[`bundle`][ldtc.reporting.artifacts.bundle] is the convenience entry
+point used by `python -m ldtc.cli.main run` to turn a single audit log
+into a complete, frozen artifact directory:
+
+* a paper-style timeline (PNG and SVG) via
+  [`render_paper_timeline`][ldtc.reporting.timeline.render_paper_timeline],
+* an optional SC1 results CSV via
+  [`write_sc1_table`][ldtc.reporting.tables.write_sc1_table],
+* a manifest JSON describing the profile thresholds, the device
+  pubkey hash, and the audit hash head, and
+* a snapshot of the original config plus a short policy notice.
+
+All produced files are then `chmod`-ed to read-only on POSIX-like
+filesystems so a results directory is hard to mutate after the fact.
 
 See Also:
-    paper/main.tex — Reporting & Figures; Verification Pipeline.
+    `paper/main.tex`: Reporting & Figures; Verification Pipeline.
 """
 
 from __future__ import annotations
@@ -11,10 +24,10 @@ from __future__ import annotations
 import json
 import os
 import time
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
 
-from .timeline import render_paper_timeline
 from .tables import write_sc1_table
+from .timeline import render_paper_timeline
 
 
 def _read_audit(path: str) -> List[dict]:
@@ -24,7 +37,8 @@ def _read_audit(path: str) -> List[dict]:
         path: Path to the audit JSONL file.
 
     Returns:
-        List of parsed JSON objects; malformed lines are skipped.
+        List of parsed JSON objects. A missing file yields an empty
+        list; malformed lines are skipped.
     """
     recs: List[dict] = []
     if not os.path.exists(path):
@@ -42,14 +56,18 @@ def _read_audit(path: str) -> List[dict]:
 
 
 def _extract_header(recs: List[dict]) -> Tuple[Dict[str, Any], int]:
-    """Extract the last run_header record.
+    """Extract the last `run_header` record.
+
+    A single audit log can contain multiple runs; the bundler always
+    scopes itself to the most recent `run_header` so that re-runs do not
+    contaminate each other's artifacts.
 
     Args:
         recs: Parsed audit records.
 
     Returns:
-        Tuple of (header_details_dict, index_of_last_header) or ({{}}, -1) if
-        not found.
+        Tuple `(header_details, last_index)` or `({}, -1)` if no
+        `run_header` is present.
     """
     last_idx = -1
     last_details: Dict[str, Any] = {}
@@ -82,18 +100,20 @@ def _extract_header(recs: List[dict]) -> Tuple[Dict[str, Any], int]:
     return {}, -1
 
 
-def _extract_sc1_rows(
-    recs: List[dict], eta_label: str | None, start_index: int
-) -> List[Dict[str, Any]]:
+def _extract_sc1_rows(recs: List[dict], eta_label: str | None, start_index: int) -> List[Dict[str, Any]]:
     """Extract SC1 results into table rows.
 
     Args:
         recs: Parsed audit records.
-        eta_label: Label for Ω stimulus.
-        start_index: Only consider records from this index onward.
+        eta_label: Label for the `Ω` stimulus that produced these
+            results (e.g., `"power_sag"`).
+        start_index: Only consider records from this index onward;
+            typically the index of the most recent `run_header`.
 
     Returns:
-        List of dict rows ready for CSV writing.
+        List of dict rows ready for
+        [`write_sc1_table`][ldtc.reporting.tables.write_sc1_table]. Each
+        row contains `eta`, `delta`, `tau_rec`, `M_post`, and `pass`.
     """
     rows: List[Dict[str, Any]] = []
     for r in recs[max(0, int(start_index)) :]:
@@ -117,7 +137,7 @@ def _audit_hash_head(recs: List[dict]) -> str:
         recs: Parsed audit records.
 
     Returns:
-        Last record's ``hash`` or an empty string.
+        The last record's `hash` field, or `""` if the input is empty.
     """
     if not recs:
         return ""
@@ -128,10 +148,12 @@ def _pubkey_hash_or_none(pubkey_path: str) -> str | None:
     """Compute SHA-256 of a PEM public key file, if present.
 
     Args:
-        pubkey_path: Filesystem path to PEM public key.
+        pubkey_path: Filesystem path to a PEM-encoded public key.
 
     Returns:
-        Hex-encoded SHA-256 string or None.
+        Hex-encoded SHA-256 string, or `None` if the file is missing or
+        unreadable. Used to give consumers of the manifest a stable
+        fingerprint of the device key without bundling the key itself.
     """
     try:
         import hashlib
@@ -148,17 +170,22 @@ def _pubkey_hash_or_none(pubkey_path: str) -> str | None:
 def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
     """Create a verification artifact bundle from an audit log.
 
-    Generates a paper-style timeline (PNG+SVG), an optional SC1 CSV table, and
-    a manifest JSON describing profile thresholds and artifact paths.
+    Generates a paper-style timeline (PNG and SVG), an optional SC1 CSV
+    table, a manifest JSON describing profile thresholds and artifact
+    paths, an optional config snapshot, and a short policy notice. All
+    produced files are then made read-only on POSIX-like filesystems so
+    a results directory is hard to mutate after the fact.
 
     Args:
-        artifact_dir: Output directory for generated artifacts.
-        audit_path: Path to the JSONL audit log.
+        artifact_dir: Output directory for generated artifacts. Created
+            if missing.
+        audit_path: Path to the JSONL audit log emitted by
+            [`AuditLog`][ldtc.guardrails.audit.AuditLog].
 
     Returns:
-        Dict with keys for produced files: ``timeline_png``, ``timeline_svg``,
-        ``sc1_table`` (optional), ``manifest``, ``config_snapshot`` (optional),
-        and a policy ``notice``.
+        Dict with keys for produced files: `timeline_png`,
+        `timeline_svg`, `sc1_table` (optional), `manifest`,
+        `config_snapshot` (optional), and a policy `notice`.
 
     Raises:
         FileNotFoundError: If the audit log is missing or empty.
@@ -171,8 +198,6 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
     eta = header.get("omega") or "trial"
     stamp = int(time.time())
 
-    # 1) Timeline (PNG+SVG), scoped to this run only
-    # Write a temporary segment audit containing records from the last run_header onward
     seg_path = os.path.join(artifact_dir, f"audit_segment_{eta}_{stamp}.jsonl")
     try:
         with open(seg_path, "w", encoding="utf-8") as f:
@@ -193,14 +218,12 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
         except Exception:
             pass
 
-    # 2) SC1 table from audit (if any sc1_result present)
     sc1_rows = _extract_sc1_rows(recs, eta_label=str(eta), start_index=header_idx)
     table_path = ""
     if sc1_rows:
         table_path = os.path.join(artifact_dir, f"sc1_table_{eta}_{stamp}.csv")
         write_sc1_table(sc1_rows, table_path)
 
-    # 3) Manifest JSON (include config path and policy note; lock files read-only)
     manifest = {
         "version": 1,
         "profile_id": int(header.get("profile_id", 0)),
@@ -218,18 +241,13 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
         "seed_np": int(header.get("seed_np", 0)),
         "eta": eta,
         "eta_args": header.get("omega_args", {}),
-        # CI coverage is fixed by estimator at 95% via bootstrap percentiles
         "ci_coverage": 0.95,
         "audit_hash_head": _audit_hash_head(recs),
-        # Indicator schema note (bit-layout and pubkey hash for verification tooling)
         "indicator_schema": {
             "mq_step_db": 0.25,
             "mq_bits": 6,
         },
-        "pubkey_sha256": _pubkey_hash_or_none(
-            os.path.join("artifacts", "keys", "ed25519_pub.pem")
-        ),
-        # Policy note required by manuscript/patent: raw LREG never leaves enclave
+        "pubkey_sha256": _pubkey_hash_or_none(os.path.join("artifacts", "keys", "ed25519_pub.pem")),
         "policy_note": "No raw LREG values or CI bounds are exported; figures derive only from M(dB) and audit events.",
         "artifacts": {
             "timeline_png": tpaths.get("png", ""),
@@ -237,16 +255,12 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
             "sc1_table_csv": table_path or None,
         },
     }
-    # 3a) Snapshot the YAML config used (exact profile passed to CLI)
     cfg_snap_path = None
     try:
         cfg_src = header.get("config_path")
         if isinstance(cfg_src, str) and os.path.exists(cfg_src):
             base_name = os.path.basename(cfg_src)
-            cfg_snap_path = os.path.join(
-                artifact_dir, f"config_snapshot_{eta}_{stamp}_{base_name}"
-            )
-            # Copy without bringing along permissions
+            cfg_snap_path = os.path.join(artifact_dir, f"config_snapshot_{eta}_{stamp}_{base_name}")
             with (
                 open(cfg_src, "r", encoding="utf-8") as f_in,
                 open(cfg_snap_path, "w", encoding="utf-8") as f_out,
@@ -255,21 +269,19 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
     except Exception:
         cfg_snap_path = None
 
-    # 3b) Write manifest
     manifest_path = os.path.join(artifact_dir, f"manifest_{eta}_{stamp}.json")
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
-    # 3c) Policy notice file
     notice_path = os.path.join(artifact_dir, f"NOTICE_{eta}_{stamp}.txt")
     try:
         with open(notice_path, "w", encoding="utf-8") as nf:
             nf.write(
-                "This repository enforces a derived-indicators-only policy: raw LREG values and CI bounds never leave the enclave.\n"
+                "This repository enforces a derived-indicators-only policy: "
+                "raw LREG values and CI bounds never leave the enclave.\n"
             )
     except Exception:
         notice_path = ""
 
-    # Lock generated artifacts as read-only to "freeze" demo outputs
     try:
         for p in [
             tpaths.get("png", ""),
@@ -282,7 +294,6 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
             if p:
                 os.chmod(p, 0o444)
     except Exception:
-        # Best-effort on non-POSIX or restricted FS
         pass
 
     return {

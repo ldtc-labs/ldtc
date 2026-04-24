@@ -4,10 +4,11 @@
 Creates a Matplotlib figure showing a dip and recovery of loop power and writes
 ``paper/figures/fig_perturbation_recovery.{pdf,png,svg}``.
 """
+
 from pathlib import Path
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from ldtc.reporting.style import COLORS, apply_matplotlib_theme
 
@@ -147,9 +148,7 @@ def main() -> None:
     )
 
     # Threshold + inequality (use ℒ with math subscripts)
-    ax.axhline(
-        y=phi_exchange_level, color=color_phi_exchange, linestyle=":", linewidth=1.5
-    )
+    ax.axhline(y=phi_exchange_level, color=color_phi_exchange, linestyle=":", linewidth=1.5)
     ax.text(
         98,
         phi_exchange_level - 5,

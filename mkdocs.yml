@@ -1,37 +1,86 @@
 site_name: LDTC
 site_description: Real-time NC1/SC1 verification harness (paper + Python package)
+site_author: Owen Carey
 site_url: https://docs.ldtc.dev/
 repo_url: https://github.com/ldtc-labs/ldtc
+repo_name: ldtc-labs/ldtc
+edit_uri: edit/main/docs/
+
 theme:
   name: material
   features:
-    - navigation.sections
-    - navigation.instant
-    - navigation.tracking
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
     - content.code.copy
-  # logo: assets/ldtc-logo.png
+    - content.tabs.link
+    - content.tooltips
+    - navigation.expand
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - search.share
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ldtc-labs/ldtc
+      name: LDTC on GitHub
+
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Concepts:
-    - Definitions: concepts/definitions.md
+    - Mental Model: concepts/mental-model.md
     - Architecture: concepts/architecture.md
+    - Definitions: concepts/definitions.md
     - Indicators: concepts/indicators.md
-    - Guardrails & Invalidations: concepts/guardrails.md
-    - Paper → Code: concepts/paper-to-code.md
+    - Lifecycle of a Run: concepts/lifecycle.md
+    - Guardrails and Invalidations: concepts/guardrails.md
+    - Paper to Code: concepts/paper-to-code.md
   - Guides:
     - Calibration (R*): guides/calibration.md
-    - Reporting & Figures: guides/reporting.md
-    - Runs & Ω Battery: guides/runs.md
+    - Reporting and Figures: guides/reporting.md
+    - Runs and Ω Battery: guides/runs.md
+    - Hardware Adapter: guides/hardware.md
+    - Deployment: guides/deployment.md
   - Examples:
     - Minimal Run: examples/minimal.md
     - Notebooks: examples/notebooks.md
   - API Reference:
     - Package: api/ldtc.md
-    - runtime: api/runtime.md
     - lmeas: api/lmeas.md
+    - runtime: api/runtime.md
     - guardrails: api/guardrails.md
     - attest: api/attest.md
     - arbiter: api/arbiter.md
@@ -40,20 +89,92 @@ nav:
     - reporting: api/reporting.md
     - cli: api/cli.md
   - Meta:
+    - Style Guide: meta/style-guide.md
     - Contributing: meta/contributing.md
+    - FAQ: meta/faq.md
+    - Troubleshooting: meta/troubleshooting.md
     - Citation: meta/citation.md
+
 plugins:
-  - search
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - autorefs
   - mkdocstrings:
+      default_handler: python
       handlers:
         python:
+          inventories:
+            - https://docs.python.org/3/objects.inv
           options:
-            show_source: false
             docstring_style: google
+            docstring_section_style: table
+            members_order: source
+            merge_init_into_class: true
+            separate_signature: true
+            show_bases: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_source: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+            filters: ["!^_"]
+  - social:
+      cards_layout_options:
+        background_color: "#ffffff"
+        color: "#000000"
+
 extra_css:
   - styles/brand.css
+
 markdown_extensions:
+  - abbr
   - admonition
+  - attr_list
   - codehilite
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
   - toc:
       permalink: true
+      toc_depth: 4
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: ldtc-labs
+      repo: ldtc
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+watch:
+  - src/ldtc

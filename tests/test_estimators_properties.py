@@ -12,9 +12,7 @@ from ldtc.lmeas.estimators import estimate_L
 from ldtc.lmeas.metrics import m_db
 
 
-def _gen_var2_with_exchange(
-    T: int, c_intra: float, k_ex: float, seed: int = 0
-) -> np.ndarray:
+def _gen_var2_with_exchange(T: int, c_intra: float, k_ex: float, seed: int = 0) -> np.ndarray:
     """Generate a 3-node linear system with loop and exchange nodes.
 
     Args:

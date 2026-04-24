@@ -4,7 +4,9 @@
 Creates Graphviz diagrams for developmental stages and writes
 ``paper/figures/fig_dev_bootstrap.{pdf,png,svg}``.
 """
+
 from pathlib import Path
+
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
 
 
@@ -21,7 +23,10 @@ def main() -> None:
 
     dot.node(
         "SA",
-        label="<\n<B>Seed Activation</B><BR/><I>(Stage 0)</I><BR/><BR/>Protocell hydrated;<BR/>minimal policy initialized\n>",
+        label=(
+            "<\n<B>Seed Activation</B><BR/><I>(Stage 0)</I><BR/><BR/>"
+            "Protocell hydrated;<BR/>minimal policy initialized\n>"
+        ),
         shape="box",
         style="rounded,filled",
         color=purple_edge,
@@ -30,7 +35,10 @@ def main() -> None:
     )
     dot.node(
         "EC",
-        label="<\n<B>Environmental Calibration</B><BR/><I>(Stage 1)</I><BR/><BR/>Homeostat explores<BR/>actuator-sensor mappings\n>",
+        label=(
+            "<\n<B>Environmental Calibration</B><BR/><I>(Stage 1)</I><BR/><BR/>"
+            "Homeostat explores<BR/>actuator-sensor mappings\n>"
+        ),
         shape="box",
         style="rounded,filled",
         color=purple_edge,
@@ -39,7 +47,10 @@ def main() -> None:
     )
     dot.node(
         "HM",
-        label="<\n<B>Homeostat Maturation</B><BR/><I>(Stage 1)</I><BR/><BR/>Causal loop gain factors<BR/>converge with &lt; 5% error\n>",
+        label=(
+            "<\n<B>Homeostat Maturation</B><BR/><I>(Stage 1)</I><BR/><BR/>"
+            "Causal loop gain factors<BR/>converge with &lt; 5% error\n>"
+        ),
         shape="box",
         style="rounded,filled",
         color=purple_edge,
@@ -48,7 +59,10 @@ def main() -> None:
     )
     dot.node(
         "BH",
-        label="<\n<B>Boundary Hardening</B><BR/><I>(Stage 2)</I><BR/><BR/>Membrane thickens;<BR/>firewall keys generated\n>",
+        label=(
+            "<\n<B>Boundary Hardening</B><BR/><I>(Stage 2)</I><BR/><BR/>"
+            "Membrane thickens;<BR/>firewall keys generated\n>"
+        ),
         shape="box",
         style="rounded,filled",
         color=purple_edge,
@@ -57,7 +71,10 @@ def main() -> None:
     )
     dot.node(
         "AO",
-        label="<\n<B>Autonomous Operation</B><BR/><I>(Stage 3)</I><BR/><BR/>Mature agent qualified in<BR/>gradient/obstacle arena\n>",
+        label=(
+            "<\n<B>Autonomous Operation</B><BR/><I>(Stage 3)</I><BR/><BR/>"
+            "Mature agent qualified in<BR/>gradient/obstacle arena\n>"
+        ),
         shape="box",
         style="rounded,filled",
         color=purple_edge,

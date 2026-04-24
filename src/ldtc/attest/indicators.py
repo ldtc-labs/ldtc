@@ -1,10 +1,16 @@
-"""Attest: Indicator encoding and signing.
+"""Indicator encoding and signing.
 
-Defines the indicator payload schema, M(dB) quantization, and Ed25519 signing
-for CBOR-encoded device-signed packets.
+Defines the indicator payload schema, `M (dB)` quantization, and the
+Ed25519 signing step that produces a CBOR-encoded, device-signed packet.
+
+The payload is intentionally small: NC1 / SC1 booleans, a 6-bit `Mq`
+code, the run counter, the active profile id, the audit chain head, and
+an `invalidated` flag. That gives auditors enough to verify a result
+without exposing any raw `𝓛` value.
 
 See Also:
-    paper/main.tex — Methods: Measurement & Attestation; Exported indicators.
+    `paper/main.tex`: Methods: Measurement and Attestation; Exported
+    indicators.
 """
 
 from __future__ import annotations
@@ -23,8 +29,8 @@ class IndicatorConfig:
     """Configuration for indicator encoding.
 
     Attributes:
-        Mmin_db: Threshold for NC1 pass.
-        profile_id: Profile selector (0=R0, 1=R*).
+        Mmin_db: Threshold for NC1 pass, in dB.
+        profile_id: Profile selector (`0 = R0`, `1 = R*`).
     """
 
     Mmin_db: float = 3.0
@@ -32,15 +38,18 @@ class IndicatorConfig:
 
 
 def quantize_M(M_db: float) -> int:
-    """Quantize loop-dominance M (dB) to a 6-bit code.
+    """Quantize loop-dominance `M (dB)` to a 6-bit code.
+
+    Maps `M_db` linearly onto the integer range `[0, 63]` with a 0.25 dB
+    step, so the encoded `Mq` covers `0` through `15.75` dB. Values
+    outside the range are clamped.
 
     Args:
         M_db: Decibel loop-dominance value.
 
     Returns:
-        Integer in the range [0, 63] using 0.25 dB steps (0..15.75 dB).
+        Integer in the range `[0, 63]` using 0.25 dB steps.
     """
-    # 0..15.75 dB in 0.25 steps -> 0..63
     q = int(max(0.0, min(63.0, round(M_db / 0.25))))
     return q
 
@@ -54,15 +63,24 @@ def build_and_sign(
 ) -> Tuple[bytes, Dict]:
     """Build CBOR indicator payload and Ed25519 signature bundle.
 
+    The returned `cbor_bytes` is what gets signed and persisted; the
+    `bundle_dict` is the JSON-friendly view (`{"payload": ..., "sig":
+    "<hex>"}`) used by the JSONL artifact.
+
     Args:
-        priv: Ed25519 private key.
-        audit: Audit log providing last hash head.
-        derived: Derived indicators (e.g., nc1, M_db, counter, invalidated).
+        priv: Ed25519 private key (typically from
+            [`ensure_keys`][ldtc.attest.keys.ensure_keys]).
+        audit: Audit log providing the last hash head, anchoring this
+            indicator to the run's audit chain.
+        derived: Derived indicators from
+            [`LREG.derive`][ldtc.guardrails.lreg.LREG.derive] (must not
+            contain raw `𝓛` fields).
         cfg: Indicator configuration with profile id and thresholds.
-        last_sc1_pass: Whether SC1 passed.
+        last_sc1_pass: Whether SC1 passed in the most recent evaluation.
 
     Returns:
-        Tuple of (cbor_bytes, bundle_dict) where bundle contains hex signature.
+        Tuple `(cbor_bytes, bundle_dict)` where `bundle_dict["sig"]` is
+        the hex-encoded Ed25519 signature over `cbor_bytes`.
     """
     payload = {
         "nc1": bool(derived.get("nc1", False)),

@@ -3,12 +3,13 @@
 
 Creates a damped sinusoid and writes ``paper/figures/fig_hello.{pdf,png,svg}``.
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from ldtc.reporting.style import COLORS, apply_matplotlib_theme
-import numpy as np
 
 
 def main() -> None:

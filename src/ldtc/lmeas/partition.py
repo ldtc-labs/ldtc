@@ -1,26 +1,34 @@
-"""Lmeas: Partition management and greedy regrowth.
+"""Partition management and greedy regrowth.
 
-Deterministic C/Ex partition representation with hysteresis and a greedy
-suggestor to increase loop influence under sparsity penalties.
+A deterministic `(C, Ex)` partition representation, a manager that adds
+hysteresis around partition flips, and a greedy suggestor that proposes
+new `C` membership to increase loop influence under a sparsity penalty.
+
+The split between `C` (closed loop) and `Ex` (exchange) is what gives `M`
+its meaning: it answers "which signals are part of the controller and
+which are exogenous I/O?" The greedy suggestor lets the harness
+periodically reconsider that split based on the data, while the manager
+prevents thrashing.
 
 See Also:
-    paper/main.tex — Criterion; Methods: Partitioning algorithm.
+    `paper/main.tex`: Criterion; Methods: Partitioning algorithm.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple, Dict, Any, Callable
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 
 @dataclass
 class Partition:
-    """C/Ex partition state with freeze flag and flip counter.
+    """`(C, Ex)` partition state with freeze flag and flip counter.
 
     Attributes:
         C: Indices belonging to the loop (closed) set.
         Ex: Indices belonging to the exchange set.
-        frozen: If True, updates are suppressed (e.g., during Ω windows).
+        frozen: If `True`, updates are suppressed (e.g., during `Ω`
+            windows where partition flips would confound SC1 evaluation).
         flips: Number of accepted partition flips since creation.
     """
 
@@ -31,18 +39,27 @@ class Partition:
 
 
 class PartitionManager:
-    """Deterministic C/Ex partition with simple hysteresis.
+    """Deterministic `(C, Ex)` partition with simple hysteresis.
 
-    Provides a minimal manager that can be frozen and updated only when a
-    suggested partition yields a sufficient decibel gain ``ΔM`` for a required
-    number of consecutive windows.
+    Provides a minimal manager that can be frozen and that only accepts a
+    new partition when a suggested `C` set yields a sufficient decibel
+    gain `ΔM` over the current partition for a required number of
+    consecutive windows. The hysteresis prevents the harness from
+    chattering between similarly-scoring partitions.
 
     Args:
-        N_signals: Total number of signals ``N``.
-        seed_C: Initial indices for the ``C`` set; remainder form ``Ex``.
+        N_signals: Total number of signals `N`.
+        seed_C: Initial indices for the `C` set; the remainder form `Ex`.
     """
 
     def __init__(self, N_signals: int, seed_C: Sequence[int]) -> None:
+        """Initialize the manager with a seed partition.
+
+        Args:
+            N_signals: Total number of signals `N`.
+            seed_C: Initial indices for the `C` set; the remainder form
+                `Ex`.
+        """
         self._N = int(N_signals)
         all_idxs = list(range(self._N))
         C = list(sorted(set(seed_C)))
@@ -60,7 +77,7 @@ class PartitionManager:
         """Return the current partition state.
 
         Returns:
-            The :class:`Partition` dataclass instance.
+            The current [`Partition`][ldtc.lmeas.partition.Partition] dataclass.
         """
         return self.part
 
@@ -68,15 +85,15 @@ class PartitionManager:
         """Enable or disable freeze to suppress updates.
 
         Args:
-            on: True to freeze, False to unfreeze.
+            on: `True` to freeze, `False` to unfreeze.
         """
         self.part.frozen = on
 
     def update_current_M(self, M_db: float) -> None:
-        """Record the latest measured M for the current partition.
+        """Record the latest measured `M` for the current partition.
 
         Args:
-            M_db: Decibel loop-dominance value.
+            M_db: Decibel loop-dominance value `M = 10 · log10(L_loop / L_ex)`.
         """
         self._last_M_db = float(M_db)
 
@@ -87,17 +104,21 @@ class PartitionManager:
         delta_M_min_db: float = 0.5,
         consecutive_required: int = 3,
     ) -> None:
-        """Consider adopting ``suggested_C`` using hysteresis on the ΔM gain.
+        """Consider adopting `suggested_C` using hysteresis on the `ΔM` gain.
 
-        Updates are ignored when frozen. Accept only if the same suggestion
-        persists for ``consecutive_required`` calls and the gain exceeds
-        ``delta_M_min_db``.
+        Updates are ignored when the manager is frozen. A suggestion is
+        only accepted when the same `suggested_C` persists for
+        `consecutive_required` calls and the gain exceeds
+        `delta_M_min_db` each time.
 
         Args:
-            suggested_C: Candidate list of indices for C.
-            delta_M_db: Decibel gain relative to baseline.
-            delta_M_min_db: Minimum required ΔM to count toward acceptance.
-            consecutive_required: Number of consecutive ready windows required.
+            suggested_C: Candidate list of indices for `C`.
+            delta_M_db: Decibel gain relative to the current partition's
+                `M`.
+            delta_M_min_db: Minimum required `ΔM` to count toward
+                acceptance.
+            consecutive_required: Number of consecutive qualifying windows
+                required before the flip is committed.
         """
         if self.part.frozen:
             return
@@ -108,9 +129,7 @@ class PartitionManager:
             self._pending_streak = 0
             return
         # Evaluate hysteresis: require sufficient ΔM and persistence
-        if delta_M_db >= delta_M_min_db and (
-            self._pending_C == newC or self._pending_C is None
-        ):
+        if delta_M_db >= delta_M_min_db and (self._pending_C == newC or self._pending_C is None):
             self._pending_C = newC
             self._pending_streak += 1
         else:
@@ -148,29 +167,33 @@ def greedy_suggest_C(
     theta: float = 0.0,
     kappa: int | None = None,
 ) -> Tuple[List[int], float, Dict[str, Any]]:
-    """Greedy regrowth of C using ΔL_loop gain with sparsity penalty.
+    """Greedy regrowth of `C` using `ΔL_loop` gain with sparsity penalty.
 
-    Starting from the current C/Ex, iteratively add the candidate from Ex that
-    maximizes the penalized gain in ``L_loop`` until the marginal gain falls
-    below ``theta`` or a cap ``kappa`` is reached.
+    Starting from the current `(C, Ex)`, iteratively add the candidate
+    from `Ex` that maximizes the penalized gain in `L_loop` until the
+    marginal gain falls below `theta` or the cap `kappa` is reached.
+    Candidates are evaluated in lexicographic index order so ties break
+    deterministically.
 
     Args:
-        X: Telemetry matrix (T, N) consumed by ``estimator``.
-        C: Current loop set indices.
-        Ex: Current exchange set indices.
-        estimator: Callable compatible with :func:`ldtc.lmeas.estimators.estimate_L`.
-        method: Estimation method forwarded to ``estimator``.
-        p: VAR order for linear estimator.
+        X: Telemetry matrix `(T, N)` consumed by `estimator`.
+        C: Current loop-set indices.
+        Ex: Current exchange-set indices.
+        estimator: Callable compatible with
+            [`estimate_L`][ldtc.lmeas.estimators.estimate_L].
+        method: Estimation method forwarded to `estimator`.
+        p: VAR order for the linear estimator.
         lag_mi: Lag for MI-based estimators.
-        n_boot_candidates: Number of bootstrap draws used during candidate eval.
+        n_boot_candidates: Number of bootstrap draws used during candidate
+            evaluation.
         mi_k: k-NN parameter for Kraskov MI.
         lam: Sparsity penalty per added node.
-        theta: Minimum penalized gain to accept a candidate.
-        kappa: Optional cap on |C|.
+        theta: Minimum penalized gain required to accept a candidate.
+        kappa: Optional cap on `|C|`.
 
     Returns:
-        Tuple ``(suggested_C, delta_M_db, details)`` where ``details`` contains
-        provenance about added indices and intermediate gains.
+        A tuple `(suggested_C, delta_M_db, details)` where `details`
+        contains provenance about added indices and intermediate gains.
     """
     from .metrics import m_db as _m_db
 
@@ -228,9 +251,7 @@ def greedy_suggest_C(
         C_cur.append(int(best_idx))
         C_cur = sorted(set(C_cur))
         Ex_cur = [i for i in range(int(X.shape[1])) if i not in C_cur]
-        L_loop_base = (
-            float(best_L_loop_new) if best_L_loop_new is not None else L_loop_base
-        )
+        L_loop_base = float(best_L_loop_new) if best_L_loop_new is not None else L_loop_base
         added.append(int(best_idx))
         step_gains.append(float(best_score))
 

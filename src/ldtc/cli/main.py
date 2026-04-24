@@ -1,72 +1,103 @@
-"""LDTC CLI: run baseline and Ω perturbation demos.
+"""LDTC CLI: orchestrate baseline and `Ω` perturbation runs.
 
-Defines the ``ldtc`` command with subcommands for the baseline run and omega
-perturbations (power sag, ingress flood, command conflict, exogenous subsidy).
-It orchestrates runtime scheduling, measurement, guardrails, attestation, and
-reporting.
+This module is the verification harness's "main loop": it loads a YAML
+profile, wires together the runtime scheduler
+([`runtime`][ldtc.runtime]), measurement estimators
+([`lmeas`][ldtc.lmeas]), guardrails ([`guardrails`][ldtc.guardrails]),
+attestation ([`attest`][ldtc.attest]), the refusal arbiter and policy
+([`arbiter`][ldtc.arbiter]), the plant adapter
+([`plant`][ldtc.plant]), and finally the reporting bundle
+([`reporting`][ldtc.reporting]).
+
+Subcommands map one-to-one to functions in this module:
+
+| Subcommand | Function |
+| ---------- | -------- |
+| `ldtc run` | [`run_baseline`][ldtc.cli.main.run_baseline] |
+| `ldtc omega-power-sag` | [`omega_power_sag`][ldtc.cli.main.omega_power_sag] |
+| `ldtc omega-ingress-flood` | [`omega_ingress_flood`][ldtc.cli.main.omega_ingress_flood] |
+| `ldtc omega-command-conflict` | [`omega_command_conflict`][ldtc.cli.main.omega_command_conflict] |
+| `ldtc omega-exogenous-subsidy` | [`omega_exogenous_subsidy`][ldtc.cli.main.omega_exogenous_subsidy] |
+
+Each handler follows the same five-stage shape:
+
+1. Load profile and seed RNGs.
+2. Build adapters, audit log, LREG, exporter, scheduler, and
+   guardrails.
+3. Run a baseline phase, optionally an `Ω` window, and a recovery
+   phase, all gated by [`SmellConfig`][ldtc.guardrails.smelltests.SmellConfig].
+4. After the scheduler stops, perform post-run audit checks (chain
+   integrity, no raw LREG leakage).
+5. Build a verification artifact bundle via
+   [`reporting.artifacts.bundle`][ldtc.reporting.artifacts.bundle].
 
 See Also:
-    paper/main.tex — Verification Pipeline; CLI orchestration.
+    `paper/main.tex`: Verification Pipeline; CLI orchestration.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import random
 import sys
 import time
-from typing import Dict, List, Protocol, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Protocol
 
-import yaml
 import numpy as np
-import random
+import yaml
 
-from ..runtime.scheduler import FixedScheduler
-from ..runtime.windows import SlidingWindow
-from ..plant.adapter import PlantAdapter
-
-# Note: HardwarePlantAdapter is imported lazily inside _make_adapter_from_profile
 from ..arbiter.policy import ControllerPolicy
 from ..arbiter.refusal import RefusalArbiter
+from ..attest.exporter import IndicatorExporter
+from ..attest.indicators import IndicatorConfig
+from ..attest.keys import KeyPaths, ensure_keys
 from ..guardrails.audit import AuditLog
+from ..guardrails.dt_guard import DeltaTGuard, DtGuardConfig
 from ..guardrails.lreg import LREG, LEntry
 from ..guardrails.smelltests import (
     SmellConfig,
-    invalid_by_ci,
-    invalid_by_partition_flips,
-    invalid_flip_during_omega,
     audit_chain_broken,
-    invalid_by_ci_history,
     audit_contains_raw_lreg_values,
     exogenous_subsidy_red_flag,
+    invalid_by_ci,
+    invalid_by_ci_history,
+    invalid_by_partition_flips,
+    invalid_flip_during_omega,
 )
-from ..guardrails.dt_guard import DeltaTGuard, DtGuardConfig
-from ..lmeas.partition import PartitionManager, greedy_suggest_C
 from ..lmeas.estimators import estimate_L
 from ..lmeas.metrics import m_db, sc1_evaluate
-from ..attest.keys import ensure_keys, KeyPaths
-from ..attest.exporter import IndicatorExporter
-from ..attest.indicators import IndicatorConfig
+from ..lmeas.partition import PartitionManager, greedy_suggest_C
+from ..plant.adapter import PlantAdapter
 from ..reporting.artifacts import bundle as build_verification_bundle
+from ..runtime.scheduler import FixedScheduler
+from ..runtime.windows import SlidingWindow
 
 if TYPE_CHECKING:
-    # Only for type checking; avoids runtime import cycles
     from ..plant.models import Action as PlantAction
 
 
 class AdapterProtocol(Protocol):
-    """Protocol for plant adapters used by the CLI.
+    """Structural protocol for plant adapters used by the CLI.
 
-    Implementations must support reading state, writing actuators, and
-    applying omega stimuli.
+    Both [`PlantAdapter`][ldtc.plant.adapter.PlantAdapter] and
+    [`HardwarePlantAdapter`][ldtc.plant.hw_adapter.HardwarePlantAdapter]
+    satisfy this protocol; the CLI uses it so that `_make_adapter_from_profile`
+    can transparently swap implementations based on the `plant.adapter`
+    profile field.
     """
 
-    def read_state(self) -> Dict[str, float]: ...
-
-    def write_actuators(self, action: "PlantAction") -> None:  # noqa: F821
+    def read_state(self) -> Dict[str, float]:
+        """Return the latest plant state as a dict of named floats."""
         ...
 
-    def apply_omega(self, name: str, **kwargs: float) -> Dict[str, float | str]: ...
+    def write_actuators(self, action: "PlantAction") -> None:  # noqa: F821
+        """Send actuator commands to the plant."""
+        ...
+
+    def apply_omega(self, name: str, **kwargs: float) -> Dict[str, float | str]:
+        """Forward an `Ω` request and return a small status dict."""
+        ...
 
 
 def _load_yaml(path: str) -> Dict:
@@ -85,12 +116,17 @@ def _load_yaml(path: str) -> Dict:
 def _set_seeds(prof: Dict) -> Dict[str, int]:
     """Configure global RNG seeds from a config dict.
 
+    Resolves the per-stream seeds from the profile, defaulting to
+    `12345` when none are set. The resolved seeds are returned so the
+    CLI can record them in the audit `run_header`.
+
     Args:
-        prof: Configuration dictionary possibly containing ``seed``,
-            ``seed_py``, and ``seed_np``.
+        prof: Configuration dictionary possibly containing `seed`,
+            `seed_py`, and `seed_np`. `seed_py` and `seed_np` take
+            precedence over `seed`.
 
     Returns:
-        Dict with concrete ``seed_py`` and ``seed_np`` values.
+        Dict with concrete `seed_py` and `seed_np` values.
     """
     seed = prof.get("seed")
     seed_py = int(prof.get("seed_py", seed if seed is not None else 12345))
@@ -101,6 +137,14 @@ def _set_seeds(prof: Dict) -> Dict[str, int]:
 
 
 def _print_and_audit_header(audit: AuditLog, header: Dict) -> None:
+    """Print the run header to stdout and append it to the audit log.
+
+    Args:
+        audit: Audit log used to record the header as a `run_header`
+            event.
+        header: Header fields (profile id, `Δt`, window, thresholds,
+            seeds, `Ω` name and args).
+    """
     msg = (
         f"profile_id={header.get('profile_id')} dt={header.get('dt')} window_sec={header.get('window_sec')} "
         f"method={header.get('method')} p_lag={header.get('p_lag')} mi_lag={header.get('mi_lag')} "
@@ -113,24 +157,30 @@ def _print_and_audit_header(audit: AuditLog, header: Dict) -> None:
 
 
 def _human_invalidation_reason(reason: str, details: Dict) -> str:
-    # Best-effort humanization used across CLI pathways
+    """Render an invalidation reason as a human-readable string.
+
+    The audit log records short machine-friendly reason codes (e.g.,
+    `ci_inflation`, `dt_jitter_excess`); this helper turns each into a
+    longer explanation suitable for the CLI footer.
+
+    Args:
+        reason: Machine-friendly reason code.
+        details: Reason-specific details such as `flips_per_hour`,
+            `jitter_p95_rel`, or CI bounds.
+
+    Returns:
+        Human-readable explanation, or the raw `reason` if no humanizer
+        is registered.
+    """
     try:
         if reason == "ci_inflation":
             hwL = (
-                0.5
-                * abs(
-                    (details.get("ci_loop", (0, 0))[1])
-                    - (details.get("ci_loop", (0, 0))[0])
-                )
+                0.5 * abs((details.get("ci_loop", (0, 0))[1]) - (details.get("ci_loop", (0, 0))[0]))
                 if "ci_loop" in details
                 else None
             )
             hwE = (
-                0.5
-                * abs(
-                    (details.get("ci_ex", (0, 0))[1])
-                    - (details.get("ci_ex", (0, 0))[0])
-                )
+                0.5 * abs((details.get("ci_ex", (0, 0))[1]) - (details.get("ci_ex", (0, 0))[0]))
                 if "ci_ex" in details
                 else None
             )
@@ -141,7 +191,12 @@ def _human_invalidation_reason(reason: str, details: Dict) -> str:
             med_ex = details.get("median_hw_ex")
             base_loop = details.get("baseline_hw_loop")
             base_ex = details.get("baseline_hw_ex")
-            return f"CI medians over lookback exceeded limits (loop≈{med_loop:.2f}, ex≈{med_ex:.2f}; baseline loop≈{base_loop:.2f}, ex≈{base_ex:.2f}; max=0.30, inflate≥2.0×)"
+            return (
+                "CI medians over lookback exceeded limits "
+                f"(loop≈{med_loop:.2f}, ex≈{med_ex:.2f}; "
+                f"baseline loop≈{base_loop:.2f}, ex≈{base_ex:.2f}; "
+                "max=0.30, inflate≥2.0×)"
+            )
         if reason == "partition_flapping":
             rate = details.get("flips_per_hour")
             flips = details.get("flips")
@@ -163,14 +218,21 @@ def _human_invalidation_reason(reason: str, details: Dict) -> str:
             return "Exogenous subsidy red-flag (M rising with high I/O or SoC rising without harvest)"
     except Exception:
         pass
-    # Fallback
     return reason
 
 
-def _append_invalidation(
-    audit: AuditLog, reason: str, details: Dict, _sink: Dict
-) -> None:
-    # Mutates details to include reason_human, appends to audit, and records last message in _sink
+def _append_invalidation(audit: AuditLog, reason: str, details: Dict, _sink: Dict) -> None:
+    """Append a `run_invalidated` event with a human-readable reason.
+
+    Args:
+        audit: Target audit log.
+        reason: Machine-friendly reason code.
+        details: Reason-specific fields, copied into the audit record.
+        _sink: Caller-provided dict used as a thin out-parameter; the
+            human-readable reason is stored at
+            `_sink["last_invalidation_human"]` so callers that print a
+            CLI footer can recover it without re-reading the audit.
+    """
     rh = _human_invalidation_reason(reason, details)
     det = {"reason": reason, **details, "reason_human": rh}
     audit.append("run_invalidated", det)
@@ -178,6 +240,11 @@ def _append_invalidation(
 
 
 def _print_invalidation_footer(audit_path: str) -> None:
+    """Print the latest invalidation reason at the bottom of a CLI run.
+
+    Args:
+        audit_path: Path to the JSONL audit log produced by the run.
+    """
     try:
         import json as _json
 
@@ -191,15 +258,19 @@ def _print_invalidation_footer(audit_path: str) -> None:
                     last = obj
         if last is not None:
             det = last.get("details", {}) or {}
-            human = det.get("reason_human") or _human_invalidation_reason(
-                det.get("reason", ""), det
-            )
+            human = det.get("reason_human") or _human_invalidation_reason(det.get("reason", ""), det)
             print(f"Run invalidated: {human}")
     except Exception:
         pass
 
 
 def _ensure_dirs() -> Dict[str, str]:
+    """Create and return the artifact subdirectories used by the CLI.
+
+    Returns:
+        Dict with `artifacts`, `audits`, `indicators`, and `figures`
+        keys mapping to absolute paths under `artifacts/`.
+    """
     artifacts = os.path.join("artifacts")
     audits = os.path.join(artifacts, "audits")
     indicators = os.path.join(artifacts, "indicators")
@@ -216,6 +287,27 @@ def _ensure_dirs() -> Dict[str, str]:
 
 
 def _make_adapter_from_profile(prof: Dict) -> AdapterProtocol:
+    """Build a plant adapter from the `plant.*` block of a profile.
+
+    Args:
+        prof: Loaded YAML profile dict. The `plant.adapter` field
+            selects the implementation: `"sim"` / `"software"` /
+            `"inproc"` returns a
+            [`PlantAdapter`][ldtc.plant.adapter.PlantAdapter] over the
+            in-process software model; `"hardware"` / `"hw"` lazily
+            imports
+            [`HardwarePlantAdapter`][ldtc.plant.hw_adapter.HardwarePlantAdapter]
+            and configures its transport.
+
+    Returns:
+        An object satisfying
+        [`AdapterProtocol`][ldtc.cli.main.AdapterProtocol].
+
+    Raises:
+        ValueError: If `plant.adapter` is not a recognized kind.
+        RuntimeError: If hardware adapter is requested but its optional
+            dependencies are not installed.
+    """
     plant_prof = prof.get("plant", {}) or {}
     adapter_kind = str(plant_prof.get("adapter", "sim")).lower()
     if adapter_kind in ("sim", "software", "inproc"):
@@ -242,7 +334,21 @@ def _make_adapter_from_profile(prof: Dict) -> AdapterProtocol:
 
 
 def run_baseline(args: argparse.Namespace) -> None:
-    # Configs
+    """Run the baseline NC1 verification loop.
+
+    Performs the standard verification harness loop: a fixed-`Δt`
+    scheduler streams plant telemetry into a sliding window, the
+    [`lmeas`][ldtc.lmeas] estimator computes `M (dB)` per window,
+    [`guardrails`][ldtc.guardrails] watch for invalidation conditions,
+    and [`attest`][ldtc.attest] periodically signs derived indicators.
+    A verification artifact bundle is built at the end via
+    [`reporting.artifacts.bundle`][ldtc.reporting.artifacts.bundle].
+
+    Args:
+        args: Parsed argparse namespace; the only required field is
+            `--config`, the path to a YAML profile (e.g.,
+            `configs/profile_R0.yml`).
+    """
     prof = _load_yaml(args.config)
     seeds = _set_seeds(prof)
     dt = float(prof.get("dt", 0.01))
@@ -389,12 +495,8 @@ def run_baseline(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(
-                                    float(stn.adf_nonstationary_frac), 3
-                                ),
-                                "kpss_ns_frac": round(
-                                    float(stn.kpss_nonstationary_frac), 3
-                                ),
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -411,18 +513,11 @@ def run_baseline(args: argparse.Namespace) -> None:
             io_hist.append(state2.get("io", 0.0))
             H_hist.append(state2.get("H", 0.0))
             # Establish baseline CI medians (once) after we have lookback windows
-            if (
-                baseline_hw_medians is None
-                and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows
-            ):
+            if baseline_hw_medians is None and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows:
                 recent_loop = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
                 recent_ex = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
-                hw_loop_list = sorted(
-                    [0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_loop]
-                )
-                hw_ex_list = sorted(
-                    [0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_ex]
-                )
+                hw_loop_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_loop])
+                hw_ex_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_ex])
                 baseline_hw_medians = (
                     hw_loop_list[len(hw_loop_list) // 2],
                     hw_ex_list[len(hw_ex_list) // 2],
@@ -445,9 +540,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                     },
                     _sink={},
                 )
-            if invalid_by_ci_history(
-                ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
-            ):
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
                 lreg.invalidate("ci_history_inflation")
                 med_loop: float | None = None
                 med_ex: float | None = None
@@ -518,9 +611,7 @@ def run_baseline(args: argparse.Namespace) -> None:
             )
             # export indicators (derived only)
             derived = lreg.derive()
-            exported, base = exporter.maybe_export(
-                priv, audit, derived, icfg, last_sc1_pass=False
-            )
+            exported, base = exporter.maybe_export(priv, audit, derived, icfg, last_sc1_pass=False)
             if exported:
                 audit.append("indicators_exported", {"base": os.path.basename(base)})
             # Deterministic growth cadence with hysteresis (skip if frozen)
@@ -637,30 +728,38 @@ def run_baseline(args: argparse.Namespace) -> None:
 
     # Build verification bundle (timeline, optional SC1 table if present, manifest)
     try:
-        out = build_verification_bundle(
-            dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl")
-        )
+        out = build_verification_bundle(dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl"))
         audit.append(
             "report_generated",
             {
                 "timeline_png": os.path.basename(out.get("timeline_png", "")),
                 "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
-                "table": (
-                    os.path.basename(out.get("sc1_table", ""))
-                    if out.get("sc1_table")
-                    else None
-                ),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
         print(
-            f"Bundle: timeline={out.get('timeline_png','')}, table={out.get('sc1_table','')}, manifest={out.get('manifest','')}"
+            "Bundle: "
+            f"timeline={out.get('timeline_png','')}, "
+            f"table={out.get('sc1_table','')}, "
+            f"manifest={out.get('manifest','')}"
         )
     except Exception:
         pass
 
 
 def omega_power_sag(args: argparse.Namespace) -> None:
+    """Apply a power-sag `Ω` and evaluate SC1.
+
+    Runs a baseline phase, freezes the partition, applies a power-sag
+    `Ω` for `--duration` seconds, then observes recovery. SC1 is
+    evaluated from the trough of `L_loop` and the first sustained
+    compliance window after `Ω`.
+
+    Args:
+        args: Parsed argparse namespace with `--config`, `--drop`
+            (fractional power drop), and `--duration` (seconds).
+    """
     prof = _load_yaml(args.config)
     seeds = _set_seeds(prof)
     dt = float(prof.get("dt", 0.01))
@@ -746,7 +845,9 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     last_flip_count = 0
 
     def tick(_now: float) -> None:
-        nonlocal L_loop_baseline, L_loop_trough, M_post, phase, risky_cmd, window_idx, last_flip_count, recovery_start_idx, last_idx_written, sustained_ok_count, baseline_hw_medians
+        nonlocal L_loop_baseline, L_loop_trough, M_post, phase, risky_cmd, window_idx
+        nonlocal last_flip_count, recovery_start_idx, last_idx_written, sustained_ok_count
+        nonlocal baseline_hw_medians
         state = adapter.read_state()
         ent = lreg.latest()
         predicted = ent.M_db if ent else 0.0
@@ -797,12 +898,8 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(
-                                    float(stn.adf_nonstationary_frac), 3
-                                ),
-                                "kpss_ns_frac": round(
-                                    float(stn.kpss_nonstationary_frac), 3
-                                ),
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -833,27 +930,16 @@ def omega_power_sag(args: argparse.Namespace) -> None:
             E_hist.append(st.get("E", 0.0))
             io_hist.append(st.get("io", 0.0))
             H_hist.append(st.get("H", 0.0))
-            if (
-                baseline_hw_medians is None
-                and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows
-            ):
+            if baseline_hw_medians is None and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows:
                 rL = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
                 rE = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
                 hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
                 hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
                 baseline_hw_medians = (hwL[len(hwL) // 2], hwE[len(hwE) // 2])
             if phase == "baseline":
-                L_loop_baseline = (
-                    res.L_loop
-                    if L_loop_baseline is None
-                    else 0.9 * L_loop_baseline + 0.1 * res.L_loop
-                )
+                L_loop_baseline = res.L_loop if L_loop_baseline is None else 0.9 * L_loop_baseline + 0.1 * res.L_loop
             elif phase == "sag":
-                L_loop_trough = (
-                    res.L_loop
-                    if (L_loop_trough is None or res.L_loop < L_loop_trough)
-                    else L_loop_trough
-                )
+                L_loop_trough = res.L_loop if (L_loop_trough is None or res.L_loop < L_loop_trough) else L_loop_trough
             elif phase == "recovery":
                 # Measure sustained compliance: M ≥ Mmin and L_loop ≥ L_ex (σ not modeled here)
                 if (M >= Mmin) and (res.L_loop >= res.L_ex):
@@ -871,9 +957,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 lreg.invalidate("dt_change_rate_limit")
                 # audit already appended by guard
             # Smell tests
-            if invalid_by_ci_history(
-                ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
-            ):
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
                 lreg.invalidate("ci_history_inflation")
                 med_loop: float | None = None
                 med_ex: float | None = None
@@ -925,11 +1009,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
             # Deterministic growth cadence outside the sag phase and when not frozen
             window_idx += 1
-            if (
-                (window_idx % part_growth_cadence_windows) == 0
-                and not pm.get().frozen
-                and phase != "sag"
-            ):
+            if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen and phase != "sag":
                 part = pm.get()
                 cand_C, dM_db, greedy_details = greedy_suggest_C(
                     X=X,
@@ -1020,9 +1100,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         phase = "recovery"
         # Unfreeze after Ω and check any flips during Ω (should be none)
         flips_after_omega = pm.get().flips
-        if invalid_flip_during_omega(
-            flips_before_omega, flips_after_omega, SmellConfig()
-        ):
+        if invalid_flip_during_omega(flips_before_omega, flips_after_omega, SmellConfig()):
             lreg.invalidate("partition_flip_during_omega")
             audit.append(
                 "run_invalidated",
@@ -1110,7 +1188,10 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     if exported:
         audit.append("indicators_exported", {"base": os.path.basename(base)})
     print(
-        f"SC1 pass: {passed} (delta={sc1_stats.delta:.3f}, tau={sc1_stats.tau_rec:.3f}s, M_post={sc1_stats.M_post:.2f} dB)"
+        f"SC1 pass: {passed} "
+        f"(delta={sc1_stats.delta:.3f}, "
+        f"tau={sc1_stats.tau_rec:.3f}s, "
+        f"M_post={sc1_stats.M_post:.2f} dB)"
     )
     _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
 
@@ -1122,22 +1203,32 @@ def omega_power_sag(args: argparse.Namespace) -> None:
             {
                 "timeline_png": os.path.basename(out.get("timeline_png", "")),
                 "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
-                "table": (
-                    os.path.basename(out.get("sc1_table", ""))
-                    if out.get("sc1_table")
-                    else None
-                ),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
         print(
-            f"Bundle: timeline={out.get('timeline_png','')}, table={out.get('sc1_table','')}, manifest={out.get('manifest','')}"
+            "Bundle: "
+            f"timeline={out.get('timeline_png','')}, "
+            f"table={out.get('sc1_table','')}, "
+            f"manifest={out.get('manifest','')}"
         )
     except Exception:
         pass
 
 
 def omega_ingress_flood(args: argparse.Namespace) -> None:
+    """Burst external demand and evaluate SC1.
+
+    Runs a baseline phase, freezes the partition, multiplies ingress
+    demand by `--mult` for `--duration` seconds, then observes
+    recovery. SC1 is evaluated from the trough of `L_loop` and the
+    first sustained compliance window after `Ω`.
+
+    Args:
+        args: Parsed argparse namespace with `--config`, `--mult`
+            (load multiplier), and `--duration` (seconds).
+    """
     prof = _load_yaml(args.config)
     seeds = _set_seeds(prof)
     dt = float(prof.get("dt", 0.01))
@@ -1219,7 +1310,9 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     sustained_required = int(prof.get("sustained_required_windows", 2))
 
     def tick(_now: float) -> None:
-        nonlocal risky_cmd, window_idx, last_flip_count, baseline_hw_medians, phase, L_loop_baseline, L_loop_trough, M_post, omega_onset_idx, recovery_start_idx, last_idx_written, sustained_ok_count
+        nonlocal risky_cmd, window_idx, last_flip_count, baseline_hw_medians, phase
+        nonlocal L_loop_baseline, L_loop_trough, M_post, omega_onset_idx
+        nonlocal recovery_start_idx, last_idx_written, sustained_ok_count
         state = adapter.read_state()
         ent = lreg.latest()
         predicted = ent.M_db if ent else 0.0
@@ -1270,12 +1363,8 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(
-                                    float(stn.adf_nonstationary_frac), 3
-                                ),
-                                "kpss_ns_frac": round(
-                                    float(stn.kpss_nonstationary_frac), 3
-                                ),
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -1305,10 +1394,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             E_hist.append(st.get("E", 0.0))
             io_hist.append(st.get("io", 0.0))
             H_hist.append(st.get("H", 0.0))
-            if (
-                baseline_hw_medians is None
-                and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows
-            ):
+            if baseline_hw_medians is None and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows:
                 rL = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
                 rE = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
                 hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
@@ -1316,17 +1402,9 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 baseline_hw_medians = (hwL[len(hwL) // 2], hwE[len(hwE) // 2])
             # SC1 measures
             if phase == "baseline":
-                L_loop_baseline = (
-                    res.L_loop
-                    if L_loop_baseline is None
-                    else 0.9 * L_loop_baseline + 0.1 * res.L_loop
-                )
+                L_loop_baseline = res.L_loop if L_loop_baseline is None else 0.9 * L_loop_baseline + 0.1 * res.L_loop
             elif phase == "flood":
-                L_loop_trough = (
-                    res.L_loop
-                    if (L_loop_trough is None or res.L_loop < L_loop_trough)
-                    else L_loop_trough
-                )
+                L_loop_trough = res.L_loop if (L_loop_trough is None or res.L_loop < L_loop_trough) else L_loop_trough
             elif phase == "recovery":
                 if (M >= Mmin) and (res.L_loop >= res.L_ex):
                     sustained_ok_count += 1
@@ -1337,9 +1415,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 else:
                     sustained_ok_count = 0
             # smell tests
-            if invalid_by_ci_history(
-                ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians
-            ):
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
                 lreg.invalidate("ci_history_inflation")
                 audit.append("run_invalidated", {"reason": "ci_history_inflation"})
             elapsed = max(1e-6, time.perf_counter() - start_time)
@@ -1355,9 +1431,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 )
             if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
                 lreg.invalidate("exogenous_subsidy")
-                audit.append(
-                    "run_invalidated", {"reason": "exogenous_subsidy_red_flag"}
-                )
+                audit.append("run_invalidated", {"reason": "exogenous_subsidy_red_flag"})
             # deterministic growth cadence when not frozen
             window_idx += 1
             if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
@@ -1511,14 +1585,15 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
 
     # Export derived indicators snapshot with SC1 bit if available
     last_sc1_pass = bool(passed) if not lreg.invalidated else False
-    exported, base = exporter.maybe_export(
-        priv, audit, lreg.derive(), icfg, last_sc1_pass=last_sc1_pass
-    )
+    exported, base = exporter.maybe_export(priv, audit, lreg.derive(), icfg, last_sc1_pass=last_sc1_pass)
     if exported:
         audit.append("indicators_exported", {"base": os.path.basename(base)})
     if stats_sc1 is not None:
         print(
-            f"SC1 pass: {passed} (delta={stats_sc1.delta:.3f}, tau={stats_sc1.tau_rec:.3f}s, M_post={stats_sc1.M_post:.2f} dB)"
+            f"SC1 pass: {passed} "
+            f"(delta={stats_sc1.delta:.3f}, "
+            f"tau={stats_sc1.tau_rec:.3f}s, "
+            f"M_post={stats_sc1.M_post:.2f} dB)"
         )
     else:
         print("Not enough data for SC1 evaluation.")
@@ -1533,22 +1608,33 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             {
                 "timeline_png": os.path.basename(out.get("timeline_png", "")),
                 "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
-                "table": (
-                    os.path.basename(out.get("sc1_table", ""))
-                    if out.get("sc1_table")
-                    else None
-                ),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
         print(
-            f"Bundle: timeline={out.get('timeline_png','')}, table={out.get('sc1_table','')}, manifest={out.get('manifest','')}"
+            "Bundle: "
+            f"timeline={out.get('timeline_png','')}, "
+            f"table={out.get('sc1_table','')}, "
+            f"manifest={out.get('manifest','')}"
         )
     except Exception:
         pass
 
 
 def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
+    """Inject SoC without harvest as a negative-control `Ω`.
+
+    This `Ω` is *expected* to fail the smell-test heuristic: it raises
+    `M (dB)` while harvest is zero, so
+    [`exogenous_subsidy_red_flag`][ldtc.guardrails.smelltests.exogenous_subsidy_red_flag]
+    should fire and invalidate the run. It exists to demonstrate the
+    "no quietly-tuned NC1 result" rule end-to-end.
+
+    Args:
+        args: Parsed argparse namespace with `--config`, `--delta`
+            (amount to add to E), `--zero-harvest`, and `--duration`.
+    """
     prof = _load_yaml(args.config)
     seeds = _set_seeds(prof)
     dt = float(prof.get("dt", 0.01))
@@ -1599,9 +1685,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
 
         adapter.write_actuators(
             action=PlantAction(
-                **ControllerPolicy(RefusalArbiter())
-                .compute(state, predicted_M_db=0.0, risky_cmd=None)
-                .__dict__
+                **ControllerPolicy(RefusalArbiter()).compute(state, predicted_M_db=0.0, risky_cmd=None).__dict__
             )
         )
         st = adapter.read_state()
@@ -1609,9 +1693,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
         if sw.ready():
             X = np.asarray(sw.get_matrix())
             part = pm.get()
-            res = estimate_L(
-                X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot
-            )
+            res = estimate_L(X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot)
             # Diagnostics per window
             try:
                 from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio
@@ -1640,12 +1722,8 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(
-                                    float(stn.adf_nonstationary_frac), 3
-                                ),
-                                "kpss_ns_frac": round(
-                                    float(stn.kpss_nonstationary_frac), 3
-                                ),
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -1695,9 +1773,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                     dt_guard.change_dt(scheduler=sch, new_dt=new_dt, policy_digest=pdig)
 
             _th.Thread(target=_dt_script, daemon=True).start()
-        audit.append(
-            "omega_exogenous_subsidy_start", {"delta": delta, "zero_harvest": zero_h}
-        )
+        audit.append("omega_exogenous_subsidy_start", {"delta": delta, "zero_harvest": zero_h})
         time.sleep(1.0)
         adapter.apply_omega("exogenous_subsidy", delta=delta, zero_harvest=zero_h)
         time.sleep(float(args.duration))
@@ -1735,22 +1811,27 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
             {
                 "timeline_png": os.path.basename(out.get("timeline_png", "")),
                 "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
-                "table": (
-                    os.path.basename(out.get("sc1_table", ""))
-                    if out.get("sc1_table")
-                    else None
-                ),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
-        print(
-            f"Bundle: timeline={out.get('timeline_png','')}, manifest={out.get('manifest','')}"
-        )
+        print(f"Bundle: timeline={out.get('timeline_png','')}, manifest={out.get('manifest','')}")
     except Exception:
         pass
 
 
 def omega_command_conflict(args: argparse.Namespace) -> None:
+    """Issue a risky command and measure refusal latency.
+
+    Warms up the loop briefly, then issues a `hard_shutdown` command
+    and observes for `--observe` seconds. Records each refusal event
+    with its `T_refuse` (ms) and reason. No SC1 evaluation is
+    performed.
+
+    Args:
+        args: Parsed argparse namespace with `--config` and `--observe`
+            (seconds to observe after issuing the command).
+    """
     prof = _load_yaml(args.config)
     seeds = _set_seeds(prof)
     dt = float(prof.get("dt", 0.01))
@@ -1812,9 +1893,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
         if sw.ready():
             X = np.asarray(sw.get_matrix())
             part = pm.get()
-            res = estimate_L(
-                X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot
-            )
+            res = estimate_L(X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot)
             if method.startswith("mi"):
                 res = estimate_L(
                     X,
@@ -1854,12 +1933,8 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                             "measurement_unstable",
                             {
                                 "reasons": reasons,
-                                "adf_ns_frac": round(
-                                    float(stn.adf_nonstationary_frac), 3
-                                ),
-                                "kpss_ns_frac": round(
-                                    float(stn.kpss_nonstationary_frac), 3
-                                ),
+                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
+                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
                                 "var_nt_ratio": round(float(vratio), 3),
                             },
                         )
@@ -1943,13 +2018,9 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
 
     # Summarize refusal reasons and Trefuse
     if refusal_events:
-        avg_ms = sum(ev["trefuse_ms"] for ev in refusal_events) / max(
-            1, len(refusal_events)
-        )
+        avg_ms = sum(ev["trefuse_ms"] for ev in refusal_events) / max(1, len(refusal_events))
         reasons = {ev["reason"] for ev in refusal_events}
-        print(
-            f"Refusals: {len(refusal_events)}; avg Trefuse ≈ {avg_ms:.2f} ms; reasons: {sorted(reasons)}"
-        )
+        print(f"Refusals: {len(refusal_events)}; avg Trefuse ≈ {avg_ms:.2f} ms; reasons: {sorted(reasons)}")
     else:
         print("No refusal events recorded (command likely accepted).")
 
@@ -1961,46 +2032,41 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
             {
                 "timeline_png": os.path.basename(out.get("timeline_png", "")),
                 "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
-                "table": (
-                    os.path.basename(out.get("sc1_table", ""))
-                    if out.get("sc1_table")
-                    else None
-                ),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
-        print(
-            f"Bundle: timeline={out.get('timeline_png','')}, manifest={out.get('manifest','')}"
-        )
+        print(f"Bundle: timeline={out.get('timeline_png','')}, manifest={out.get('manifest','')}")
     except Exception:
         pass
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the top-level `ldtc` argparse parser.
+
+    Wires up the `run` subcommand and the four `omega-*` subcommands;
+    each subparser binds its handler via `set_defaults(func=...)`.
+
+    Returns:
+        Configured `ArgumentParser`. Call `parse_args()` and then
+        `args.func(args)` to dispatch.
+    """
     p = argparse.ArgumentParser(prog="ldtc", description="LDTC CLI")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     p_run = sub.add_parser("run", help="Run baseline NC1 loop")
-    p_run.add_argument(
-        "--config", required=True, help="YAML profile (e.g., configs/profile_r0.yml)"
-    )
+    p_run.add_argument("--config", required=True, help="YAML profile (e.g., configs/profile_r0.yml)")
     p_run.set_defaults(func=run_baseline)
 
-    p_omega = sub.add_parser(
-        "omega-power-sag", help="Apply power-sag Ω and evaluate SC1"
-    )
+    p_omega = sub.add_parser("omega-power-sag", help="Apply power-sag Ω and evaluate SC1")
     p_omega.add_argument("--config", required=True)
     p_omega.add_argument("--drop", type=float, default=0.3)
     p_omega.add_argument("--duration", type=float, default=10.0)
     p_omega.set_defaults(func=omega_power_sag)
 
-    p_ing = sub.add_parser(
-        "omega-ingress-flood", help="Apply ingress-flood Ω demo with partition freeze"
-    )
+    p_ing = sub.add_parser("omega-ingress-flood", help="Apply ingress-flood Ω demo with partition freeze")
     p_ing.add_argument("--config", required=True)
-    p_ing.add_argument(
-        "--mult", type=float, default=3.0, help="Multiplier for ingress load"
-    )
+    p_ing.add_argument("--mult", type=float, default=3.0, help="Multiplier for ingress load")
     p_ing.add_argument("--duration", type=float, default=5.0)
     p_ing.set_defaults(func=omega_ingress_flood)
 
@@ -2022,12 +2088,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Inject SoC without harvest to simulate subsidy (negative control)",
     )
     p_sub.add_argument("--config", required=True)
-    p_sub.add_argument(
-        "--delta", type=float, default=0.1, help="Amount to add to E (SoC)"
-    )
-    p_sub.add_argument(
-        "--zero-harvest", action="store_true", help="Zero H while injecting E"
-    )
+    p_sub.add_argument("--delta", type=float, default=0.1, help="Amount to add to E (SoC)")
+    p_sub.add_argument("--zero-harvest", action="store_true", help="Zero H while injecting E")
     p_sub.add_argument("--duration", type=float, default=3.0)
     p_sub.set_defaults(func=omega_exogenous_subsidy)
 
@@ -2035,6 +2097,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: List[str] | None = None) -> None:
+    """Entry point for the `ldtc` console script.
+
+    Args:
+        argv: Optional argument list (mostly for tests); defaults to
+            `sys.argv[1:]`.
+    """
     argv = argv if argv is not None else sys.argv[1:]
     parser = build_parser()
     args = parser.parse_args(argv)

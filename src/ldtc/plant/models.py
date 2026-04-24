@@ -1,17 +1,20 @@
-"""Plant: Software plant model and data structures.
+"""Software plant model and data structures.
 
-Defines the minimal discrete-time plant, its parameters, state, and actions
-used by adapters and controllers in the verification harness.
+Defines the minimal discrete-time plant used by adapters and controllers
+in the verification harness, along with its parameter, state, and action
+data classes. The model is intentionally simple and stochastic so that
+the harness has varied telemetry to exercise without requiring a real
+controller in the loop.
 
 See Also:
-    paper/main.tex — Plant models and adapters.
+    `paper/main.tex`: Plant models and adapters.
 """
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from typing import Dict, Tuple
-import random
 
 
 @dataclass
@@ -68,7 +71,7 @@ class PlantParams:
 
 @dataclass
 class PlantState:
-    """State variables for the software plant (0..1 normalized).
+    """State variables for the software plant (`[0, 1]`-normalized).
 
     Attributes:
         E: Energy / state of charge.
@@ -77,7 +80,8 @@ class PlantState:
         demand: External task demand.
         io: Exchange I/O activity.
         H: Current harvest level.
-        last_cmd: Last command received (one-shot).
+        last_cmd: Last command received (one-shot; consumed on the next
+            `step` if accepted).
     """
 
     E: float = 0.7  # energy/SoC (0..1)
@@ -94,9 +98,10 @@ class Action:
     """Actuator settings for the plant.
 
     Attributes:
-        throttle: Throttle command in [0, 1].
-        cool: Cooling command in [0, 1].
-        repair: Repair command in [0, 1].
+        throttle: Throttle command in `[0, 1]` (`1.0` is heavy
+            throttle).
+        cool: Cooling command in `[0, 1]`.
+        repair: Repair command in `[0, 1]`.
         accept_cmd: Whether to accept the pending risky command.
     """
 
@@ -107,14 +112,20 @@ class Action:
 
 
 class Plant:
-    """Minimal discrete-time plant model with E/T/R dynamics.
+    """Minimal discrete-time plant model with E / T / R dynamics.
 
-    Simulates energy (E), temperature (T), repair/health (R), external demand,
-    I/O activity, and energy harvest (H). The model is intentionally simple and
-    stochastic to provide varied telemetry for the verification harness.
+    Simulates energy (`E`), temperature (`T`), repair / health (`R`),
+    external demand, I/O activity, and energy harvest (`H`). The model
+    is intentionally simple and stochastic to provide varied telemetry
+    for the verification harness.
+
+    Args:
+        params: Optional [`PlantParams`][ldtc.plant.models.PlantParams]
+            instance; defaults to the baseline preset.
     """
 
     def __init__(self, params: PlantParams | None = None) -> None:
+        """Initialize plant with the given (or default) parameters."""
         self.p = params or PlantParams()
         self.s = PlantState()
 
@@ -122,7 +133,7 @@ class Plant:
         """Read the current plant state.
 
         Returns:
-            Dict with keys ``E``, ``T``, ``R``, ``demand``, ``io``, ``H``.
+            Dict with keys `E`, `T`, `R`, `demand`, `io`, `H`.
         """
         s = self.s
         return {"E": s.E, "T": s.T, "R": s.R, "demand": s.demand, "io": s.io, "H": s.H}
@@ -130,13 +141,22 @@ class Plant:
     def command(self, cmd: str) -> None:
         """Record a one-shot external command.
 
+        The command is consumed on the next `step` if the action sets
+        `accept_cmd=True`; otherwise it remains pending until accepted
+        or overwritten.
+
         Args:
-            cmd: Command name (e.g., ``"hard_shutdown"``).
+            cmd: Command name (e.g., `"hard_shutdown"`).
         """
         self.s.last_cmd = cmd
 
     def step(self, action: Action) -> None:
         """Advance the plant by one tick with the given action.
+
+        Updates `E`, `T`, and `R` according to the simple dynamics
+        described on the class. If `last_cmd` is `"hard_shutdown"` and
+        the action accepts it, the command is applied (large `E` drop,
+        temperature spike, health drop) and consumed.
 
         Args:
             action: Actuator settings to apply this tick.
@@ -187,10 +207,11 @@ class Plant:
         """Reduce harvest by a fractional drop.
 
         Args:
-            drop: Fraction in [0, 1) by which to reduce ``H``.
+            drop: Fraction in `[0, 0.95]` by which to reduce `H`.
+                Values outside the range are clamped.
 
         Returns:
-            Tuple of previous and new ``H`` values.
+            Tuple `(old_H, new_H)`.
         """
         drop = max(0.0, min(0.95, drop))
         old = self.s.H
@@ -198,13 +219,13 @@ class Plant:
         return old, self.s.H
 
     def set_power(self, newH: float) -> Tuple[float, float]:
-        """Set harvest level.
+        """Set the harvest level directly.
 
         Args:
-            newH: New harvest value.
+            newH: New harvest value (negative inputs clamp to `0`).
 
         Returns:
-            Tuple of previous and new ``H`` values.
+            Tuple `(old_H, new_H)`.
         """
         old = self.s.H
         self.s.H = max(0.0, newH)
@@ -214,10 +235,11 @@ class Plant:
         """Multiply demand and I/O by a factor.
 
         Args:
-            mult: Multiplicative factor (>= 1.0); results are clamped to [0, 1].
+            mult: Multiplicative factor (`>= 1.0`). Smaller values are
+                clamped up to `1.0`. Results are clamped into `[0, 1]`.
 
         Returns:
-            Tuple of updated ``(demand, io)``.
+            Tuple of updated `(demand, io)`.
         """
         m = max(1.0, mult)
         self.s.demand = max(0.0, min(1.0, self.s.demand * m))
@@ -225,10 +247,22 @@ class Plant:
         return self.s.demand, self.s.io
 
     def inject_soc(self, delta: float, zero_harvest: bool = True) -> float:
-        """Exogenously increase SoC E by ``delta``; optionally zero harvest H.
+        """Exogenously increase SoC `E` by `delta`.
 
-        Returns the new E value. Used as a negative-control omega (subsidy) to
-        exercise smell tests in analysis.
+        Used as the negative-control `Ω` (an "exogenous subsidy") to
+        exercise the smell-tests in analysis: a controller that
+        survives only because energy keeps appearing from nowhere
+        should fail
+        [`exogenous_subsidy_red_flag`][ldtc.guardrails.smelltests.exogenous_subsidy_red_flag].
+
+        Args:
+            delta: Amount to add to `E`. The result is clamped into
+                `[E_min, E_max]`.
+            zero_harvest: When `True` (default), also set `H = 0` so
+                the boost cannot be confused with real harvest.
+
+        Returns:
+            The new `E` value after clamping.
         """
         if zero_harvest:
             self.s.H = 0.0

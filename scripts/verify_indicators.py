@@ -14,9 +14,9 @@ import glob
 import hashlib
 import json
 import os
-from typing import Dict, List, Tuple
 import sys
 from collections import OrderedDict
+from typing import Dict, List, Tuple
 
 import cbor2
 from cryptography.hazmat.primitives import serialization
@@ -89,9 +89,7 @@ def audit_chain_status(audit_path: str) -> Tuple[bool, str, int, List[str], str]
         )
 
 
-def verify_indicators(
-    ind_dir: str, pub: Ed25519PublicKey, audit_hashes: List[str]
-) -> Dict[str, int | bool | str]:
+def verify_indicators(ind_dir: str, pub: Ed25519PublicKey, audit_hashes: List[str]) -> Dict[str, int | bool | str]:
     """Verify indicator packets in a directory.
 
     Args:
@@ -152,9 +150,7 @@ def verify_indicators(
                             if k in payload:
                                 ordered_payload[k] = payload[k]
                         # Include any unexpected keys deterministically for robustness
-                        for k in sorted(
-                            [k for k in payload.keys() if k not in ordered_payload]
-                        ):
+                        for k in sorted([k for k in payload.keys() if k not in ordered_payload]):
                             ordered_payload[k] = payload[k]
                         cbor_bytes_to_verify = cbor2.dumps(ordered_payload)
                     # Verify signature
@@ -179,9 +175,7 @@ def verify_indicators(
                         for k in ordered_keys:
                             if k in payload:
                                 ordered_payload[k] = payload[k]
-                        for k in sorted(
-                            [k for k in payload.keys() if k not in ordered_payload]
-                        ):
+                        for k in sorted([k for k in payload.keys() if k not in ordered_payload]):
                             ordered_payload[k] = payload[k]
                         cbor_bytes_reconstructed = cbor2.dumps(ordered_payload)
                         if cbor_sidecar == cbor_bytes_reconstructed:
@@ -230,9 +224,7 @@ def main() -> None:
     Parses arguments for indicator directory, audit path, and public key,
     then checks signatures, CBOR equality (if sidecars exist), and audit prev-hash membership.
     """
-    parser = argparse.ArgumentParser(
-        description="Verify signed indicators and audit chain."
-    )
+    parser = argparse.ArgumentParser(description="Verify signed indicators and audit chain.")
     parser.add_argument(
         "--ind-dir",
         default=os.path.abspath(os.path.join("artifacts", "indicators")),
@@ -251,17 +243,13 @@ def main() -> None:
     args = parser.parse_args()
 
     pub = load_pubkey(args.pub)
-    chain_ok, last_hash, last_counter, audit_hashes, diag = audit_chain_status(
-        args.audit
-    )
+    chain_ok, last_hash, last_counter, audit_hashes, diag = audit_chain_status(args.audit)
     stats = verify_indicators(args.ind_dir, pub, audit_hashes)
 
     # Determine how many entries had sidecars present
     # We approximate by counting any cbor match attempt (ok+fail)
     ok_match = (
-        int(stats["ok_cbor_match"])
-        if isinstance(stats["ok_cbor_match"], int)
-        else int(stats["ok_cbor_match"] or 0)
+        int(stats["ok_cbor_match"]) if isinstance(stats["ok_cbor_match"], int) else int(stats["ok_cbor_match"] or 0)
     )
     fail_match = (
         int(stats["fails_cbor_match"])
@@ -279,10 +267,17 @@ def main() -> None:
 
     status = "CERT OK" if all_ok else "CERT FAIL"
     # One-line certificate report
+    chain_state = "OK" if chain_ok else "BROKEN"
+    diag_suffix = (" diag=" + diag) if (not chain_ok and diag) else ""
     print(
-        f"{status} | sigs {stats['ok_sig']}/{stats['total']} | CBOR match {stats['ok_cbor_match']}/{stats['total']} | "
-        f"audit_chain {'OK' if chain_ok else 'BROKEN'} last={last_hash[:8]} cnt={last_counter}{(' diag='+diag) if not chain_ok and diag else ''} | prev_hash match {stats['ok_prev_in_audit']}/{stats['total']} | "
-        f"pub_fpr {pub_fingerprint(pub)} | ind_dir {args.ind_dir} | audit {args.audit}"
+        f"{status} | "
+        f"sigs {stats['ok_sig']}/{stats['total']} | "
+        f"CBOR match {stats['ok_cbor_match']}/{stats['total']} | "
+        f"audit_chain {chain_state} last={last_hash[:8]} cnt={last_counter}{diag_suffix} | "
+        f"prev_hash match {stats['ok_prev_in_audit']}/{stats['total']} | "
+        f"pub_fpr {pub_fingerprint(pub)} | "
+        f"ind_dir {args.ind_dir} | "
+        f"audit {args.audit}"
     )
     # Exit non-zero in CI if verification fails
     sys.exit(0 if all_ok else 1)

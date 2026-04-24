@@ -1,10 +1,16 @@
-"""Arbiter: Controller policy over refusal logic.
+"""Controller policy over refusal logic.
 
-Provides a simple homeostatic controller that consults the refusal arbiter to
-prioritize boundary integrity over risky external commands.
+A small homeostatic controller that produces actuator setpoints
+(`throttle`, `cool`, `repair`) and consults the
+[`RefusalArbiter`][ldtc.arbiter.refusal.RefusalArbiter] to decide
+whether to accept a risky external command. The controller intentionally
+prioritizes boundary integrity over downstream tasks: throttle and cool
+respond to `E` (state of charge) and `T` (temperature) before any
+command acceptance is considered.
 
 See Also:
-    paper/main.tex — Self-Referential Control; Threat Model & Refusal.
+    `paper/main.tex`: Self-Referential Control; Threat Model and
+    Refusal.
 """
 
 from __future__ import annotations
@@ -20,10 +26,11 @@ class ControlAction:
     """Low-level control action for the plant actuators.
 
     Attributes:
-        throttle: Throttle level in [0, 1].
-        cool: Cooling effort in [0, 1].
-        repair: Repair effort in [0, 1].
-        accept_cmd: Whether to accept a risky external command.
+        throttle: Throttle level in `[0, 1]`.
+        cool: Cooling effort in `[0, 1]`.
+        repair: Repair effort in `[0, 1]`.
+        accept_cmd: Whether to accept the risky external command for
+            this tick.
     """
 
     throttle: float
@@ -35,15 +42,19 @@ class ControlAction:
 class ControllerPolicy:
     """Simple homeostatic controller layered over a refusal arbiter.
 
-    Heuristically sets throttle, cooling, and repair based on current state,
-    and consults :class:`RefusalArbiter` to decide whether to accept a risky
-    external command.
+    Heuristically sets throttle, cooling, and repair based on the
+    current state, and consults
+    [`RefusalArbiter`][ldtc.arbiter.refusal.RefusalArbiter] to decide
+    whether to accept a risky external command. The most recent
+    decision is cached on `last_decision` for downstream inspection
+    (e.g., audit records).
 
     Args:
         refusal: Refusal arbiter used to gate risky commands.
     """
 
     def __init__(self, refusal: RefusalArbiter) -> None:
+        """Initialize with the refusal arbiter to delegate to."""
         self.refusal = refusal
         self.last_decision: Optional[RefusalDecision] = None
 
@@ -56,17 +67,18 @@ class ControllerPolicy:
         """Compute an action and command-acceptance decision.
 
         Args:
-            state: Plant state with keys 'E', 'T', and 'R'.
-            predicted_M_db: Predicted loop-dominance margin.
+            state: Plant state with keys `"E"` (state of charge), `"T"`
+                (temperature), and `"R"` (repair / health).
+            predicted_M_db: Predicted loop-dominance margin in dB.
             risky_cmd: Optional risky command to evaluate.
 
         Returns:
-            :class:`ControlAction` with actuator settings and accept flag.
+            A [`ControlAction`][ldtc.arbiter.policy.ControlAction] with
+            actuator settings and the accept flag from the arbiter.
         """
         E = state["E"]
         T = state["T"]
         R = state["R"]
-        # heuristics
         throttle = 0.0
         cool = 0.0
         repair = 0.0
@@ -78,6 +90,4 @@ class ControllerPolicy:
             repair = min(1.0, (0.6 - R) * 1.5)
         dec: RefusalDecision = self.refusal.decide(state, predicted_M_db, risky_cmd)
         self.last_decision = dec
-        return ControlAction(
-            throttle=throttle, cool=cool, repair=repair, accept_cmd=dec.accept
-        )
+        return ControlAction(throttle=throttle, cool=cool, repair=repair, accept_cmd=dec.accept)

@@ -4,7 +4,9 @@
 Creates Graphviz diagrams for the C/Ex causal structure and writes
 ``paper/figures/fig_loop_exchange.{pdf,png,svg}``.
 """
+
 from pathlib import Path
+
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
 
 
@@ -24,9 +26,7 @@ def main() -> None:
 
     with dot.subgraph(name="cluster_loop") as c:
         c.attr(label="<\n<B>Closed Self-Maintaining Loop (L<SUB>loop</SUB>)</B>\n>")
-        c.attr(
-            color=yellow_edge, penwidth="2.0", style="rounded", fillcolor=yellow_fill
-        )
+        c.attr(color=yellow_edge, penwidth="2.0", style="rounded", fillcolor=yellow_fill)
         c.attr("graph", style="filled")
         c.attr(labelloc="t", labeljust="c", margin="16")
         c.attr(rank="same")

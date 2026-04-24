@@ -4,6 +4,7 @@
 Reads indicator JSONL files from ``artifacts/indicators`` and prints them
 to stdout with indentation for quick inspection.
 """
+
 from __future__ import annotations
 
 import glob

@@ -5,9 +5,9 @@ Covers key generation, audit integration, and building/signed bundles.
 
 from __future__ import annotations
 
-from ldtc.attest.keys import ensure_keys, KeyPaths
-from ldtc.guardrails.audit import AuditLog
 from ldtc.attest.indicators import IndicatorConfig, build_and_sign
+from ldtc.attest.keys import KeyPaths, ensure_keys
+from ldtc.guardrails.audit import AuditLog
 
 
 def test_build_and_sign(tmp_path):

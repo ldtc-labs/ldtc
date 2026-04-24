@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import json
 
-from ldtc.attest.indicators import quantize_M, IndicatorConfig, build_and_sign
-from ldtc.attest.keys import ensure_keys, KeyPaths
+from ldtc.attest.indicators import IndicatorConfig, build_and_sign, quantize_M
+from ldtc.attest.keys import KeyPaths, ensure_keys
 from ldtc.guardrails.audit import AuditLog
-from scripts.verify_indicators import verify_indicators, audit_chain_status
+from scripts.verify_indicators import audit_chain_status, verify_indicators
 
 
 def test_quantize_M_step_and_rounding():
@@ -98,9 +98,7 @@ def test_indicator_signature_verification_tool(tmp_path):
     with open(sidecar_path, "wb") as f:
         f.write(cbor_bytes)
     # Verify
-    chain_ok, last_hash, last_counter, audit_hashes, diag = audit_chain_status(
-        str(audit_path)
-    )
+    chain_ok, last_hash, last_counter, audit_hashes, diag = audit_chain_status(str(audit_path))
     assert chain_ok is True and last_counter == 1
     stats = verify_indicators(str(ind_dir), pub, audit_hashes)
     assert stats["total"] == 1

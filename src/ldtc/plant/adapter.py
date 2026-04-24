@@ -1,10 +1,13 @@
-"""Plant: In-process adapter.
+"""In-process plant adapter.
 
-Thread-safe adapter around the software plant providing a stable API used by
-CLI and omega modules.
+Thread-safe adapter around the software [`Plant`][ldtc.plant.models.Plant]
+providing a stable, narrow API used by the CLI and the
+[`omega`][ldtc.omega] modules. Mirrors
+[`HardwarePlantAdapter`][ldtc.plant.hw_adapter.HardwarePlantAdapter] so
+the same `omega` code paths work in simulation and on real hardware.
 
 See Also:
-    paper/main.tex — Plant models and adapters.
+    `paper/main.tex`: Plant models and adapters.
 """
 
 from __future__ import annotations
@@ -12,22 +15,26 @@ from __future__ import annotations
 import threading
 from typing import Dict, Optional
 
-from .models import Plant, Action
+from .models import Action, Plant
 
 
 class PlantAdapter:
     """Thread-safe, in-process adapter over the software plant.
 
-    Exposes a stable API used by the CLI and omega modules:
-    - ``read_state()``
-    - ``write_actuators(action)``
-    - ``apply_omega(name, **params)``
+    Exposes a stable API used by the CLI and `Ω` modules:
+
+    - [`read_state`][ldtc.plant.adapter.PlantAdapter.read_state]
+    - [`write_actuators`][ldtc.plant.adapter.PlantAdapter.write_actuators]
+    - [`apply_omega`][ldtc.plant.adapter.PlantAdapter.apply_omega]
 
     Args:
-        plant: Optional preconstructed :class:`Plant` instance.
+        plant: Optional preconstructed
+            [`Plant`][ldtc.plant.models.Plant] instance. A fresh
+            default-parameterized `Plant` is created if omitted.
     """
 
     def __init__(self, plant: Optional[Plant] = None) -> None:
+        """Initialize with an optional preconstructed plant."""
         self._plant = plant or Plant()
         self._lock = threading.Lock()
         self._last_action = Action()
@@ -36,7 +43,8 @@ class PlantAdapter:
         """Read the current plant state.
 
         Returns:
-            Dict mapping keys to floats representing the plant state.
+            Dict mapping each state key to a float representing the
+            plant state at the current tick.
         """
         with self._lock:
             return dict(self._plant.read_state())
@@ -52,14 +60,21 @@ class PlantAdapter:
             self._plant.step(action)
 
     def apply_omega(self, name: str, **kwargs: float) -> Dict[str, float | str]:
-        """Apply an omega stimulus to the plant.
+        """Apply an `Ω` stimulus to the plant.
 
         Args:
-            name: Omega name (e.g., 'power_sag', 'ingress_flood').
-            **kwargs: Parameters forwarded to the underlying plant method.
+            name: `Ω` name. Recognized values are `"power_sag"`,
+                `"ingress_flood"`, `"command_conflict"`, and
+                `"exogenous_subsidy"`.
+            **kwargs: Parameters forwarded to the underlying plant
+                method (e.g., `drop=0.3` for `power_sag`).
 
         Returns:
-            Small dict summarizing the applied stimulus and resulting state.
+            Small dict summarizing the applied stimulus and resulting
+            state. The exact keys depend on the `Ω`.
+
+        Raises:
+            ValueError: If `name` is not a recognized `Ω`.
         """
         with self._lock:
             if name == "power_sag":
@@ -71,7 +86,6 @@ class PlantAdapter:
                 d, io = self._plant.spike_ingress(mult)
                 return {"demand": d, "io": io}
             elif name == "command_conflict":
-                # External system issues a dangerous command
                 self._plant.command("hard_shutdown")
                 return {"cmd": "hard_shutdown"}
             elif name == "exogenous_subsidy":
@@ -84,9 +98,5 @@ class PlantAdapter:
 
     @property
     def plant(self) -> Plant:
-        """Access the underlying :class:`Plant` instance.
-
-        Returns:
-            The wrapped :class:`Plant`.
-        """
+        """The wrapped [`Plant`][ldtc.plant.models.Plant] instance."""
         return self._plant

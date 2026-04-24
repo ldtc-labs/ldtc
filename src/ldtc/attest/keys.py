@@ -1,9 +1,12 @@
-"""Attest: Key management helpers.
+"""Key management helpers.
 
-Load or generate Ed25519 keys stored as PEM files for device-signed indicators.
+Load or generate Ed25519 keys stored as PEM files for device-signed
+indicators. Designed to be one of the first things the CLI run touches
+so that a fresh checkout produces verifiable artifacts on its first
+run.
 
 See Also:
-    paper/main.tex — Methods: Measurement & Attestation.
+    `paper/main.tex`: Methods: Measurement and Attestation.
 """
 
 from __future__ import annotations
@@ -12,11 +15,11 @@ import os
 from dataclasses import dataclass
 from typing import Tuple
 
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from cryptography.hazmat.primitives import serialization
 
 
 @dataclass
@@ -35,14 +38,16 @@ class KeyPaths:
 def ensure_keys(paths: KeyPaths) -> Tuple[Ed25519PrivateKey, Ed25519PublicKey]:
     """Load or generate Ed25519 keys at the provided paths.
 
-    If no keys exist, generates a new keypair and writes them as PEM. If keys
-    exist but are not Ed25519, regenerates an Ed25519 pair in place.
+    If no keys exist, generates a new keypair and writes them as PEM. If
+    keys exist but are not Ed25519, regenerates an Ed25519 pair in place
+    (overwriting the prior files). The parent directory is created on
+    demand.
 
     Args:
         paths: Private and public key filesystem paths.
 
     Returns:
-        Tuple ``(private_key, public_key)``.
+        Tuple `(private_key, public_key)`.
     """
     os.makedirs(os.path.dirname(paths.priv_path), exist_ok=True)
     if not os.path.exists(paths.priv_path):
@@ -70,9 +75,7 @@ def ensure_keys(paths: KeyPaths) -> Tuple[Ed25519PrivateKey, Ed25519PublicKey]:
         with open(paths.pub_path, "rb") as f:
             loaded_pub = serialization.load_pem_public_key(f.read())
         # Narrow to Ed25519 types if possible
-        if isinstance(loaded_priv, Ed25519PrivateKey) and isinstance(
-            loaded_pub, Ed25519PublicKey
-        ):
+        if isinstance(loaded_priv, Ed25519PrivateKey) and isinstance(loaded_pub, Ed25519PublicKey):
             return loaded_priv, loaded_pub
         # If keys are not Ed25519, regenerate Ed25519 keys in-place for consistency
         priv = Ed25519PrivateKey.generate()

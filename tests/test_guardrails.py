@@ -5,21 +5,20 @@ Exercises LREG derivation, Δt rate limits, audit chain checks, and jitter.
 
 from __future__ import annotations
 
+import time
+
+from ldtc.guardrails.audit import AuditLog
+from ldtc.guardrails.dt_guard import DeltaTGuard, DtGuardConfig
 from ldtc.guardrails.lreg import LREG, LEntry
 from ldtc.guardrails.smelltests import (
     SmellConfig,
-    invalid_by_partition_flips,
-    invalid_flip_during_omega,
-    flips_per_hour,
-)
-from ldtc.guardrails.audit import AuditLog
-from ldtc.guardrails.dt_guard import DeltaTGuard, DtGuardConfig
-from ldtc.guardrails.smelltests import (
     audit_chain_broken,
     audit_contains_raw_lreg_values,
+    flips_per_hour,
+    invalid_by_partition_flips,
+    invalid_flip_during_omega,
 )
 from ldtc.runtime.scheduler import FixedScheduler
-import time
 
 
 def test_lreg_derive():
@@ -87,9 +86,7 @@ def test_audit_chain_and_raw_lreg_detection(tmp_path):
     assert audit_chain_broken(str(audit_path)) is False
     # append a malformed (counter gap) record directly
     with open(audit_path, "a", encoding="utf-8") as f:
-        f.write(
-            '{"counter": 100, "ts": 0, "event": "bad", "details": {}, "prev_hash": "x", "hash": "y"}\n'
-        )
+        f.write('{"counter": 100, "ts": 0, "event": "bad", "details": {}, "prev_hash": "x", "hash": "y"}\n')
     assert audit_chain_broken(str(audit_path)) is True
     # check raw LREG leakage detection
     audit2_path = tmp_path / "audit2.jsonl"

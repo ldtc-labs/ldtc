@@ -4,7 +4,9 @@
 Creates Graphviz diagrams for the high-level system and writes
 ``paper/figures/fig_system.{pdf,png,svg}``.
 """
+
 from pathlib import Path
+
 from ldtc.reporting.style import COLORS, apply_graphviz_theme, new_graph
 
 

@@ -1,10 +1,19 @@
-"""Runtime: Fixed-interval scheduler.
+"""Fixed-interval scheduler.
 
-Lightweight Δt-enforcing scheduler with jitter metrics and optional audit
-hooks, used by CLI runs and verification harness loops.
+A lightweight Δt-enforcing scheduler with jitter metrics and optional
+audit hooks. Used by CLI runs and the verification harness loops to
+guarantee that measurements happen on a stable cadence regardless of
+estimator runtime.
+
+The scheduler runs the user-provided tick callback in a daemon thread,
+so the caller stays responsive (for example, to handle keyboard
+interrupts) while ticks fire in the background. Jitter is recorded per
+tick and exposed via `stats.jitter_*` properties so that the
+[`dt_guard`][ldtc.guardrails.dt_guard] can decide whether the current
+schedule is still healthy.
 
 See Also:
-    paper/main.tex — Methods: Measurement & Attestation Guardrails.
+    `paper/main.tex`: Methods: Measurement and Attestation Guardrails.
 """
 
 from __future__ import annotations
@@ -12,11 +21,23 @@ from __future__ import annotations
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Dict
+from typing import Callable, Dict, Optional
 
 
 @dataclass
 class TickStats:
+    """Per-run jitter and tick counters for a [`FixedScheduler`][ldtc.runtime.scheduler.FixedScheduler].
+
+    Attributes:
+        dt_target: Target tick period in seconds.
+        ticks: Number of ticks recorded so far.
+        jitter_abs_sum: Sum of `|actual_dt - dt_target|` over all ticks.
+        jitter_max: Largest absolute jitter observed.
+        start_time: `perf_counter()` value captured at construction.
+        jitters: Per-tick absolute jitter samples, kept for percentile
+            queries.
+    """
+
     dt_target: float
     ticks: int = 0
     jitter_abs_sum: float = 0.0
@@ -25,6 +46,11 @@ class TickStats:
     jitters: list[float] = field(default_factory=list)
 
     def record(self, actual_dt: float) -> None:
+        """Record a single tick's actual interval.
+
+        Args:
+            actual_dt: Measured interval in seconds since the previous tick.
+        """
         self.ticks += 1
         jitter = abs(actual_dt - self.dt_target)
         self.jitter_abs_sum += jitter
@@ -34,46 +60,61 @@ class TickStats:
 
     @property
     def elapsed(self) -> float:
+        """Wall-clock seconds since the scheduler started."""
         return time.perf_counter() - self.start_time
 
     @property
     def jitter_mean_abs(self) -> float:
+        """Mean absolute jitter across all recorded ticks."""
         return (self.jitter_abs_sum / self.ticks) if self.ticks else 0.0
 
     def jitter_percentile_abs(self, q: float = 0.95) -> float:
+        """Nearest-rank percentile of the absolute jitter distribution.
+
+        Args:
+            q: Percentile in `[0, 1]`. Values outside the range are
+                clamped.
+
+        Returns:
+            The `q`-th percentile of `|actual_dt - dt_target|`, in
+            seconds. Returns `0.0` if no ticks have been recorded yet.
+        """
         if not self.jitters:
             return 0.0
-        # clamp q to [0,1]
         q = 0.0 if q < 0.0 else (1.0 if q > 1.0 else q)
         js = sorted(self.jitters)
-        # nearest-rank method
         k = max(0, min(len(js) - 1, int(round(q * (len(js) - 1)))))
         return js[k]
 
     @property
     def jitter_p95_abs(self) -> float:
+        """Convenience alias for `jitter_percentile_abs(0.95)`."""
         return self.jitter_percentile_abs(0.95)
 
 
 class FixedScheduler:
     """Fixed-interval scheduler.
 
-    Enforces a constant sampling interval Δt and invokes a tick callback every
-    period until stopped. Tracks jitter statistics and emits optional audit
-    events through a user-provided hook.
+    Enforces a constant sampling interval `Δt` and invokes a tick
+    callback every period until stopped. Tracks jitter statistics and
+    emits optional audit events through a user-provided hook.
 
     Args:
-        dt: Target period in seconds (Δt > 0).
-        tick_fn: Callback invoked each tick with the current ``perf_counter``
-            timestamp.
+        dt: Target period in seconds (`Δt > 0`).
+        tick_fn: Callback invoked each tick with the current
+            `perf_counter` timestamp.
         on_start: Optional hook executed before the worker thread begins.
-        on_stop: Optional hook executed after stop; receives final ``TickStats``.
-        audit_hook: Optional callable taking ``(event: str, details: Dict)`` for
-            emitting audit records.
+        on_stop: Optional hook executed after stop; receives the final
+            [`TickStats`][ldtc.runtime.scheduler.TickStats].
+        audit_hook: Optional callable taking `(event: str, details: Dict)`
+            for emitting audit records (typically wired up to
+            [`AuditLog.append`][ldtc.guardrails.audit.AuditLog.append]).
 
     Notes:
-        - Jitter metrics are accessible on the ``stats`` attribute.
-        - Thread-safe updates to Δt can be made via ``set_dt``.
+        - Jitter metrics are accessible on the `stats` attribute after
+          ticks have been recorded.
+        - Thread-safe updates to `Δt` can be made via `set_dt`. The new
+          period takes effect at the *next* tick boundary.
     """
 
     def __init__(
@@ -84,6 +125,7 @@ class FixedScheduler:
         on_stop: Optional[Callable[[TickStats], None]] = None,
         audit_hook: Optional[Callable[[str, Dict], None]] = None,
     ) -> None:
+        """Initialize the scheduler. See class docstring for argument details."""
         assert dt > 0.0
         self.dt = dt
         self.tick_fn = tick_fn
@@ -96,12 +138,16 @@ class FixedScheduler:
         self._dt_lock = threading.Lock()
 
     def start(self) -> None:
+        """Start the worker thread.
+
+        No-op if a worker is already running. Calls `on_start` (if
+        provided) before the thread begins, and emits a
+        `scheduler_started` audit event.
+        """
         if self._thread and self._thread.is_alive():
             return
         self._stop.clear()
-        self._thread = threading.Thread(
-            target=self._run, name="ldtc-scheduler", daemon=True
-        )
+        self._thread = threading.Thread(target=self._run, name="ldtc-scheduler", daemon=True)
         if self.on_start:
             self.on_start()
         if self.audit:
@@ -109,6 +155,16 @@ class FixedScheduler:
         self._thread.start()
 
     def stop(self) -> TickStats:
+        """Stop the worker thread and return final stats.
+
+        Joins the worker thread, calls `on_stop` (if provided), and emits
+        a `scheduler_stopped` audit event with the summarized jitter
+        metrics.
+
+        Returns:
+            The final [`TickStats`][ldtc.runtime.scheduler.TickStats] for
+            the run.
+        """
         self._stop.set()
         if self._thread:
             self._thread.join()
@@ -123,9 +179,7 @@ class FixedScheduler:
                     "jitter_max": self.stats.jitter_max,
                     "jitter_mean_abs": self.stats.jitter_mean_abs,
                     "jitter_p95_abs": self.stats.jitter_p95_abs,
-                    "jitter_p95_rel": (
-                        (self.stats.jitter_p95_abs / self.dt) if self.dt > 0 else 0.0
-                    ),
+                    "jitter_p95_rel": ((self.stats.jitter_p95_abs / self.dt) if self.dt > 0 else 0.0),
                 },
             )
         return self.stats
@@ -135,32 +189,28 @@ class FixedScheduler:
         while not self._stop.is_set():
             now = time.perf_counter()
             if now >= next_t:
-                # tick
                 self.tick_fn(now)
-                # measure jitter on the tick-to-tick interval
                 with self._dt_lock:
                     cur_dt = self.dt
                 actual_dt = time.perf_counter() - next_t + cur_dt
                 self.stats.record(actual_dt)
-                # schedule next
                 next_t += cur_dt
-                # if we fell behind a lot, jump to now+dt
                 if next_t < time.perf_counter():
                     next_t = time.perf_counter() + cur_dt
             else:
-                # sleep until next tick
                 time.sleep(max(0.0, next_t - now))
 
     def set_dt(self, new_dt: float) -> float:
-        """Change Δt at runtime.
+        """Change `Δt` at runtime in a thread-safe way.
 
-        Thread-safe update of the enforced period.
+        The new period is applied at the next tick boundary, so a tick
+        currently in flight finishes against the previous interval.
 
         Args:
-            new_dt: New period in seconds (Δt > 0).
+            new_dt: New period in seconds (`Δt > 0`).
 
         Returns:
-            The previous ``dt`` value.
+            The previous `dt` value.
         """
         assert new_dt > 0.0
         with self._dt_lock:
