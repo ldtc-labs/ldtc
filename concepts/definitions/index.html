@@ -9,14 +9,16 @@
         <meta name="description" content="Real-time NC1/SC1 verification harness (paper + Python package)">
       
       
+        <meta name="author" content="Owen Carey">
+      
       
         <link rel="canonical" href="https://docs.ldtc.dev/concepts/definitions/">
       
       
-        <link rel="prev" href="../../getting-started/">
+        <link rel="prev" href="../architecture/">
       
       
-        <link rel="next" href="../architecture/">
+        <link rel="next" href="../indicators/">
       
       
         
@@ -33,6 +35,9 @@
     
       <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
       
 
 
@@ -45,8 +50,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
@@ -60,10 +65,30 @@
 
     
     
-  </head>
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Definitions - LDTC" />
+<meta property="og:description" content="Real-time NC1/SC1 verification harness (paper + Python package)" />
+<meta property="og:image" content="https://docs.ldtc.dev/assets/images/social/concepts/definitions.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://docs.ldtc.dev/concepts/definitions/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Definitions - LDTC" />
+<meta property="twitter:description" content="Real-time NC1/SC1 verification harness (paper + Python package)" />
+<meta property="twitter:image" content="https://docs.ldtc.dev/assets/images/social/concepts/definitions.png" />
+</head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -86,7 +111,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="LDTC" class="md-header__button md-logo" aria-label="LDTC" data-md-component="logo">
       
@@ -115,6 +140,32 @@
       </div>
     </div>
     
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
@@ -139,11 +190,18 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
         <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -165,23 +223,182 @@
         <a href="https://github.com/ldtc-labs/ldtc" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    ldtc-labs/ldtc
   </div>
 </a>
       </div>
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../mental-model/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/calibration/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/minimal/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/ldtc/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../meta/style-guide/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Meta
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -195,8 +412,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="LDTC" class="md-nav__button md-logo" aria-label="LDTC" data-md-component="logo">
       
@@ -211,10 +430,10 @@
       <a href="https://github.com/ldtc-labs/ldtc" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    ldtc-labs/ldtc
   </div>
 </a>
     </div>
@@ -285,10 +504,29 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
         
+        
+      
+      
         
       
     
@@ -333,26 +571,17 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../mental-model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Definitions
+    Mental Model
   
 
     
@@ -361,7 +590,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -390,6 +618,403 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#time-and-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time and sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Time and sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#t-scheduler-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Δt: scheduler period
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w-window-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W: window length
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loop-and-exchange-influence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loop and exchange influence
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loop and exchange influence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#c-ex-partition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C, Ex: partition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l_loop-l_ex-loop-and-exchange-influence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        𝓛_loop, 𝓛_ex: loop and exchange influence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-mmin-loop-dominance-margin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M, Mmin: loop-dominance margin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mq-quantized-m-6-bit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mq: quantized M (6 bit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sc1-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SC1 evaluation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SC1 evaluation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fractional-drop-during" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        δ: fractional drop during Ω
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tolerance-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ε: tolerance on δ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_rec-_max-recovery-time-and-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        τ_rec, τ_max: recovery time and budget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m_post-post-recovery-margin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M_post: post-recovery margin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nc1-sc1-the-two-indicator-bits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NC1, SC1: the two indicator bits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#perturbations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perturbations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Perturbations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perturbation-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ω: perturbation event
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#t_refuse-refusal-latency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T_refuse: refusal latency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guardrails-and-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guardrails and audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Guardrails and audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lreg-loop-registry-enclave" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LREG: loop registry enclave
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audit-log-hash-chained-event-journal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit log: hash-chained event journal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smell-tests-and-invalidations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smell tests and invalidations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiles-and-reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles and reproducibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Profiles and reproducibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#profile_id-r0-vs-r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        profile_id: R0 vs R*
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seed-deterministic-rng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        seed: deterministic RNG
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notation-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notation summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -430,6 +1055,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle of a Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../guardrails/" class="md-nav__link">
         
   
@@ -437,7 +1090,7 @@
   <span class="md-ellipsis">
     
   
-    Guardrails & Invalidations
+    Guardrails and Invalidations
   
 
     
@@ -465,7 +1118,7 @@
   <span class="md-ellipsis">
     
   
-    Paper → Code
+    Paper to Code
   
 
     
@@ -494,22 +1147,36 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -580,7 +1247,7 @@
   <span class="md-ellipsis">
     
   
-    Reporting & Figures
+    Reporting and Figures
   
 
     
@@ -608,7 +1275,63 @@
   <span class="md-ellipsis">
     
   
-    Runs & Ω Battery
+    Runs and Ω Battery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Adapter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
   
 
     
@@ -637,22 +1360,30 @@
   
     
     
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -752,22 +1483,46 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -831,14 +1586,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/runtime/" class="md-nav__link">
+      <a href="../../api/lmeas/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    runtime
+    lmeas
   
 
     
@@ -859,14 +1614,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/lmeas/" class="md-nav__link">
+      <a href="../../api/runtime/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    lmeas
+    runtime
   
 
     
@@ -1091,22 +1846,36 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1142,6 +1911,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../meta/style-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Style Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../meta/contributing/" class="md-nav__link">
         
   
@@ -1150,6 +1947,62 @@
     
   
     Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../meta/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../meta/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -1218,6 +2071,336 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#time-and-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time and sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Time and sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#t-scheduler-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Δt: scheduler period
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w-window-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W: window length
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loop-and-exchange-influence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loop and exchange influence
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loop and exchange influence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#c-ex-partition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C, Ex: partition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l_loop-l_ex-loop-and-exchange-influence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        𝓛_loop, 𝓛_ex: loop and exchange influence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-mmin-loop-dominance-margin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M, Mmin: loop-dominance margin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mq-quantized-m-6-bit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mq: quantized M (6 bit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sc1-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SC1 evaluation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SC1 evaluation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fractional-drop-during" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        δ: fractional drop during Ω
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tolerance-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ε: tolerance on δ
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_rec-_max-recovery-time-and-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        τ_rec, τ_max: recovery time and budget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m_post-post-recovery-margin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M_post: post-recovery margin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nc1-sc1-the-two-indicator-bits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NC1, SC1: the two indicator bits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#perturbations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perturbations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Perturbations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perturbation-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ω: perturbation event
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#t_refuse-refusal-latency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T_refuse: refusal latency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guardrails-and-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guardrails and audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Guardrails and audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lreg-loop-registry-enclave" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LREG: loop registry enclave
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audit-log-hash-chained-event-journal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit log: hash-chained event journal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smell-tests-and-invalidations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smell tests and invalidations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiles-and-reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles and reproducibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Profiles and reproducibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#profile_id-r0-vs-r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        profile_id: R0 vs R*
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seed-deterministic-rng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        seed: deterministic RNG
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notation-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notation summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1233,27 +2416,405 @@
 
 
   
+    <a href="https://github.com/ldtc-labs/ldtc/edit/main/docs/concepts/definitions.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/ldtc-labs/ldtc/raw/main/docs/concepts/definitions.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg>
+    </a>
   
 
 
 <h1 id="definitions">Definitions<a class="headerlink" href="#definitions" title="Permanent link">&para;</a></h1>
-<p>Key symbols and definitions used throughout the code and paper (to be filled with formal statements from the manuscript):</p>
+<p>This page is the authoritative glossary for every symbol used in
+the LDTC code, audit log, and accompanying manuscript. Each entry
+gives:</p>
 <ul>
-<li>Δt — fixed scheduler period (s)</li>
-<li>𝓛_loop, 𝓛_exchange — loop vs exchange gains</li>
-<li>M(dB) — loop-dominance metric in decibels, derived from 𝓛</li>
-<li>Mmin — NC1 threshold for M(dB)</li>
-<li>δ — fractional depression during Ω</li>
-<li>τ_rec — recovery time after Ω</li>
-<li>ε — tolerance for δ</li>
-<li>τ_max — maximum allowed τ_rec</li>
-<li>C/Ex — control vs exchange partition</li>
-<li>LREG — write-only registry for raw measurement values</li>
-<li>NC1 — loop-dominance bit</li>
-<li>SC1 — resilience bit under Ω battery</li>
-<li>Mq — quantized M(dB) in 0.25 dB steps (0..63)</li>
+<li>A short formal statement (math or pseudocode).</li>
+<li>A plain-English gloss.</li>
+<li>The paper section that defines it.</li>
+<li>A link to the API symbol that implements or measures it.</li>
 </ul>
-<p>This page should mirror the paper’s notation exactly for cross-reference.</p>
+<p>The goal is that anyone reading the paper, the audit log, or the
+source can map a symbol to <em>exactly one</em> canonical meaning.</p>
+<div class="admonition note">
+<p class="admonition-title">Paper sections</p>
+<p>Section references point at <code>paper/main.tex</code> in the
+<a href="https://doi.org/10.5281/zenodo.17073880">accompanying manuscript</a>.
+They are reproduced here for convenience; the paper is the
+normative source.</p>
+</div>
+<h2 id="time-and-sampling">Time and sampling<a class="headerlink" href="#time-and-sampling" title="Permanent link">&para;</a></h2>
+<h3 id="t-scheduler-period"><code>Δt</code>: scheduler period<a class="headerlink" href="#t-scheduler-period" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>Δt ∈ ℝ_{&gt;0}</code> is the fixed sampling period of the
+real-time tick, in seconds. The scheduler's effective rate is
+<code>f = 1 / Δt</code>. Changes to <code>Δt</code> at runtime are rate-limited to at
+most <code>max_dt_changes_per_hour</code> and always require a privileged
+edit through
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;change_dt&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.dt_guard.DeltaTGuard.change_dt"><code>DeltaTGuard.change_dt</code></a>,
+gated by
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;can_change&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.dt_guard.DeltaTGuard.can_change"><code>DeltaTGuard.can_change</code></a>.</p>
+<p><strong>Plain English.</strong> How often the controller wakes up. Holding <code>Δt</code>
+constant is what lets <code>M</code> and <code>τ_rec</code> mean the same thing across
+runs.</p>
+<p><strong>Paper.</strong> §4.1 ("Δt constraints") and §4.5 ("Δt governance and
+audit").</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;FixedScheduler&lt;/span&gt;" href="../../api/runtime/#ldtc.runtime.scheduler.FixedScheduler"><code>FixedScheduler</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;DeltaTGuard&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.dt_guard.DeltaTGuard"><code>DeltaTGuard</code></a>.</p>
+<h3 id="w-window-length"><code>W</code>: window length<a class="headerlink" href="#w-window-length" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>W = ⌈window_sec / Δt⌉</code> consecutive samples form one
+analysis window. <code>𝓛</code> and <code>M</code> are computed once per window.</p>
+<p><strong>Plain English.</strong> How much history each estimator sees. Smaller
+<code>W</code> means tighter time resolution but noisier estimates; larger
+<code>W</code> means smoother estimates but slower SC1 reaction.</p>
+<p><strong>Paper.</strong> §4.1 ("Estimators, sampling window").</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SlidingWindow&lt;/span&gt;" href="../../api/runtime/#ldtc.runtime.windows.SlidingWindow"><code>SlidingWindow</code></a>.</p>
+<h2 id="loop-and-exchange-influence">Loop and exchange influence<a class="headerlink" href="#loop-and-exchange-influence" title="Permanent link">&para;</a></h2>
+<h3 id="c-ex-partition"><code>C</code>, <code>Ex</code>: partition<a class="headerlink" href="#c-ex-partition" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> Given <code>N</code> measured signals indexed <code>0..N-1</code>, the
+partition is a pair <code>(C, Ex)</code> of disjoint index sets with
+<code>C ∪ Ex = {0..N-1}</code>. <code>C</code> is the closed-loop ("controller") set
+and <code>Ex</code> is the exchange ("environment") set. Updates are managed
+by <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;PartitionManager&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.partition.PartitionManager"><code>PartitionManager</code></a>,
+which applies hysteresis (a candidate <code>C'</code> is accepted only after
+yielding <code>ΔM ≥ delta_dB_min</code> for <code>consec</code> consecutive windows).
+The partition is <strong>frozen</strong> during <code>Ω</code> windows so SC1 cannot be
+gamed by reshuffling membership.</p>
+<p><strong>Plain English.</strong> Which signals count as part of the loop, and
+which count as the world the loop is talking to.</p>
+<p><strong>Paper.</strong> §4.1 ("Deterministic C/Ex partitioning"), §4.6 Box 1a
+("Partition stability").</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Partition&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.partition.Partition"><code>Partition</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;PartitionManager&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.partition.PartitionManager"><code>PartitionManager</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;greedy_suggest_C&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.partition.greedy_suggest_C"><code>greedy_suggest_C</code></a>.</p>
+<h3 id="l_loop-l_ex-loop-and-exchange-influence"><code>𝓛_loop</code>, <code>𝓛_ex</code>: loop and exchange influence<a class="headerlink" href="#l_loop-l_ex-loop-and-exchange-influence" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> For a window <code>X ∈ ℝ^{T × N}</code> and partition <code>(C, Ex)</code>:</p>
+<ul>
+<li><code>𝓛_loop(X) = mean over (i, j) ∈ C × C with i ≠ j of  L̂(X[:, i] → X[:, j])</code></li>
+<li><code>𝓛_ex(X)   = mean over (i, j) ∈ Ex × C of            L̂(X[:, i] → X[:, j])</code></li>
+</ul>
+<p><code>L̂(·)</code> is one of three predictive-dependence estimators selected by
+the <code>method</code> config field:</p>
+<ul>
+<li><code>method = "linear"</code>: lagged Granger-like log-likelihood ratio.</li>
+<li><code>method = "mi"</code>: sklearn <code>mutual_info_regression</code> at lag
+  <code>mi_lag</code>.</li>
+<li><code>method = "mi_kraskov"</code>: Kraskov k-NN mutual information with
+  <code>k = mi_k</code>.</li>
+</ul>
+<p>Each window also produces a 95% CI from a circular block bootstrap
+of length <code>n_boot</code>.</p>
+<p><strong>Plain English.</strong> "How much do the loop signals predict each
+other?" versus "How much does the environment predict the loop?"</p>
+<p><strong>Paper.</strong> §4.1 (estimators); Methods: Measurement and
+Attestation.</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;estimate_L&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.estimators.estimate_L"><code>estimate_L</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LResult&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.estimators.LResult"><code>LResult</code></a>.</p>
+<h3 id="m-mmin-loop-dominance-margin"><code>M</code>, <code>Mmin</code>: loop-dominance margin<a class="headerlink" href="#m-mmin-loop-dominance-margin" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>M = 10 · log₁₀(𝓛_loop / 𝓛_ex)</code> in decibels, computed
+per window with a small <code>eps = 1e-12</code> floor on numerator and
+denominator to avoid <code>log10(0)</code>. <code>Mmin</code> is the NC1 acceptance
+threshold (config field <code>Mmin_db</code>, default <code>3.0</code>).</p>
+<p><strong>Plain English.</strong> How many decibels louder the loop is than the
+environment. A run passes NC1 if <code>M ≥ Mmin</code> window-by-window for
+the baseline.</p>
+<p><strong>Paper.</strong> Criterion §4.2.</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;m_db&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.m_db"><code>m_db</code></a>.</p>
+<h3 id="mq-quantized-m-6-bit"><code>Mq</code>: quantized <code>M</code> (6 bit)<a class="headerlink" href="#mq-quantized-m-6-bit" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>Mq = clamp(round(M / 0.25), 0, 63)</code>. Encodes <code>M</code>
+values in <code>[0, 15.75] dB</code> at 0.25 dB resolution. This is what
+appears in the signed indicator payload, never the raw <code>M</code>.</p>
+<p><strong>Plain English.</strong> A small, lossy summary of <code>M</code> that can leave
+the LREG enclave.</p>
+<p><strong>Paper.</strong> Methods: Measurement and Attestation; Appendix A.</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;quantize_M&lt;/span&gt;" href="../../api/attest/#ldtc.attest.indicators.quantize_M"><code>quantize_M</code></a>.</p>
+<h2 id="sc1-evaluation">SC1 evaluation<a class="headerlink" href="#sc1-evaluation" title="Permanent link">&para;</a></h2>
+<h3 id="fractional-drop-during"><code>δ</code>: fractional drop during <code>Ω</code><a class="headerlink" href="#fractional-drop-during" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>δ = max(0, (𝓛_loop_baseline − 𝓛_loop_trough) /
+𝓛_loop_baseline)</code> where <code>𝓛_loop_trough</code> is the minimum of
+<code>𝓛_loop</code> measured during the <code>Ω</code> window.</p>
+<p><strong>Plain English.</strong> "By what fraction did the loop influence dip
+under the perturbation?"</p>
+<p><strong>Paper.</strong> §4.3 (SC1).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SC1Stats&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.SC1Stats"><code>SC1Stats.delta</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;sc1_evaluate&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.sc1_evaluate"><code>sc1_evaluate</code></a>.</p>
+<h3 id="tolerance-on"><code>ε</code>: tolerance on <code>δ</code><a class="headerlink" href="#tolerance-on" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>ε ∈ [0, 1]</code> is the maximum allowed fractional drop.
+A run satisfies the SC1 dip clause when <code>δ ≤ ε</code>.</p>
+<p><strong>Plain English.</strong> How big a dip we are willing to tolerate
+before we call SC1 a failure. Default <code>ε = 0.15</code> (15%).</p>
+<p><strong>Paper.</strong> §4.3 (SC1); Methods: Threshold Calibration.</p>
+<p><strong>API.</strong> <code>epsilon</code> config field; consumed by
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;sc1_evaluate&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.sc1_evaluate"><code>sc1_evaluate</code></a>.</p>
+<h3 id="_rec-_max-recovery-time-and-budget"><code>τ_rec</code>, <code>τ_max</code>: recovery time and budget<a class="headerlink" href="#_rec-_max-recovery-time-and-budget" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>τ_rec</code> is the elapsed time, in seconds, from the end
+of the <code>Ω</code> window to the first window in which <code>𝓛_loop</code> returns
+to <code>𝓛_loop_baseline · (1 − ε)</code>. SC1 requires
+<code>τ_rec ≤ τ_max</code> (default <code>τ_max = 60.0 s</code>).</p>
+<p><strong>Plain English.</strong> How long the loop took to bounce back. SC1
+fails if it took too long.</p>
+<p><strong>Paper.</strong> §4.3 (SC1).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SC1Stats&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.SC1Stats"><code>SC1Stats.tau_rec</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;sc1_evaluate&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.sc1_evaluate"><code>sc1_evaluate</code></a>.</p>
+<h3 id="m_post-post-recovery-margin"><code>M_post</code>: post-recovery margin<a class="headerlink" href="#m_post-post-recovery-margin" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> <code>M</code> measured after the recovery gate. SC1 additionally
+requires <code>M_post ≥ Mmin</code>, i.e. the loop must come back <em>and</em> still
+pass NC1.</p>
+<p><strong>Plain English.</strong> "Did we recover all the way?"</p>
+<p><strong>Paper.</strong> §4.3 (SC1).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SC1Stats&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.SC1Stats"><code>SC1Stats.M_post</code></a>.</p>
+<h3 id="nc1-sc1-the-two-indicator-bits">NC1, SC1: the two indicator bits<a class="headerlink" href="#nc1-sc1-the-two-indicator-bits" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong></p>
+<ul>
+<li><code>NC1 = 1</code> iff the most recent measured window satisfied
+  <code>M ≥ Mmin</code> (and the run is not invalidated).</li>
+<li><code>SC1 = 1</code> iff the most recent <code>Ω</code> trial satisfied
+  <code>(δ ≤ ε) ∧ (τ_rec ≤ τ_max) ∧ (M_post ≥ Mmin)</code>.</li>
+</ul>
+<p>Both are exported as 1-bit booleans in the signed indicator
+payload alongside <code>Mq</code>, the run counter, and the audit chain head.</p>
+<p><strong>Paper.</strong> Criterion §4.2 (NC1); §4.3 (SC1); Appendix A.</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;build_and_sign&lt;/span&gt;" href="../../api/attest/#ldtc.attest.indicators.build_and_sign"><code>build_and_sign</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;IndicatorExporter&lt;/span&gt;" href="../../api/attest/#ldtc.attest.exporter.IndicatorExporter"><code>IndicatorExporter</code></a>.</p>
+<h2 id="perturbations">Perturbations<a class="headerlink" href="#perturbations" title="Permanent link">&para;</a></h2>
+<h3 id="perturbation-event"><code>Ω</code>: perturbation event<a class="headerlink" href="#perturbation-event" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> A labeled, time-bounded intervention applied to the
+plant during a known interval <code>[t₀, t₁]</code>. The CLI tags the audit
+log with <code>omega_event</code> records and freezes the partition for the
+duration. The shipped battery is:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;power_sag&lt;/span&gt;" href="../../api/omega/#ldtc.omega.power_sag"><code>omega.power_sag</code></a></td>
+<td>Drops the harvest term <code>H</code> by a fraction.</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;ingress_flood&lt;/span&gt;" href="../../api/omega/#ldtc.omega.ingress_flood"><code>omega.ingress_flood</code></a></td>
+<td>Multiplies external demand for a window.</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;command_conflict&lt;/span&gt;" href="../../api/omega/#ldtc.omega.command_conflict"><code>omega.command_conflict</code></a></td>
+<td>Issues a risky <code>hard_shutdown</code>; the arbiter's refusal latency <code>T_refuse</code> is recorded.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Plain English.</strong> Each <code>Ω</code> is a controlled "kick" we apply to see
+whether the loop survives.</p>
+<p><strong>Paper.</strong> §6.5 (Verification pipeline); §7.6 (signatures table).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" href="../../api/omega/#ldtc.omega"><code>ldtc.omega</code></a>.</p>
+<h3 id="t_refuse-refusal-latency"><code>T_refuse</code>: refusal latency<a class="headerlink" href="#t_refuse-refusal-latency" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> Wall-clock seconds between issuing a risky command and
+the arbiter's refusal record being appended to the audit. Captured
+by
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;decide&lt;/span&gt;" href="../../api/arbiter/#ldtc.arbiter.refusal.RefusalArbiter.decide"><code>RefusalArbiter.decide</code></a>
+when <code>M &lt; Mmin</code> and the survival bit is asserted.</p>
+<p><strong>Paper.</strong> §6.2.1 (Threat model and refusal path); §7.6
+(Signature A).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;refusal&lt;/span&gt;" href="../../api/arbiter/#ldtc.arbiter.refusal"><code>ldtc.arbiter.refusal</code></a>.</p>
+<h2 id="guardrails-and-audit">Guardrails and audit<a class="headerlink" href="#guardrails-and-audit" title="Permanent link">&para;</a></h2>
+<h3 id="lreg-loop-registry-enclave">LREG: loop registry enclave<a class="headerlink" href="#lreg-loop-registry-enclave" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> A process-local, write-only registry that stores raw
+<code>𝓛_loop</code>, <code>𝓛_ex</code>, and CI bounds per window. The
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;derive&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.lreg.LREG.derive"><code>LREG.derive</code></a> method returns
+<em>only</em> the sanctioned derived fields (<code>M_db</code>, <code>nc1</code>, <code>counter</code>,
+<code>invalidated</code>). Direct iteration over the registry is intentionally
+unavailable; CSV exporters and indicator builders both call
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;audit_contains_raw_lreg_values&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.smelltests.audit_contains_raw_lreg_values"><code>smelltests.audit_contains_raw_lreg_values</code></a>
+to ensure no raw <code>𝓛</code> ever leaks.</p>
+<p><strong>Plain English.</strong> The black box. Raw measurements go in; only
+indicators come out.</p>
+<p><strong>Paper.</strong> §4.5 (LREG).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;LREG&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.lreg.LREG"><code>LREG</code></a>.</p>
+<h3 id="audit-log-hash-chained-event-journal">Audit log: hash-chained event journal<a class="headerlink" href="#audit-log-hash-chained-event-journal" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> Append-only JSONL where each record contains a
+monotone counter, a payload, and <code>prev_hash = SHA256(prev_record)</code>.
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;audit_chain_broken&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.smelltests.audit_chain_broken"><code>audit_chain_broken</code></a>
+re-reads the file from disk after the run and returns <code>True</code> on
+any mismatch. Broken chains invalidate the run via
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;smelltests&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.smelltests"><code>smelltests</code></a>.</p>
+<p><strong>Plain English.</strong> A tamper-evident receipt of every event the
+harness saw, in order.</p>
+<p><strong>Paper.</strong> §4.5 (audit and attestation).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;AuditLog&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.audit.AuditLog"><code>AuditLog</code></a>.</p>
+<h3 id="smell-tests-and-invalidations">Smell tests and invalidations<a class="headerlink" href="#smell-tests-and-invalidations" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> A run is invalidated (the audit emits
+<code>run_invalidated</code> and the next exported indicator carries
+<code>invalidated = true</code>) when any of:</p>
+<ul>
+<li><strong>CI inflation:</strong> the CI half-width on <code>𝓛_loop</code> or <code>𝓛_ex</code>
+  exceeds <code>0.30</code> for a window
+  (<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;invalid_by_ci&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.smelltests.invalid_by_ci"><code>invalid_by_ci</code></a>).</li>
+<li><strong>Excessive <code>Δt</code> edits:</strong> more than 3 <code>Δt</code> changes in any
+  rolling hour, enforced inline by the
+  <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;DeltaTGuard&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.dt_guard.DeltaTGuard"><code>DeltaTGuard</code></a> which
+  refuses changes once the rolling cap is reached.</li>
+<li><strong>Partition flapping:</strong> more than 2 C/Ex flips per hour with
+  dynamic regrow enabled.</li>
+<li><strong>Export breach:</strong> an attempt to write a CSV row containing raw
+  <code>𝓛</code> fields.</li>
+<li><strong>Subsidy flag:</strong> sustained <code>M</code> increase while I/O or SoC rises
+  without a logged harvest event.</li>
+<li><strong>Audit chain broken:</strong> <code>prev_hash</code> mismatch detected post-run.</li>
+</ul>
+<p><strong>Paper.</strong> §4.6 Box 1a (invalidations).</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;smelltests&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.smelltests"><code>ldtc.guardrails.smelltests</code></a>.</p>
+<h2 id="profiles-and-reproducibility">Profiles and reproducibility<a class="headerlink" href="#profiles-and-reproducibility" title="Permanent link">&para;</a></h2>
+<h3 id="profile_id-r0-vs-r"><code>profile_id</code>: R0 vs R*<a class="headerlink" href="#profile_id-r0-vs-r" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> A <code>u8</code> discriminator carried in every signed
+indicator. <code>0 = R0</code> (default thresholds), <code>1 = R*</code> (calibrated
+per-device thresholds), <code>2..255 = reserved</code>. Set in <code>configs/*.yml</code>
+under <code>profile_id</code>.</p>
+<p><strong>Paper.</strong> Methods: Threshold Calibration.</p>
+<p><strong>API.</strong> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;IndicatorConfig&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../../api/attest/#ldtc.attest.indicators.IndicatorConfig"><code>IndicatorConfig.profile_id</code></a>.</p>
+<h3 id="seed-deterministic-rng"><code>seed</code>: deterministic RNG<a class="headerlink" href="#seed-deterministic-rng" title="Permanent link">&para;</a></h3>
+<p><strong>Formal.</strong> Each run config carries <code>seed</code>, <code>seed_py</code>, and
+<code>seed_np</code> integers. The CLI seeds Python's <code>random</code>, NumPy's
+default RNG, and the bootstrap RNG used inside
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;estimate_L&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.estimators.estimate_L"><code>estimate_L</code></a>. Two runs with the
+same seed and config produce bit-identical audit logs (modulo
+wall-clock timestamps).</p>
+<p><strong>Paper.</strong> Methods: Reproducibility.</p>
+<h2 id="notation-summary">Notation summary<a class="headerlink" href="#notation-summary" title="Permanent link">&para;</a></h2>
+<p>A quick visual reference of the symbols used throughout the docs
+and code:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Code field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Δt</code></td>
+<td><code>dt</code></td>
+<td>Scheduler period (s).</td>
+</tr>
+<tr>
+<td><code>W</code></td>
+<td><code>window_sec</code></td>
+<td>Window length in seconds.</td>
+</tr>
+<tr>
+<td><code>N</code></td>
+<td><code>N_signals</code></td>
+<td>Number of measured signals.</td>
+</tr>
+<tr>
+<td><code>C</code>, <code>Ex</code></td>
+<td><code>partition.C</code>, <code>partition.Ex</code></td>
+<td>Loop / exchange index sets.</td>
+</tr>
+<tr>
+<td><code>𝓛_loop</code></td>
+<td><code>LResult.L_loop</code></td>
+<td>Mean loop predictive influence per window.</td>
+</tr>
+<tr>
+<td><code>𝓛_ex</code></td>
+<td><code>LResult.L_ex</code></td>
+<td>Mean exchange predictive influence per window.</td>
+</tr>
+<tr>
+<td><code>M</code></td>
+<td><code>M_db</code></td>
+<td><code>10 · log₁₀(𝓛_loop / 𝓛_ex)</code>, in dB.</td>
+</tr>
+<tr>
+<td><code>Mmin</code></td>
+<td><code>Mmin_db</code></td>
+<td>NC1 threshold, in dB.</td>
+</tr>
+<tr>
+<td><code>Mq</code></td>
+<td><code>mq</code></td>
+<td>6-bit quantized <code>M</code>.</td>
+</tr>
+<tr>
+<td><code>δ</code></td>
+<td><code>delta</code></td>
+<td>Fractional <code>𝓛_loop</code> drop during <code>Ω</code>.</td>
+</tr>
+<tr>
+<td><code>ε</code></td>
+<td><code>epsilon</code></td>
+<td>Tolerance on <code>δ</code>.</td>
+</tr>
+<tr>
+<td><code>τ_rec</code></td>
+<td><code>tau_rec</code></td>
+<td>Recovery time, in seconds.</td>
+</tr>
+<tr>
+<td><code>τ_max</code></td>
+<td><code>tau_max</code></td>
+<td>SC1 recovery budget, in seconds.</td>
+</tr>
+<tr>
+<td><code>T_refuse</code></td>
+<td><code>T_refuse</code></td>
+<td>Refusal latency, in seconds.</td>
+</tr>
+<tr>
+<td><code>Ω</code></td>
+<td><code>omega_event</code></td>
+<td>Labeled perturbation interval.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Read the <a href="../mental-model/">mental model</a> for the one-paragraph
+  story these symbols tell.</li>
+<li>See the <a href="../paper-to-code/">paper-to-code crosswalk</a> for the
+  per-section mapping.</li>
+<li>Jump into <a href="../../api/lmeas/"><code>ldtc.lmeas</code></a> and
+  <a href="../../api/attest/"><code>ldtc.attest</code></a> to read the implementations.</li>
+</ul>
 
 
 
@@ -1271,8 +2832,16 @@
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1285,6 +2854,19 @@
   
 </div>
       
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/ldtc-labs/ldtc" target="_blank" rel="noopener" title="LDTC on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
     </div>
   </div>
 </footer>
@@ -1294,11 +2876,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
     
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant", "navigation.tracking", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.expand", "navigation.indexes", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.suggest", "search.share", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

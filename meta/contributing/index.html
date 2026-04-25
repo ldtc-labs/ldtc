@@ -9,14 +9,16 @@
         <meta name="description" content="Real-time NC1/SC1 verification harness (paper + Python package)">
       
       
+        <meta name="author" content="Owen Carey">
+      
       
         <link rel="canonical" href="https://docs.ldtc.dev/meta/contributing/">
       
       
-        <link rel="prev" href="../../api/cli/">
+        <link rel="prev" href="../style-guide/">
       
       
-        <link rel="next" href="../citation/">
+        <link rel="next" href="../faq/">
       
       
         
@@ -33,6 +35,9 @@
     
       <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
       
 
 
@@ -45,8 +50,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
@@ -60,10 +65,30 @@
 
     
     
-  </head>
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Contributing - LDTC" />
+<meta property="og:description" content="Real-time NC1/SC1 verification harness (paper + Python package)" />
+<meta property="og:image" content="https://docs.ldtc.dev/assets/images/social/meta/contributing.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://docs.ldtc.dev/meta/contributing/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Contributing - LDTC" />
+<meta property="twitter:description" content="Real-time NC1/SC1 verification harness (paper + Python package)" />
+<meta property="twitter:image" content="https://docs.ldtc.dev/assets/images/social/meta/contributing.png" />
+</head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -86,7 +111,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="LDTC" class="md-header__button md-logo" aria-label="LDTC" data-md-component="logo">
       
@@ -115,6 +140,32 @@
       </div>
     </div>
     
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
@@ -139,11 +190,18 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
         <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -165,23 +223,182 @@
         <a href="https://github.com/ldtc-labs/ldtc" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    ldtc-labs/ldtc
   </div>
 </a>
       </div>
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../concepts/mental-model/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/calibration/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/minimal/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/ldtc/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../style-guide/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Meta
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -195,8 +412,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="LDTC" class="md-nav__button md-logo" aria-label="LDTC" data-md-component="logo">
       
@@ -211,10 +430,10 @@
       <a href="https://github.com/ldtc-labs/ldtc" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    ldtc-labs/ldtc
   </div>
 </a>
     </div>
@@ -283,22 +502,40 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -334,14 +571,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/definitions/" class="md-nav__link">
+      <a href="../../concepts/mental-model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Definitions
+    Mental Model
   
 
     
@@ -390,6 +627,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/indicators/" class="md-nav__link">
         
   
@@ -418,6 +683,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle of a Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/guardrails/" class="md-nav__link">
         
   
@@ -425,7 +718,7 @@
   <span class="md-ellipsis">
     
   
-    Guardrails & Invalidations
+    Guardrails and Invalidations
   
 
     
@@ -453,7 +746,7 @@
   <span class="md-ellipsis">
     
   
-    Paper → Code
+    Paper to Code
   
 
     
@@ -482,22 +775,36 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -568,7 +875,7 @@
   <span class="md-ellipsis">
     
   
-    Reporting & Figures
+    Reporting and Figures
   
 
     
@@ -596,7 +903,63 @@
   <span class="md-ellipsis">
     
   
-    Runs & Ω Battery
+    Runs and Ω Battery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Adapter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
   
 
     
@@ -625,22 +988,30 @@
   
     
     
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -740,22 +1111,46 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -819,14 +1214,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/runtime/" class="md-nav__link">
+      <a href="../../api/lmeas/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    runtime
+    lmeas
   
 
     
@@ -847,14 +1242,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/lmeas/" class="md-nav__link">
+      <a href="../../api/runtime/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    lmeas
+    runtime
   
 
     
@@ -1081,10 +1476,25 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
         
+        
+      
+      
         
       
     
@@ -1129,6 +1539,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../style-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Style Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1140,6 +1578,24 @@
       
         
       
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -1158,6 +1614,336 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-changes-are-welcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changes are welcome
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-for-contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start for contributors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-to-put-in-a-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to put in a PR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-gates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI gates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository-contributing-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository contributing guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Repository contributing guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contributing-to-ldtc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributing to LDTC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-layout-high-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project layout (high-level)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coding-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coding guidelines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conventional-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventional Commits
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conventional Commits">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-message-character-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit message character set
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-scopes-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple scopes (optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-requests-and-squash-merges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull requests and squash merges
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull request checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-perturbation-or-estimator-quick-recipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a new Ω perturbation or estimator (quick recipe)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versioning-and-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning and releases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Versioning and releases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#branching-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branching rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Branching rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#branch-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-and-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and provenance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        License
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1218,6 +2004,269 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-changes-are-welcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changes are welcome
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-for-contributors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start for contributors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-to-put-in-a-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to put in a PR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-gates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI gates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repository-contributing-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository contributing guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Repository contributing guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contributing-to-ldtc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributing to LDTC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-layout-high-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project layout (high-level)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coding-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coding guidelines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conventional-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventional Commits
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conventional Commits">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-message-character-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit message character set
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-scopes-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple scopes (optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-requests-and-squash-merges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull requests and squash merges
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull request checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-perturbation-or-estimator-quick-recipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a new Ω perturbation or estimator (quick recipe)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versioning-and-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning and releases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Versioning and releases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#branching-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branching rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Branching rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#branch-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-and-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and provenance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        License
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1233,16 +2282,374 @@
 
 
   
+    <a href="https://github.com/ldtc-labs/ldtc/edit/main/docs/meta/contributing.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/ldtc-labs/ldtc/raw/main/docs/meta/contributing.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg>
+    </a>
   
 
 
 <h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h1>
-<p>See <code>CONTRIBUTING.md</code> at the repository root for full guidelines, development setup, coding standards, and Conventional Commits. Key points:</p>
+<p>Thanks for considering a contribution to LDTC. This page summarizes
+what changes are most welcome and how to get a patch through CI. The
+canonical guide lives in <code>CONTRIBUTING.md</code> at the repository root and
+is included verbatim below; the rest of this page covers conventions
+that are specific to the documentation site.</p>
+<h2 id="what-changes-are-welcome">What changes are welcome<a class="headerlink" href="#what-changes-are-welcome" title="Permanent link">&para;</a></h2>
+<p>LDTC is a research harness, so contributions that strengthen the
+guarantees printed onto the verifier's terminal are especially
+valuable:</p>
 <ul>
-<li>Python ≥ 3.9; install with <code>pip install -e "."</code> and <code>pip install -e ".[dev]"</code></li>
-<li>Lint, type-check, tests via Makefile: <code>make lint</code>, <code>make typecheck</code>, <code>make test</code></li>
-<li>Keep measurement guardrails and LREG invariants intact; add tests for changes</li>
+<li><strong>New estimators or metrics</strong> in
+  <a class="autorefs autorefs-internal" href="../../api/lmeas/#ldtc.lmeas"><code>ldtc.lmeas</code></a> with bootstrap confidence
+  intervals and tests against synthetic ground truth.</li>
+<li><strong>New <code>Ω</code> perturbations</strong> in
+  <a class="autorefs autorefs-internal" href="../../api/omega/#ldtc.omega"><code>ldtc.omega</code></a> that exercise novel failure
+  modes (intermittent power, noisy actuators, multi-agent
+  coordination).</li>
+<li><strong>Hardware adapters</strong> in
+  <a class="autorefs autorefs-internal" href="../../api/plant/#ldtc.plant"><code>ldtc.plant</code></a> for real devices: a small,
+  well-documented adapter is more useful than a large one.</li>
+<li><strong>Reporting / verification tooling</strong> that consumes the signed
+  indicators and audit log without ever reaching back into the LREG.</li>
+<li><strong>Docs</strong>: clarifications, additional examples, and tighter prose
+  are always welcome. Run the <a href="../style-guide/">style guide</a> by your
+  changes before submitting.</li>
 </ul>
+<p>What we cannot accept:</p>
+<ul>
+<li>Anything that reads, mutates, or bypasses the LREG outside the
+  guard's <code>derive()</code> path. This is a hard rule; PRs that touch this
+  surface will be rejected on principle.</li>
+<li>Changes that weaken the audit chain, the indicator schema, or the
+  <code>Δt</code> governance loop without an explicit migration story.</li>
+</ul>
+<h2 id="quick-start-for-contributors">Quick start for contributors<a class="headerlink" href="#quick-start-for-contributors" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;your-fork&gt;/ldtc.git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>ldtc
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,docs]&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>make<span class="w"> </span>lint<span class="w"> </span>typecheck<span class="w"> </span><span class="nb">test</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>make<span class="w"> </span>docs<span class="w">   </span><span class="c1"># builds docs in --strict mode</span>
+</span></code></pre></div>
+<p>If <code>make docs</code> fails locally with a Cairo error, see
+<a href="../troubleshooting/#mkdocs-build-fails-with-cairo-or-cairosvg-errors">Troubleshooting</a>.</p>
+<h2 id="what-to-put-in-a-pr">What to put in a PR<a class="headerlink" href="#what-to-put-in-a-pr" title="Permanent link">&para;</a></h2>
+<p>A typical good PR contains:</p>
+<ol>
+<li>The smallest set of code changes that solves one problem.</li>
+<li>New or updated tests that fail before the change and pass after.</li>
+<li>Updates to the relevant docstrings (Google style; see
+   <a href="../style-guide/">style guide</a>).</li>
+<li>If the public surface changed, an updated entry in the matching
+   <code>docs/api/*.md</code> page or <code>docs/concepts/*.md</code> page.</li>
+<li>A clear, present-tense title and body describing <em>why</em> the change
+   matters, not just <em>what</em> it does.</li>
+</ol>
+<p>Conventional Commits (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>refactor:</code>, <code>test:</code>,
+<code>chore:</code>) are appreciated but not required.</p>
+<h2 id="ci-gates">CI gates<a class="headerlink" href="#ci-gates" title="Permanent link">&para;</a></h2>
+<p>Every push runs:</p>
+<ul>
+<li><code>make lint</code> (Black, Ruff with Google docstring rules).</li>
+<li><code>make typecheck</code> (MyPy in strict mode).</li>
+<li><code>make test</code> (Pytest, including property tests over the partition
+  algebra and the LREG monotonicity invariant).</li>
+<li><code>make docs</code> (<code>mkdocs build --strict</code>; broken cross-references and
+  missing pages fail the build).</li>
+</ul>
+<p>Run all four locally before opening a PR.</p>
+<h2 id="repository-contributing-guide">Repository contributing guide<a class="headerlink" href="#repository-contributing-guide" title="Permanent link">&para;</a></h2>
+<p>The following section is the project-wide contributing guide. It is
+embedded verbatim from <code>CONTRIBUTING.md</code> so that the source of truth
+stays a single file.</p>
+<h3 id="contributing-to-ldtc">Contributing to LDTC<a class="headerlink" href="#contributing-to-ldtc" title="Permanent link">&para;</a></h3>
+<p>Thanks for your interest in contributing. This repository is a verification harness for the Loop-Dominance (NC1/SC1) pipeline described in the manuscript. Contributions should keep the code reproducible, auditable, and consistent with the paper's symbols and assumptions (Δt, M, ε, τmax, σ, C/Ex partition, Ω battery, LREG/attestation).</p>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p>Development uses Python ≥ 3.9.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># install runtime deps (editable)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>make<span class="w"> </span>install
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># install dev tooling (pytest, ruff, black, mypy)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>make<span class="w"> </span>dev
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># run tests, lint, type-check, and format</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>make<span class="w"> </span><span class="nb">test</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>make<span class="w"> </span>lint
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>make<span class="w"> </span>typecheck
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>make<span class="w"> </span>fmt
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1"># smoke runs</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>make<span class="w"> </span>run<span class="w">          </span><span class="c1"># baseline NC1</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>make<span class="w"> </span>omega-power-sag<span class="w">   </span><span class="c1"># Ω power-sag demo</span>
+</span></code></pre></div>
+<h2 id="project-layout-high-level">Project layout (high-level)<a class="headerlink" href="#project-layout-high-level" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>src/ldtc/</code></li>
+<li><code>arbiter/</code> – policy and refusal semantics</li>
+<li><code>attest/</code> – indicators, exporter, keys (LREG-derived)</li>
+<li><code>cli/</code> – command-line interface and entrypoints</li>
+<li><code>guardrails/</code> – audit, Δt guards, smell-tests</li>
+<li><code>lmeas/</code> – estimators, metrics, partitioning</li>
+<li><code>omega/</code> – perturbation generators (power sag, ingress flood, command conflict)</li>
+<li><code>plant/</code> – sim/hw adapters and models</li>
+<li><code>reporting/</code> – artifacts, tables, timelines</li>
+<li><code>runtime/</code> – scheduler and windows</li>
+<li><code>configs/</code> – R₀ defaults, negative controls, example R* profile</li>
+<li><code>scripts/</code> – calibration, indicator verification, batch helpers</li>
+<li><code>tests/</code> – unit tests</li>
+<li><code>docs/</code> – method notes and figures</li>
+</ul>
+<h2 id="coding-guidelines">Coding guidelines<a class="headerlink" href="#coding-guidelines" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Style: Black; lint: Ruff (with the Google docstring convention enabled); typing: MyPy (settings in <code>pyproject.toml</code>).</li>
+<li>Docstrings: Google-style throughout. See the project <a href="https://docs.ldtc.dev/meta/style-guide/">documentation style guide</a> for the full conventions and examples, and the <a href="https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings">Google Python Style Guide §3.8 Comments and Docstrings</a> for the upstream reference.</li>
+<li>Prose follows the <em>Chicago Manual of Style</em> (17<sup>th</sup> ed.): no em dashes, straight ASCII quotes, serial commas, sentence-case headings. Keep Greek and mathematical symbols (Δt, 𝓛, M, ε, τ, σ, Ω) as Unicode.</li>
+<li>Prefer explicit, descriptive names; follow repository symbol mapping to the paper.</li>
+<li>Add or extend tests in <code>tests/</code> for new behavior; keep fast unit tests (no network or large IO).</li>
+<li>Keep artifacts under <code>artifacts/</code> only; do not commit generated files.</li>
+</ul>
+<p>Common commands:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span><span class="nb">test</span><span class="w">            </span><span class="c1"># pytest -q</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>make<span class="w"> </span>lint<span class="w">            </span><span class="c1"># ruff check . (includes Google-style docstring rules on src/ldtc)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>make<span class="w"> </span>typecheck<span class="w">       </span><span class="c1"># mypy src tests scripts</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>make<span class="w"> </span>fmt<span class="w">             </span><span class="c1"># black src tests examples scripts</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>make<span class="w"> </span>docs<span class="w">            </span><span class="c1"># mkdocs build --strict</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>make<span class="w"> </span>docs-serve<span class="w">      </span><span class="c1"># mkdocs serve (live preview at http://127.0.0.1:8000)</span>
+</span></code></pre></div>
+<h2 id="conventional-commits">Conventional Commits<a class="headerlink" href="#conventional-commits" title="Permanent link">&para;</a></h2>
+<p>This project uses Conventional Commits. Use the form:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>[optional body]
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>[optional footer(s)]
+</span></code></pre></div>
+<h3 id="commit-message-character-set">Commit message character set<a class="headerlink" href="#commit-message-character-set" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Encoding: UTF‑8 is allowed and preferred across subjects and bodies.</li>
+<li>Subjects may include UTF‑8 symbols (e.g., Δ, 𝓛, λ/θ/κ) when they add clarity; keep the subject ≤ 72 chars and avoid emoji.</li>
+<li>If maximum legacy compatibility is needed, prefer ASCII in the subject and use UTF‑8 in the body.</li>
+</ul>
+<p>Example (UTF‑8 subject):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>feat(lmeas,cli): implement greedy Δ𝓛 loop-gain partitioning with hysteresis; add λ/θ/κ knobs
+</span></code></pre></div>
+<p>Accepted types (stick to the standard):</p>
+<ul>
+<li><code>build</code> – build system or external dependencies (e.g., requirements, packaging)</li>
+<li><code>chore</code> – maintenance (no src/ behavior change)</li>
+<li><code>ci</code> – continuous integration configuration (workflows, pipelines)</li>
+<li><code>docs</code> – documentation only</li>
+<li><code>feat</code> – user-facing feature or capability</li>
+<li><code>fix</code> – bug fix</li>
+<li><code>perf</code> – performance improvements</li>
+<li><code>refactor</code> – code change that neither fixes a bug nor adds a feature</li>
+<li><code>revert</code> – revert of a previous commit</li>
+<li><code>style</code> – formatting/whitespace (no code behavior)</li>
+<li><code>test</code> – add/adjust tests only</li>
+</ul>
+<p>Recommended scopes (choose the smallest, most accurate unit; prefer module/directory names):</p>
+<ul>
+<li>Module/directory scopes:</li>
+<li><code>arbiter</code> – policy and refusal semantics</li>
+<li><code>attest</code> – indicators, exporter, keys (LREG-derived)</li>
+<li><code>cli</code> – command-line interface and entrypoints</li>
+<li><code>guardrails</code> – audit, Δt guards, smell-tests</li>
+<li><code>lmeas</code> – estimators, metrics, partitioning</li>
+<li><code>omega</code> – perturbation generators (power sag, ingress flood, command conflict)</li>
+<li><code>plant</code> – sim/hw adapters and models</li>
+<li><code>reporting</code> – artifacts, tables, timelines</li>
+<li>
+<p><code>runtime</code> – scheduler and windows</p>
+</li>
+<li>
+<p>Other scopes:</p>
+</li>
+<li><code>configs</code> – configuration files (R₀ defaults, negative controls, example R* profile)</li>
+<li><code>deps</code> – dependency updates and version pins (e.g., requirements files)</li>
+<li><code>docker</code> – containerization (e.g., <code>Dockerfile</code>, image build/runtime settings)</li>
+<li><code>examples</code> – example scripts and minimal demos under <code>examples/</code></li>
+<li><code>makefile</code> – <code>Makefile</code> targets and build helpers</li>
+<li><code>notebooks</code> – Jupyter notebooks under <code>notebooks/</code></li>
+<li><code>paper</code> – LaTeX manuscript sources under <code>paper/</code> (e.g., <code>main.tex</code>, <code>macros.tex</code>, <code>refs.bib</code>, <code>Makefile</code>, <code>scripts/</code>)</li>
+<li><code>pyproject</code> – <code>pyproject.toml</code> packaging/build metadata and tool config</li>
+<li><code>repo</code> – repository metadata and top-level files (e.g., <code>README.md</code>, <code>CONTRIBUTING.md</code>, <code>LICENSE</code>, <code>CITATION.cff</code>, <code>.gitignore</code>); also docs assets like images under <code>docs/assets/</code></li>
+<li><code>mkdocs</code> – documentation site (MkDocs/Material) configuration and content under <code>docs/</code></li>
+<li><code>scripts</code> – utility/CLI scripts under <code>scripts/</code></li>
+<li><code>tests</code> – unit/integration tests under <code>tests/</code></li>
+<li><code>workflows</code> – CI pipelines under <code>.github/workflows/</code></li>
+</ul>
+<p>Note: Avoid redundant type==scope pairs (e.g., <code>docs(docs)</code>). Prefer a module scope (e.g., <code>docs(attest)</code>) or <code>docs(repo)</code> for top-level repository updates.</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>build(deps): refresh pinned versions
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>chore(makefile): add figures target for paper assets
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>chore(pyproject): bump version to 0.2.0
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>ci(workflows): add indicator verification job
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>docs(attest): clarify Mq bit width and signing scheme
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>docs(notebooks): clarify demo parameters in 02_sc1_omega.ipynb
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>docs(repo): update LDTC logo asset in docs/assets
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>feat(lmeas): add Kraskov kNN MI path with configurable k
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>fix(omega): correct power-sag duration units to seconds
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>perf(plant): reduce allocation in sim step to lower GC pauses
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>refactor(runtime): extract jitter accounting from scheduler loop
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>revert(cli): revert omega ingress flag rename
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>test(guardrails): add Δt governance invalidation cases
+</span></code></pre></div>
+<p>Examples (no scope):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>build: update packaging metadata
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>chore: update .gitignore patterns
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>docs: add Zenodo DOI
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>revert: revert &quot;refactor(runtime): extract jitter accounting from scheduler loop&quot;
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>style: format code with Black
+</span></code></pre></div>
+<p>Breaking changes:</p>
+<ul>
+<li>Use <code>!</code> after the type/scope or a <code>BREAKING CHANGE:</code> footer.</li>
+</ul>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>feat(lmeas)!: change default Mmin from 1 dB to 3 dB
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>BREAKING CHANGE: Default NC1 threshold raised to 3 dB; update configs.
+</span></code></pre></div>
+<h3 id="multiple-scopes-optional">Multiple scopes (optional)<a class="headerlink" href="#multiple-scopes-optional" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Comma-separate scopes without spaces: <code>type(scope1,scope2): ...</code></li>
+<li>Prefer a single scope when possible; use multiple only when the change genuinely spans tightly related areas.</li>
+</ul>
+<p>Scope ordering (house style):</p>
+<ul>
+<li>Put the most impacted scope first (e.g., <code>repo</code>), then any secondary scopes.</li>
+<li>For extra consistency, alphabetize the remaining scopes after the primary.</li>
+<li>Keep it to 1–3 scopes max.</li>
+</ul>
+<p>Example:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>feat(reporting,cli): add SC1 figure bundle; CLI wires new subcommand
+</span></code></pre></div>
+<p>Primary = <code>reporting</code> (new figure generation and bundling). Secondary = <code>cli</code> (exposes/wires the subcommand).</p>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>feat(cli,reporting): add figures subcommand and timeline export
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>fix(guardrails,attest): block raw LREG reads and enforce indicator-only exports
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>refactor(runtime,lmeas): decouple scheduler tick from windowing logic
+</span></code></pre></div>
+<h2 id="pull-requests-and-squash-merges">Pull requests and squash merges<a class="headerlink" href="#pull-requests-and-squash-merges" title="Permanent link">&para;</a></h2>
+<ul>
+<li>PR title: use Conventional Commit format.</li>
+<li>Example: <code>feat(cli): add figures subcommand</code></li>
+<li>Imperative mood; no trailing period; aim for ≤ 72 chars; use <code>!</code> for breaking changes.</li>
+<li>Prefer one primary scope; use comma-separated scopes only when necessary.</li>
+<li>PR description: include brief sections: What, Why, How (brief), Testing, Risks/Impact, Docs/Follow-ups.</li>
+<li>Link issues with keywords (e.g., <code>Closes #123</code>).</li>
+<li>Merging: use "Squash and merge" with "Pull request title and description".</li>
+<li>Keep PRs focused; avoid unrelated changes in the same PR.</li>
+</ul>
+<p>Conventional Commits applies to the subject line (your PR title) and optional footers. The PR body is free-form; when squashing, it becomes the commit body. Place any footers at the bottom of the description.</p>
+<p>Recommended PR template:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>What
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>- Short summary of the change
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>Why
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>- Motivation/user value
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>How (brief)
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>- Key implementation notes or decisions
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>Testing
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>- Local/CI coverage; links to tests if relevant
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>Risks/Impact
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>- Compat, rollout, perf, security; mitigations
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>Docs/Follow-ups
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>- Docs updated or TODO next steps
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>Closes #123
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>BREAKING CHANGE: &lt;details if any&gt;
+</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>Co-authored-by: Name &lt;email&gt;
+</span></code></pre></div>
+<h2 id="pull-request-checklist">Pull request checklist<a class="headerlink" href="#pull-request-checklist" title="Permanent link">&para;</a></h2>
+<ul>
+<li>PR title: Conventional Commits format (CI-enforced by <code>pr-lint.yml</code>).</li>
+<li>Tests: added/updated; <code>make test</code> passes.</li>
+<li>Lint/format/type-check: <code>make lint</code>, <code>make fmt</code>, <code>make typecheck</code> pass.</li>
+<li>Docs: update <code>docs/</code> and <code>README.md</code> if behavior, symbols, or indicators change.</li>
+<li>Configs: update <code>configs/profile_r0.yml</code> and example R* mapping if thresholds/symbols move.</li>
+<li>Artifacts: none committed; runs write to <code>artifacts/</code> only.</li>
+</ul>
+<h2 id="adding-a-new-perturbation-or-estimator-quick-recipe">Adding a new Ω perturbation or estimator (quick recipe)<a class="headerlink" href="#adding-a-new-perturbation-or-estimator-quick-recipe" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Ω: implement under <code>src/ldtc/omega/</code>, add CLI wiring in <code>cli/</code>, add tests in <code>tests/test_omega.py</code>.</li>
+<li>Estimator: implement in <code>src/ldtc/lmeas/</code>, expose config flags, and extend tests in <code>tests/test_estimators.py</code>.</li>
+<li>Update indicators/reporting if exported fields change; update docs.</li>
+</ul>
+<h2 id="versioning-and-releases">Versioning and releases<a class="headerlink" href="#versioning-and-releases" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The version is tracked in <code>pyproject.toml</code> (<code>project.version</code>) and mirrored in <code>src/ldtc/__init__.py</code> as <code>__version__</code>. Both files are updated automatically by <a href="https://python-semantic-release.readthedocs.io/">python-semantic-release</a>.</li>
+<li><strong>Automated release pipeline</strong> (on every merge to <code>main</code>):</li>
+<li><code>python-semantic-release</code> scans Conventional Commit messages since the last tag.</li>
+<li>It determines the next SemVer bump: <code>feat</code> → <strong>minor</strong>, <code>fix</code>/<code>perf</code> → <strong>patch</strong>, <code>BREAKING CHANGE</code> → <strong>major</strong>.</li>
+<li>Version files are updated, <code>CHANGELOG.md</code> is generated, and a tagged release commit (<code>chore(release): vX.Y.Z</code>) is pushed.</li>
+<li>A GitHub Release is created with auto-generated release notes and the built sdist/wheel attached.</li>
+<li>When drafts are disabled, the package is also published to PyPI via Trusted Publishing.</li>
+<li><strong>Draft / published toggle</strong>: the <code>DRAFT_RELEASE</code> variable at the top of <code>.github/workflows/release.yml</code> controls release mode. Set to <code>"true"</code> (the default) for draft GitHub Releases with PyPI publishing skipped; flip to <code>"false"</code> to publish releases and upload to PyPI immediately.</li>
+<li>Commit types that trigger a release: <code>feat</code> (minor), <code>fix</code> and <code>perf</code> (patch), <code>BREAKING CHANGE</code> (major). All other types (<code>build</code>, <code>chore</code>, <code>ci</code>, <code>docs</code>, <code>refactor</code>, <code>revert</code>, <code>style</code>, <code>test</code>) are recorded in the changelog but do <strong>not</strong> trigger a release on their own.</li>
+<li>Tag format: <code>v</code>-prefixed (e.g., <code>v1.1.0</code>).</li>
+<li>Manual version bumps are no longer needed; just merge PRs with valid Conventional Commit titles. For ad-hoc runs, use the workflow's <strong>Run workflow</strong> button (<code>workflow_dispatch</code>).</li>
+</ul>
+<h3 id="branching-rules">Branching rules<a class="headerlink" href="#branching-rules" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>main</code>: default branch; protected; mirrors PyPI.</li>
+<li>All work branches are created from <code>main</code>.</li>
+</ul>
+<h4 id="branch-naming">Branch naming<a class="headerlink" href="#branch-naming" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Use lowercase kebab-case; no spaces; keep names concise (aim ≤ 40 chars).</li>
+<li>Branch prefixes match Conventional Commit types:</li>
+<li><code>feat/&lt;scope&gt;-&lt;short-desc&gt;</code></li>
+<li><code>fix/&lt;issue-or-bug&gt;-&lt;short-desc&gt;</code></li>
+<li><code>chore/&lt;short-desc&gt;</code></li>
+<li><code>docs/&lt;short-desc&gt;</code></li>
+<li><code>ci/&lt;short-desc&gt;</code></li>
+<li><code>refactor/&lt;scope&gt;-&lt;short-desc&gt;</code></li>
+<li><code>test/&lt;short-desc&gt;</code></li>
+<li><code>perf/&lt;short-desc&gt;</code></li>
+<li><code>build/&lt;short-desc&gt;</code></li>
+<li>Optionally append an issue ID at the end (e.g., <code>feat/cli-figures-123</code>).</li>
+<li>Delete remote and local branches after merge.</li>
+</ul>
+<p>Examples:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>feat/cli-figures
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>fix/omega-duration-units-123
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>docs/contributing-branch-naming
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>ci/mplbackend-agg-headless
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>build/lock-filters-ldtc
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>refactor/runtime-jitter-accounting
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>test/omega-suite
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>fix/attest-sig-verify
+</span></code></pre></div>
+<h3 id="ci">CI<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>CI</strong> (<code>ci.yml</code>): runs Black, Ruff, MyPy, pytest, and indicator verification on pushes to <code>main</code> and PRs.</li>
+<li><strong>PR Lint</strong> (<code>pr-lint.yml</code>): validates the PR title against Conventional Commits format (protects squash merges) and checks individual commit messages via commitlint (protects rebase merges). Recommended: add the <strong>PR title</strong> job as a required status check in branch-protection settings.</li>
+<li><strong>Release</strong> (<code>release.yml</code>): runs on merge to <code>main</code>; computes version, generates changelog, tags, creates GitHub Release, and (when <code>DRAFT_RELEASE</code> is <code>"false"</code>) publishes to PyPI.</li>
+<li><strong>Docs</strong> (<code>docs.yml</code>): deploys documentation to GitHub Pages on push to <code>main</code>.</li>
+<li><strong>Build Paper</strong> (<code>build-paper.yml</code>): compiles the LaTeX manuscript.</li>
+</ul>
+<h2 id="security-and-provenance">Security and provenance<a class="headerlink" href="#security-and-provenance" title="Permanent link">&para;</a></h2>
+<ul>
+<li>LREG/attestation paths are measurement-only; do not expose raw LREG contents outside enclave abstractions in code or docs.</li>
+<li>Δt governance and audit rules must not be bypassed in contributions; changes require tests and documentation.</li>
+</ul>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
+<p>By contributing, you agree that your contributions are licensed under the repository's MIT License.</p>
 
 
 
@@ -1260,8 +2667,16 @@
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1274,6 +2689,19 @@
   
 </div>
       
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/ldtc-labs/ldtc" target="_blank" rel="noopener" title="LDTC on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
     </div>
   </div>
 </footer>
@@ -1283,11 +2711,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
     
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant", "navigation.tracking", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.expand", "navigation.indexes", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.suggest", "search.share", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

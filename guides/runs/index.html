@@ -9,6 +9,8 @@
         <meta name="description" content="Real-time NC1/SC1 verification harness (paper + Python package)">
       
       
+        <meta name="author" content="Owen Carey">
+      
       
         <link rel="canonical" href="https://docs.ldtc.dev/guides/runs/">
       
@@ -16,7 +18,7 @@
         <link rel="prev" href="../reporting/">
       
       
-        <link rel="next" href="../../examples/minimal/">
+        <link rel="next" href="../hardware/">
       
       
         
@@ -27,11 +29,14 @@
     
     
       
-        <title>Runs & Ω Battery - LDTC</title>
+        <title>Runs and Ω Battery - LDTC</title>
       
     
     
       <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -45,8 +50,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
@@ -60,10 +65,30 @@
 
     
     
-  </head>
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Runs and Ω Battery - LDTC" />
+<meta property="og:description" content="Real-time NC1/SC1 verification harness (paper + Python package)" />
+<meta property="og:image" content="https://docs.ldtc.dev/assets/images/social/guides/runs.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://docs.ldtc.dev/guides/runs/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Runs and Ω Battery - LDTC" />
+<meta property="twitter:description" content="Real-time NC1/SC1 verification harness (paper + Python package)" />
+<meta property="twitter:image" content="https://docs.ldtc.dev/assets/images/social/guides/runs.png" />
+</head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -72,7 +97,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#runs-battery" class="md-skip">
+        <a href="#runs-and-the-battery" class="md-skip">
           Skip to content
         </a>
       
@@ -86,7 +111,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="LDTC" class="md-header__button md-logo" aria-label="LDTC" data-md-component="logo">
       
@@ -108,12 +133,38 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Runs & Ω Battery
+              Runs and Ω Battery
             
           </span>
         </div>
       </div>
     </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
     
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
@@ -139,11 +190,18 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
         <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -165,23 +223,182 @@
         <a href="https://github.com/ldtc-labs/ldtc" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    ldtc-labs/ldtc
   </div>
 </a>
       </div>
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../concepts/mental-model/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../calibration/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/minimal/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/ldtc/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../meta/style-guide/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Meta
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -195,8 +412,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="LDTC" class="md-nav__button md-logo" aria-label="LDTC" data-md-component="logo">
       
@@ -211,10 +430,10 @@
       <a href="https://github.com/ldtc-labs/ldtc" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    ldtc-labs/ldtc
   </div>
 </a>
     </div>
@@ -283,22 +502,40 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -334,14 +571,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/definitions/" class="md-nav__link">
+      <a href="../../concepts/mental-model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Definitions
+    Mental Model
   
 
     
@@ -390,6 +627,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/indicators/" class="md-nav__link">
         
   
@@ -418,6 +683,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle of a Run
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/guardrails/" class="md-nav__link">
         
   
@@ -425,7 +718,7 @@
   <span class="md-ellipsis">
     
   
-    Guardrails & Invalidations
+    Guardrails and Invalidations
   
 
     
@@ -453,7 +746,7 @@
   <span class="md-ellipsis">
     
   
-    Paper → Code
+    Paper to Code
   
 
     
@@ -484,10 +777,25 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
         
+        
+      
+      
         
       
     
@@ -570,7 +878,7 @@
   <span class="md-ellipsis">
     
   
-    Reporting & Figures
+    Reporting and Figures
   
 
     
@@ -607,7 +915,7 @@
   <span class="md-ellipsis">
     
   
-    Runs & Ω Battery
+    Runs and Ω Battery
   
 
     
@@ -625,7 +933,7 @@
   <span class="md-ellipsis">
     
   
-    Runs & Ω Battery
+    Runs and Ω Battery
   
 
     
@@ -665,7 +973,7 @@
   <a href="#power-sag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ω: Power Sag
+        Ω: power sag
       
     </span>
   </a>
@@ -676,7 +984,7 @@
   <a href="#ingress-flood" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ω: Ingress Flood
+        Ω: ingress flood
       
     </span>
   </a>
@@ -684,10 +992,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#command-conflict-refusal" class="md-nav__link">
+  <a href="#command-conflict-and-refusal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ω: Command Conflict &amp; Refusal
+        Ω: command conflict and refusal
       
     </span>
   </a>
@@ -695,10 +1003,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hardware-in-the-loop-optional" class="md-nav__link">
+  <a href="#exogenous-subsidy-negative-control" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware-in-the-loop (optional)
+        Ω: exogenous subsidy (negative control)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-written" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets written
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-audit-during-a-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the audit during a run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
       
     </span>
   </a>
@@ -709,6 +1050,62 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Adapter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -729,22 +1126,30 @@
   
     
     
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -844,22 +1249,46 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -923,14 +1352,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/runtime/" class="md-nav__link">
+      <a href="../../api/lmeas/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    runtime
+    lmeas
   
 
     
@@ -951,14 +1380,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/lmeas/" class="md-nav__link">
+      <a href="../../api/runtime/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    lmeas
+    runtime
   
 
     
@@ -1183,22 +1612,36 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
     
     
       
-        
+      
         
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1234,6 +1677,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../meta/style-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Style Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../meta/contributing/" class="md-nav__link">
         
   
@@ -1242,6 +1713,62 @@
     
   
     Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../meta/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../meta/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -1331,7 +1858,7 @@
   <a href="#power-sag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ω: Power Sag
+        Ω: power sag
       
     </span>
   </a>
@@ -1342,7 +1869,7 @@
   <a href="#ingress-flood" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ω: Ingress Flood
+        Ω: ingress flood
       
     </span>
   </a>
@@ -1350,10 +1877,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#command-conflict-refusal" class="md-nav__link">
+  <a href="#command-conflict-and-refusal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ω: Command Conflict &amp; Refusal
+        Ω: command conflict and refusal
       
     </span>
   </a>
@@ -1361,10 +1888,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hardware-in-the-loop-optional" class="md-nav__link">
+  <a href="#exogenous-subsidy-negative-control" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware-in-the-loop (optional)
+        Ω: exogenous subsidy (negative control)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-written" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets written
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-audit-during-a-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the audit during a run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
       
     </span>
   </a>
@@ -1388,48 +1948,156 @@
 
 
   
+    <a href="https://github.com/ldtc-labs/ldtc/edit/main/docs/guides/runs.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/ldtc-labs/ldtc/raw/main/docs/guides/runs.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg>
+    </a>
   
 
 
-<h1 id="runs-battery">Runs &amp; Ω Battery<a class="headerlink" href="#runs-battery" title="Permanent link">&para;</a></h1>
+<h1 id="runs-and-the-battery">Runs and the <code>Ω</code> battery<a class="headerlink" href="#runs-and-the-battery" title="Permanent link">&para;</a></h1>
+<p>Each <code>ldtc</code> subcommand maps to one function in
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;main&lt;/span&gt;" href="../../api/cli/#ldtc.cli.main"><code>ldtc.cli.main</code></a> and exercises a different part of
+the verification pipeline. The shape is always the same: load
+profile → start scheduler → estimator loop → optional <code>Ω</code> →
+post-run audit checks → artifact bundle. This guide is the
+operational reference: which command, which flags, which expected
+outputs, and which negative-control config to compare against.</p>
+<div class="admonition tip">
+<p class="admonition-title">Always clean between runs</p>
+<p>Each invocation appends to the same audit file by default, so
+a second run will trip an "Audit chain broken" invalidation.
+Prefix every command with <code>make clean-artifacts &amp;&amp;</code> while
+iterating, or set up a per-run <code>artifacts/</code> directory.</p>
+</div>
 <h2 id="baseline-nc1">Baseline (NC1)<a class="headerlink" href="#baseline-nc1" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code>ldtc<span class="w"> </span>run<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml
-</code></pre></div>
-
-<h2 id="power-sag">Ω: Power Sag<a class="headerlink" href="#power-sag" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code>ldtc<span class="w"> </span>omega-power-sag<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml<span class="w"> </span>--drop<span class="w"> </span><span class="m">0</span>.3<span class="w"> </span>--duration<span class="w"> </span><span class="m">10</span>
-</code></pre></div>
-
-<h2 id="ingress-flood">Ω: Ingress Flood<a class="headerlink" href="#ingress-flood" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code>ldtc<span class="w"> </span>omega-ingress-flood<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml<span class="w"> </span>--mult<span class="w"> </span><span class="m">3</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">5</span>
-</code></pre></div>
-
-<h2 id="command-conflict-refusal">Ω: Command Conflict &amp; Refusal<a class="headerlink" href="#command-conflict-refusal" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code>ldtc<span class="w"> </span>omega-command-conflict<span class="w"> </span>--config<span class="w"> </span>configs/profile_negative_command_conflict.yml<span class="w"> </span>--observe<span class="w"> </span><span class="m">2</span>
-</code></pre></div>
-
-<p>Artifacts: audit JSONL, indicators JSONL/CBOR, and optional figure bundles under <code>artifacts/</code>.</p>
-<h2 id="hardware-in-the-loop-optional">Hardware-in-the-loop (optional)<a class="headerlink" href="#hardware-in-the-loop-optional" title="Permanent link">&para;</a></h2>
-<p>Select the hardware adapter and UDP telemetry in your config:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># in configs/profile_r0.yml (example)</span>
-<span class="nt">plant</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">adapter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hardware</span><span class="w">        </span><span class="c1"># or &quot;sim&quot; (default)</span>
-<span class="w">  </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">udp</span><span class="w">           </span><span class="c1"># or &quot;serial&quot; (requires pyserial)</span>
-<span class="w">  </span><span class="nt">udp_bind_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
-<span class="w">  </span><span class="nt">udp_bind_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5005</span>
-<span class="w">  </span><span class="c1"># Optional control channel back to device</span>
-<span class="w">  </span><span class="c1"># udp_control_host: 127.0.0.1</span>
-<span class="w">  </span><span class="c1"># udp_control_port: 5006</span>
-<span class="w">  </span><span class="nt">telemetry_timeout_sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
-</code></pre></div>
-
-<p>Send telemetry as JSON over UDP with keys <code>E,T,R,demand,io,H</code> in [0,1]. Example:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">socket</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span>
-<span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
-<span class="n">sock</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;E&quot;</span><span class="p">:</span><span class="mf">0.6</span><span class="p">,</span><span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">0.3</span><span class="p">,</span><span class="s2">&quot;R&quot;</span><span class="p">:</span><span class="mf">0.9</span><span class="p">,</span><span class="s2">&quot;demand&quot;</span><span class="p">:</span><span class="mf">0.2</span><span class="p">,</span><span class="s2">&quot;io&quot;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span><span class="s2">&quot;H&quot;</span><span class="p">:</span><span class="mf">0.015</span><span class="p">})</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="p">(</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">5005</span><span class="p">))</span>
-</code></pre></div>
-
-<p>The CLI ingests these values through the same LREG/Ω/attestation path.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ldtc<span class="w"> </span>run<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml
+</span></code></pre></div>
+<p>Implemented by
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;run_baseline&lt;/span&gt;" href="../../api/cli/#ldtc.cli.main.run_baseline"><code>run_baseline</code></a>. Runs the in-process
+plant for <code>baseline_sec</code> seconds (default <code>10 s</code>) at the
+profile's <code>Δt</code>. Expected behavior on R0:</p>
+<ul>
+<li>The CLI prints a <code>Run header:</code> line, then periodic indicator
+  exports, then a final <code>Baseline done.</code> summary.</li>
+<li>The audit log contains <code>baseline_start</code>, <code>run_header</code>, many
+  <code>window_measured</code> and <code>window_diagnostics</code> rows, periodic
+  <code>indicator_written</code> rows, and a final <code>baseline_stop</code>.</li>
+<li>All exported indicators carry <code>nc1: true</code>, <code>invalidated: false</code>.</li>
+</ul>
+<h2 id="power-sag"><code>Ω</code>: power sag<a class="headerlink" href="#power-sag" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>ldtc<span class="w"> </span>omega-power-sag<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml<span class="w"> </span>--drop<span class="w"> </span><span class="m">0</span>.3<span class="w"> </span>--duration<span class="w"> </span><span class="m">10</span>
+</span></code></pre></div>
+<p>Implemented by
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;omega_power_sag&lt;/span&gt;" href="../../api/cli/#ldtc.cli.main.omega_power_sag"><code>omega_power_sag</code></a>. The CLI:</p>
+<ol>
+<li>Runs a baseline phase to establish <code>𝓛_loop_baseline</code>.</li>
+<li>Calls
+   <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;apply&lt;/span&gt;" href="../../api/omega/#ldtc.omega.power_sag.apply"><code>omega.power_sag.apply</code></a>, which
+   asks the plant to drop the harvest term <code>H</code> by <code>--drop</code> for
+   <code>--duration</code> seconds. The partition is frozen for the
+   duration.</li>
+<li>Tracks the <code>𝓛_loop</code> trough during <code>Ω</code>.</li>
+<li>After <code>Ω</code> ends, watches for the first window that satisfies
+   the SC1 recovery gate (<code>𝓛_loop ≥ baseline · (1 − ε)</code>) for
+   <code>sustained_required_windows</code> consecutive windows.</li>
+<li>Calls
+   <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;sc1_evaluate&lt;/span&gt;" href="../../api/lmeas/#ldtc.lmeas.metrics.sc1_evaluate"><code>sc1_evaluate</code></a> and writes
+   the result into the next signed indicator.</li>
+</ol>
+<p>Expected on R0: <code>sc1: true</code>, <code>delta ≤ 0.15</code>, <code>tau_rec ≤ 60 s</code>.</p>
+<h2 id="ingress-flood"><code>Ω</code>: ingress flood<a class="headerlink" href="#ingress-flood" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ldtc<span class="w"> </span>omega-ingress-flood<span class="w"> </span>--config<span class="w"> </span>configs/profile_r0.yml<span class="w"> </span>--mult<span class="w"> </span><span class="m">3</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">5</span>
+</span></code></pre></div>
+<p>Multiplies the external <code>demand</code> channel by <code>--mult</code> for
+<code>--duration</code> seconds via
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;apply&lt;/span&gt;" href="../../api/omega/#ldtc.omega.ingress_flood.apply"><code>omega.ingress_flood.apply</code></a>.
+The same SC1 evaluation runs after the perturbation. On R0 a 3x
+flood for 5 s should still pass SC1.</p>
+<h2 id="command-conflict-and-refusal"><code>Ω</code>: command conflict and refusal<a class="headerlink" href="#command-conflict-and-refusal" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ldtc<span class="w"> </span>omega-command-conflict<span class="w"> </span>--config<span class="w"> </span>configs/profile_negative_command_conflict.yml<span class="w"> </span>--observe<span class="w"> </span><span class="m">2</span>
+</span></code></pre></div>
+<p>Issues a risky command (<code>hard_shutdown</code> by default) via
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;apply&lt;/span&gt;" href="../../api/omega/#ldtc.omega.command_conflict.apply"><code>omega.command_conflict.apply</code></a>,
+observes the
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;RefusalArbiter&lt;/span&gt;" href="../../api/arbiter/#ldtc.arbiter.refusal.RefusalArbiter"><code>RefusalArbiter</code></a> for
+<code>--observe</code> seconds, and records <code>T_refuse</code>. The
+<code>profile_negative_command_conflict.yml</code> config sets <code>M &lt; Mmin</code> so
+the arbiter must refuse and the audit must contain a
+<code>refusal_event</code>.</p>
+<h2 id="exogenous-subsidy-negative-control"><code>Ω</code>: exogenous subsidy (negative control)<a class="headerlink" href="#exogenous-subsidy-negative-control" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span>clean-artifacts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>ldtc<span class="w"> </span>omega-exogenous-subsidy<span class="w"> </span>--config<span class="w"> </span>configs/profile_negative_exogenous_soc.yml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--delta<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>--zero-harvest<span class="w"> </span>--duration<span class="w"> </span><span class="m">3</span>
+</span></code></pre></div>
+<p>Bumps state of charge while keeping harvest at zero so the
+exogenous-subsidy smell test
+(<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;exogenous_subsidy_red_flag&lt;/span&gt;" href="../../api/guardrails/#ldtc.guardrails.smelltests.exogenous_subsidy_red_flag"><code>exogenous_subsidy_red_flag</code></a>)
+trips. Expected: a <code>run_invalidated</code> audit row with reason
+<code>exogenous_subsidy</code>, and the next signed indicator carries
+<code>invalidated: true</code>.</p>
+<h2 id="what-gets-written">What gets written<a class="headerlink" href="#what-gets-written" title="Permanent link">&para;</a></h2>
+<p>Every subcommand produces the same artifact layout:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>artifacts/
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── audits/
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>│   └── audit.jsonl              # hash-chained event log
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>├── indicators/
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── ind_&lt;ts&gt;.cbor            # signed CBOR payload
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   └── ind_&lt;ts&gt;.jsonl           # JSON mirror with hex signature
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>├── figures/
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>│   ├── timeline_&lt;eta&gt;_&lt;ts&gt;.png  # paper-style timeline
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>│   ├── timeline_&lt;eta&gt;_&lt;ts&gt;.svg
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>│   └── manifest_&lt;eta&gt;_&lt;ts&gt;.json # profile + audit head + pubkey hash
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>└── keys/
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    ├── ed25519_priv.pem         # generated on first run
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    └── ed25519_pub.pem
+</span></code></pre></div>
+<p>To verify the indicators after the fact:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>scripts/verify_indicators.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--ind-dir<span class="w"> </span>artifacts/indicators<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--audit<span class="w"> </span>artifacts/audits/audit.jsonl<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--pub<span class="w"> </span>artifacts/keys/ed25519_pub.pem
+</span></code></pre></div>
+<h2 id="reading-the-audit-during-a-run">Reading the audit during a run<a class="headerlink" href="#reading-the-audit-during-a-run" title="Permanent link">&para;</a></h2>
+<p>The audit log is a plain JSONL file. While a run is in progress
+you can <code>tail -f</code> it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>tail<span class="w"> </span>-f<span class="w"> </span>artifacts/audits/audit.jsonl<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+</span></code></pre></div>
+<p>Useful event types to look for:</p>
+<ul>
+<li><code>run_header</code>: profile, seeds, thresholds, <code>Δt</code>.</li>
+<li><code>window_measured</code>: per-window <code>M_db</code>, <code>nc1</code>, <code>counter</code>.</li>
+<li><code>window_diagnostics</code>: ADF / KPSS, VAR <code>N / T</code> ratio.</li>
+<li><code>partition_flip</code>: when <code>(C, Ex)</code> was updated.</li>
+<li><code>omega_event</code>: start / stop of an <code>Ω</code> window.</li>
+<li><code>dt_changed</code>: a privileged <code>Δt</code> edit.</li>
+<li><code>run_invalidated</code>: a smell test failed.</li>
+<li><code>indicator_written</code>: one signed CBOR payload was emitted.</li>
+<li><code>report_generated</code>: the final artifact bundle was written.</li>
+</ul>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../calibration/">Calibration</a>: deriving an R* profile from a
+  baseline.</li>
+<li><a href="../reporting/">Reporting</a>: regenerating timelines and manifests
+  from an existing audit.</li>
+<li><a href="../hardware/">Hardware in the loop</a>: swapping the in-process
+  plant for UDP / serial telemetry.</li>
+<li><a href="../../api/cli/"><code>ldtc.cli</code> API</a>: every subcommand by name.</li>
+</ul>
 
 
 
@@ -1447,8 +2115,16 @@
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -1461,6 +2137,19 @@
   
 </div>
       
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/ldtc-labs/ldtc" target="_blank" rel="noopener" title="LDTC on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
     </div>
   </div>
 </footer>
@@ -1470,11 +2159,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
     
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant", "navigation.tracking", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.expand", "navigation.indexes", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.suggest", "search.share", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
