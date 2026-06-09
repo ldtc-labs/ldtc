@@ -104,6 +104,15 @@ def _dir_influence_linear_conditional(
     when adding lagged predictors from `add_sources` on top of an AR baseline
     and lagged `base_sources`.
 
+    The improvement is measured as the difference of *adjusted* R²
+    between the full model (baseline plus `add_sources`) and the baseline
+    model. Adjusted R² penalizes the extra parameters, so adding lagged
+    predictors that carry no genuine predictive information yields an
+    expected improvement of approximately zero rather than the positive
+    bias (`≈ k_added / n`) of an in-sample partial R². This is what keeps
+    the estimator honest on the short windows used by the harness, so that
+    `L_loop` and `L_ex` reflect real, not spurious, predictive dependence.
+
     Args:
         x: Array of shape `(T, N)` with time along the first dimension.
         p: Number of lags for the linear model.
@@ -113,7 +122,8 @@ def _dir_influence_linear_conditional(
         targets: Target signal indices to evaluate.
 
     Returns:
-        Mean partial R² improvement across `targets`.
+        Mean adjusted-R² improvement across `targets`, clamped to
+        `[0, 1]`.
     """
     X, Y = _lag_matrix(x, p)
     Tm, N = Y.shape
@@ -126,40 +136,45 @@ def _dir_influence_linear_conditional(
             out.extend((idx_arr + lag * Nsig).tolist())
         return out
 
+    def adj_r2(design: np.ndarray, y: np.ndarray) -> float:
+        # Adjusted R^2 for an OLS fit of (mean-centered) y on a
+        # mean-centered design (the centering absorbs the intercept).
+        n = y.shape[0]
+        k = design.shape[1]
+        if k == 0:
+            return 0.0
+        if n - k - 1 <= 0:
+            return float("nan")
+        beta, *_ = np.linalg.lstsq(design, y, rcond=None)
+        resid = y - design @ beta
+        ssr = float(np.sum(resid * resid))
+        sst = float(np.sum(y * y)) + 1e-12
+        r2 = 1.0 - ssr / sst
+        return 1.0 - (1.0 - r2) * (n - 1) / (n - k - 1)
+
+    Xc = X - X.mean(axis=0, keepdims=True)
+    Yc = Y - Y.mean(axis=0, keepdims=True)
+
     r2_improvements = []
     for t in targets:
-        cols_ar = np.array(cols_for([t]), dtype=int)
+        cols_ar = cols_for([t])
         # Exclude the target from add/base sources to avoid self-lag duplication
         base_eff = [s for s in base_sources if s != t]
         add_eff = [s for s in add_sources if s != t]
-        cols_base = np.array(cols_for(base_eff), dtype=int) if len(base_eff) else np.array([], dtype=int)
-        cols_add = np.array(cols_for(add_eff), dtype=int) if len(add_eff) else np.array([], dtype=int)
-        # Build baseline and additional predictor matrices
-        X_base = np.concatenate([X[:, cols_ar], X[:, cols_base]], axis=1) if len(cols_base) else X[:, cols_ar]
-        A_add = X[:, cols_add] if len(cols_add) else np.zeros((X.shape[0], 0))
-        y = Y[:, t]
-        # Compute partial R^2 of add predictors given baseline using QR residualization
-        if X_base.size == 0:
-            # Should not occur; fallback to variance about mean
-            r = y - np.mean(y)
-            A_perp = A_add
-        else:
-            Qb, _ = np.linalg.qr(X_base, mode="reduced")
-            yhat_b = Qb @ (Qb.T @ y)
-            r = y - yhat_b
-            if A_add.size:
-                A_perp = A_add - Qb @ (Qb.T @ A_add)
-            else:
-                A_perp = A_add
-        denom = float(np.sum(r * r)) + 1e-12
-        if A_perp.size == 0:
-            r2_add = 0.0
-        else:
-            beta_add, *_ = np.linalg.lstsq(A_perp, r, rcond=None)
-            rhat = A_perp @ beta_add
-            num = float(np.sum(rhat * rhat))
-            r2_add = max(0.0, min(1.0, num / denom))
-        r2_improvements.append(r2_add)
+        cols_base = cols_for(base_eff)
+        cols_add = cols_for(add_eff)
+        base_idx = np.array(cols_ar + cols_base, dtype=int)
+        full_idx = np.array(cols_ar + cols_base + cols_add, dtype=int)
+        y = Yc[:, t]
+        if len(cols_add) == 0:
+            r2_improvements.append(0.0)
+            continue
+        adj_base = adj_r2(Xc[:, base_idx], y)
+        adj_full = adj_r2(Xc[:, full_idx], y)
+        if not (np.isfinite(adj_base) and np.isfinite(adj_full)):
+            # Too few samples per parameter to assess this target reliably.
+            continue
+        r2_improvements.append(max(0.0, min(1.0, adj_full - adj_base)))
     return float(np.mean(r2_improvements)) if r2_improvements else 0.0
 
 
@@ -368,12 +383,16 @@ def _bootstrap(
     if T < 12:
         return (np.nan, np.nan)
     # Default block length ~ window/4, with a small floor
+    if n_draws < 2:
+        return (np.nan, np.nan)
     blk = int(block) if block is not None else max(4, T // 4)
     idxs = block_bootstrap_indices(T, blk, n_draws)
     vals: List[float] = []
     for idx in idxs:
         vals.append(fn(x[idx]))
     arr = np.asarray(vals, dtype=float)
+    if arr.size == 0 or np.all(np.isnan(arr)):
+        return (np.nan, np.nan)
     lo, hi = np.nanpercentile(arr, [2.5, 97.5]).tolist()
     return lo, hi
 

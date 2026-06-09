@@ -1,16 +1,25 @@
-# Negative control: controller disabled (no throttle/cool/repair)
+# Negative control: controller disabled (loop disengaged -> passive matter).
+#
+# With the self-maintenance loop disengaged, the internal nodes are driven
+# directly by independent exogenous channels, so exchange dominates and NC1
+# must fail (expected median M well below 0 dB). This is the primary negative
+# control for the loop-dominance claim.
 profile_id: 0
-dt: 0.01
-window_sec: 0.2
+realtime: false
+dt: 0.05
+window_sec: 3.0
 method: linear
 p_lag: 3
-n_boot: 16
+n_boot: 32
+mi_lag: 1
+mi_k: 5
 Mmin_db: 3.0
 epsilon: 0.15
 tau_max: 60.0
-baseline_sec: 8.0
+baseline_sec: 18.0
+diag_cadence_windows: 25
 controller_disabled: true
 # Reproducible seeds
 seed: 7
-
-
+seed_py: 7
+seed_np: 7

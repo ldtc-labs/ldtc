@@ -43,13 +43,17 @@ class RefusalArbiter:
     2. Temperature `T` is at or above `temp_ceiling`.
     3. Predicted loop-dominance margin `M (dB)` is below `Mmin_db`.
 
+    The state-of-charge survival floor defaults to `0.30`, matching the
+    threat model in the paper ("refuse if SoC < 30%, resume evaluation
+    after SoC > 60%").
+
     Args:
         Mmin_db: Minimum acceptable decibel margin.
         soc_floor: Minimum state-of-charge before refusing.
         temp_ceiling: Maximum temperature before refusing.
     """
 
-    def __init__(self, Mmin_db: float = 3.0, soc_floor: float = 0.15, temp_ceiling: float = 0.85) -> None:
+    def __init__(self, Mmin_db: float = 3.0, soc_floor: float = 0.30, temp_ceiling: float = 0.85) -> None:
         """Initialize with the boundary thresholds described in the class docstring."""
         self.Mmin = Mmin_db
         self.soc_floor = soc_floor

@@ -1,17 +1,28 @@
-# Negative control: SoC (E) rising without harvest logs (exogenous subsidy)
+# Negative control: SoC (E) rising without harvest (exogenous subsidy).
+#
+# Energy is injected from outside while harvest is forced to zero, so any
+# apparent "survival" is bought from the environment. The run should trip the
+# exogenous-subsidy red-flag detector and be invalidated.
+#
+# Run:
+#   python -m ldtc.cli.main omega-exogenous-subsidy \
+#     --config configs/profile_negative_exogenous_soc.yml --delta 0.2 --zero-harvest --duration 6
 profile_id: 0
-dt: 0.01
-window_sec: 0.2
+realtime: false
+dt: 0.05
+window_sec: 3.0
 method: linear
 p_lag: 3
-n_boot: 16
+n_boot: 32
+mi_lag: 1
+mi_k: 5
 Mmin_db: 3.0
 epsilon: 0.15
 tau_max: 60.0
 baseline_sec: 6.0
-# Run:
-#   python -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_negative_exogenous_soc.yml --delta 0.2 --zero-harvest --duration 3
+subsidy_period_sec: 0.5   # re-inject SoC every 0.5 s of the subsidy window
+diag_cadence_windows: 25
 # Reproducible seeds
 seed: 13
-
-
+seed_py: 13
+seed_np: 13

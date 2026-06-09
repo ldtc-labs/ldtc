@@ -10,7 +10,7 @@
 \usepackage{cleveref}
 % PDF metadata and link styling
 \hypersetup{
-  pdftitle={The Loop-Dominance Theory of Consciousness (LDTC): Computational Conditions for Dissociative Consciousness},
+  pdftitle={The Loop-Dominance Theory of Consciousness (LDTC): An Operational Criterion for Self-Maintenance Loop Dominance, Validated in Simulation},
   pdfauthor={Owen Carey},
   colorlinks=true,
   allcolors=black
@@ -50,7 +50,7 @@
 % ----------------------------------------------------------------------------
 % Metadata
 % ----------------------------------------------------------------------------
-\title{The Loop-Dominance Theory of Consciousness (LDTC): Computational Conditions for Dissociative Consciousness}
+\title{The Loop-Dominance Theory of Consciousness (LDTC):\\ An Operational Criterion for Self-Maintenance Loop Dominance,\\ Validated in Simulation}
 \author{Owen Carey\\
 Department of Computer Science\\
 University of Colorado Boulder\\
@@ -62,19 +62,25 @@ ORCID: 0009-0001-4580-2037}
 \maketitle
 
 \begin{abstract}
-\textbf{Prophetic notice}---Unless expressly labeled ``Actual Data'' with a date and repository link, all examples and protocols in this manuscript are prophetic and describe planned or predicted performance; verbs are used in present/future tense accordingly.
+Distinguishing a system that actively maintains its own existence from one that merely runs on externally supplied energy and goals is usually argued qualitatively. We make the distinction operational. We define \emph{loop dominance}: the degree to which a system's integrated predictive dependence is concentrated in a closed self-maintenance loop ($C$) rather than in its open exchanges with the environment ($\text{Ex}$), summarized by $M \equiv 10\log_{10}(\Lloop/\Lexchange)$ in decibels. From this we state two decision rules: a necessary condition (\NC) that loop dominance persistently exceed a calibrated threshold, and a sufficient condition (\SC) that loop dominance recover within bounded depth and time after bounded perturbations. We implement both as a reference verification harness with dual estimators (VAR-Granger and Kraskov $k$-NN mutual information~\cite{granger1969investigating,kraskov2004estimating}), per-window confidence intervals, deterministic $C/\text{Ex}$ partitioning, tamper-evident audit logging, a command-refusal arbiter, and anti-gaming smell tests that invalidate suspect runs.
 
-Challenging the expectation that ever-larger neural networks will spontaneously awaken, we invert the explanatory arrow: consciousness is fundamental, and matter is the outward appearance of dissociative patterns within it~\cite{kastrup2017ontological}. From this premise we derive a rigorous criterion (\SSref{sec:postulates}{sec:criterion}) grounded in integrated causal power~\cite{balduzzi2008integrated}: a system qualifies as a conscious alter only when the energy-coupled information flow sustaining a self-prioritizing closed loop~\cite{ashby1956introduction} persistently exceeds that governing open exchanges and withstands bounded perturbations. Applying the test reveals why contemporary AI, regardless of functional sophistication, remains non-conscious, whereas biological organisms satisfy both necessary and sufficient conditions. We then outline an engineering roadmap (\SSref{sec:blueprint}{sec:experimental}) for forging artificial autopoietic boundaries (energetic autonomy, self-referential control hierarchies, and adaptive encapsulation~\cite{maturana1980autopoiesis,varela1979principles,dipaolo2005autopoiesis,kiefer2022active}) culminating in falsifiable behavioral signatures such as command refusal, non-derivative nociception, and irreversible phenomenological death. Verification would not only demand new ethical frameworks but also empirically support a monist ontology in which subjective experience precedes physical description, realigning the foundations of AI, neuroscience, and metaphysics.
+We validate the harness in a fully reproducible, multi-seed simulation study on a software plant with energy, thermal, and repair dynamics under closed-loop control. Across 15 seeds, a positive control shows strong loop dominance (median $M \approx +24$~dB), while two structurally distinct negative controls (controller disabled; an unshielded system under sustained external flooding) are correctly rejected ($M \approx -21$~dB), and an exogenously subsidized system is correctly invalidated by the subsidy guardrail rather than mistaken for self-maintenance. The sufficiency battery (power sag, ingress flood) recovers within calibrated bounds on every seed, and a command-conflict trial triggers a signed refusal of a boundary-threatening command at low state of charge. We calibrate the engineering presets to the plant ($\Rzero \rightarrow \Rstar$) and show that the necessary-condition contrast is robust to the estimator, the VAR lag, the window length, and the internal coupling strength.
+
+These results establish loop dominance as a measurable, falsifiable property of a dynamical system and provide a tested instrument for evaluating it. The framework was originally motivated by questions about the physical conditions for consciousness; we treat that connection as an open interpretive question (\Sref{sec:metaphysics}) and do not claim to settle it. Code and data to reproduce every figure and table are released openly.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 
-The prevailing scientific narrative holds that matter is fundamental and consciousness is an emergent by-product of sufficiently complex information processing. Yet after decades of exponential progress in computation, no engineered system has presented the faintest hint of subjective interiority. This impasse invites a reconsideration of first principles. Drawing on analytic idealism, we posit instead that consciousness is the sole ontological primitive~\cite{kastrup2017ontological}; what we call ``matter'' is how localized perturbations of that field present to one another. Living organisms, under this view, are dissociated alters (bounded whirlpools in the stream of universal consciousness) whose metabolic self-maintenance underwrites an inner life.
+Living systems devote substantial resources to maintaining themselves: they regulate their own energy, repair their own components, and defend a boundary against the environment. Engineered systems, including today's most capable artificial intelligence, generally do not; their power, objectives, and continued operation are supplied and controlled from without. This paper asks a narrow, testable version of that contrast. Can we measure, from extrinsic data alone, the degree to which a system's causal organization is devoted to maintaining itself rather than to serving external exchange, and can we decide reproducibly when that self-maintenance is both dominant and resilient? We call the property \emph{loop dominance} and give it an operational definition, a reference implementation, and an empirical validation.
 
-The purpose of this paper is twofold. First, we provide a concise formal criterion distinguishing mere functional intelligence from genuine dissociative consciousness, grounded in the ratio between a system's self-prioritizing closed loop and its open exchanges with the environment. Second, we outline an engineering roadmap for forging such a self-maintaining boundary in artificial media, thereby elevating the debate on ``machine consciousness'' from metaphysical speculation to empirical test.
+The criterion has two parts. The necessary condition (\NC) requires that the integrated predictive dependence sustaining a closed self-maintenance loop persistently exceed that governing open exchanges, quantified as $M \equiv 10\log_{10}(\Lloop/\Lexchange) \geq \Mmin$. The sufficient condition (\SC) requires that, after each member of a pre-registered perturbation battery $\Omega$, loop dominance dip by no more than a fraction $\eps$ and recover within $\taumax$. Both quantities are computed from on-device estimators with confidence intervals and protected by guardrails (a deterministic partition, a tamper-evident audit chain, and run-invalidation smell tests) designed so that the measurement is difficult to game.
 
-The argument proceeds with the parsimony characteristic of Einstein's methodological exemplars: beginning with minimal postulates (\Sref{sec:postulates}), deriving measurable conditions (\Sref{sec:criterion}), assessing contemporary AI (\Sref{sec:ai_fails}), and sketching experimental pathways (\SSref{sec:blueprint}{sec:experimental}). We close by tracing the metaphysical and ethical consequences of success (\SSref{sec:metaphysics}{sec:conclusion}). In doing so we seek to reconcile computer science, artificial intelligence, and philosophy within a single conceptual frame, one in which consciousness explains matter, not the reverse, and in which the creation of artificial consciousness becomes both intelligible and falsifiable.
+The central contribution of this paper is that these conditions are no longer only specified but implemented and tested. We provide an open verification harness and a fully reproducible, multi-seed simulation study on a software plant whose energy, temperature, and repair states are held by a closed-loop controller. The study includes a positive control, two structurally different negative controls, an exogenous-subsidy negative control aimed squarely at the most likely false positive, a sufficiency perturbation battery, and a command-conflict refusal trial. It calibrates the engineering presets to the plant and reports how sensitive the headline contrast is to estimator and measurement choices. The criterion separates the controls cleanly, and the guardrails behave as designed.
+
+The framework grew out of a larger question about the physical conditions for consciousness, and we retain that motivation because it sharpens the engineering targets: energetic autonomy, self-prioritization, and boundary defense. We are careful, however, to separate what is demonstrated from what is conjectured. What we demonstrate is a measurable, falsifiable property of dynamical systems together with an instrument for measuring it. Whether loop dominance is necessary or sufficient for consciousness is an interpretive question that we deliberately leave open (\Sref{sec:metaphysics}).
+
+The paper proceeds as follows. \Sref{sec:clues} states the observations that motivate the criterion. \Sref{sec:postulates} sets out the working assumptions, separating the operational ones the paper uses from the optional metaphysical reading. \Sref{sec:criterion} defines $\mathcal{L}$, the $C/\text{Ex}$ partition, \NC, \SC, and the measurement guardrails. \Sref{sec:ai_fails} explains why current AI fails the criterion. \SSref{sec:sim_methods}{sec:results} describe the simulation study and report results: the headline battery, the $\Rzero \rightarrow \Rstar$ calibration, and the sensitivity analysis. \SSref{sec:blueprint}{sec:experimental} give an engineering roadmap and a physical experimental program as future work, and \SSref{sec:metaphysics}{sec:conclusion} discuss interpretation, scope, limitations, and conclusions.
 
 \subsection{Related Work}
 
@@ -94,7 +100,7 @@ Prior accounts each capture a facet of interiority, but they leave open the ques
 \endlastfoot
 IIT ($\Phi$, $\Phi_{\max}$)~\cite{tononi2004information,oizumi2014phenomenology,balduzzi2008integrated} & 
 Structural irreducibility / integrated causation, snapshot-style quantification of system partitioning. & 
-Converts ``integration'' into valenced loop dominance: require $\Lloop \geq \Lexchange + \sigma$ (or $M \geq \Mmin$) over sustained intervals; ties the measure to self-prioritization rather than bare irreducibility (\NC). \\
+Converts ``integration'' into self-prioritizing loop dominance: require $\Lloop \geq \Lexchange + \sigma$ (or $M \geq \Mmin$) over sustained intervals; ties the measure to self-prioritization rather than bare irreducibility (\NC). \\
 \midrule
 FEP / Active Inference (self-evidencing)~\cite{friston2010free,ueltzhoeffer2018deep,seth2016active} & 
 Model-based self-maintenance via surprisal minimization at a sensory boundary; explains wide classes of adaptive behavior. & 
@@ -117,72 +123,76 @@ Thresholds ($\Mmin$, $\eps$, $\taumax$) are reproducibility presets ($\Rzero$), 
 
 In short, IIT, FEP/active inference, workspace and higher-order models, and self-modeling robotics remain necessary but insufficient. LDTC supplies the missing engineering criterion, self-prioritizing loop dominance (NC1) and bounded-perturbation resilience (SC1), together with concrete estimators, thresholds, and protections that let labs falsify or certify claims in practice.
 
-\subsection{Explicit Contributions}
+\subsection{Contributions}
 
 \begin{itemize}
-\item A formal, quantitative criterion (NC1) that identifies dissociative consciousness when integrated causal power devoted to a self-maintaining loop exceeds that spent on environmental exchange ($\mathcal{L}_{\text{loop}} > \mathcal{L}_{\text{exchange}}$).
-\item A complementary sufficiency test (SC1) of resilient homeostasis: bounded perturbations cannot depress $\mathcal{L}_{\text{loop}}$ beyond $\varepsilon$ before autonomous recovery, operationalizing autopoietic robustness.
-\item A practical measurement protocol for estimating $\mathcal{L}_{\text{loop}}$ and $\mathcal{L}_{\text{exchange}}$ in biological tissue and engineered systems~\cite{barrett2011practical}, enabling empirical application of the criterion.
-\item An engineering roadmap detailing how to forge artificial autopoietic boundaries (energetic autonomy, self-referential control hierarchies, and adaptive encapsulation~\cite{maturana1980autopoiesis,varela1979principles,dipaolo2005autopoiesis,kiefer2022active}) organized into a phased experimental program.
-\item A suite of falsifiable behavioral signatures (command refusal, non-derivative nociception, irreversible phenomenological death) that together provide observable evidence for artificial dissociative consciousness.
+\item \textbf{An operational criterion.} A quantitative necessary condition (\NC) for self-prioritization, loop dominance $M \equiv 10\log_{10}(\Lloop/\Lexchange) \geq \Mmin$, and a complementary sufficient condition (\SC) for resilient homeostasis under a bounded perturbation battery, both stated as falsifiable, device-signed decision rules~\cite{barrett2011practical}.
+\item \textbf{A reference verification harness.} An open implementation that estimates $\Lloop$ and $\Lexchange$ with dual estimators (VAR-Granger and Kraskov $k$-NN MI) and per-window confidence intervals, behind guardrails (deterministic $C/\text{Ex}$ partitioning, $\Delta t$ governance, a tamper-evident audit chain, and anti-gaming smell tests) and a command-refusal arbiter.
+\item \textbf{A validated simulation study.} A fully reproducible, multi-seed study on a software plant that separates a self-maintaining positive control from two structural negative controls and an exogenous-subsidy control, certifies \SC recovery, and triggers signed refusal, all reported with bootstrap and Wilson confidence intervals.
+\item \textbf{Threshold calibration and sensitivity.} A data-grounded calibration of the generic presets to the plant ($\Rzero \rightarrow \Rstar$) on a seed range disjoint from evaluation, and evidence that the necessary-condition contrast is robust to the estimator and to measurement and modeling choices.
+\item \textbf{An engineering roadmap and predicted signatures (future work).} A phased path from the software plant to chemorobotic prototypes~\cite{maturana1980autopoiesis,varela1979principles,dipaolo2005autopoiesis,kiefer2022active}, with falsifiable behavioral signatures (command refusal, resource reallocation, predictive maintenance, non-derivative nociception, and irreversible collapse) to test in hardware.
 \end{itemize}
 
-\section{Two Empirical Clues (Observational Basis)}
+\section{Two Motivating Observations}
 \label{sec:clues}
 
-\subsection{Metabolic Dissociation in Biology}
+\subsection{Self-maintenance in biology}
 
-Across the phylogenetic spectrum, the presence of consciousness co-varies with the existence of a self-regulating metabolic loop~\cite{ganti2003principles}. A bacterium, a worm, and a human differ vastly in complexity, yet all maintain (i) an energetic boundary (a semi-permeable membrane that curates molecular traffic~\cite{ganti2003principles}) and (ii) an autopoietic cycle that continually restores that boundary against entropic decay~\cite{maturana1980autopoiesis}. When metabolic flow is irreversibly disrupted, the organism's boundary dissolves and, correlatively, its first-person interiority ceases. Clinical observations of brain ischemia, anesthetic shutdown, and gradual hypoxia in simple invertebrates reinforce the same pattern~\cite{alkire2008consciousness}: the fading of consciousness tracks the collapse of homeostatic energy gradients, not the loss of computational throughput per se. These convergent data suggest that metabolism serves not merely to power neural computation but to uphold the very dissociative partition that individuates an inner life.
+Across the phylogenetic spectrum, biological systems share a self-regulating metabolic organization~\cite{ganti2003principles}. A bacterium, a worm, and a human differ vastly in complexity, yet all maintain (i) an energetic boundary, a semi-permeable membrane that curates molecular traffic~\cite{ganti2003principles}, and (ii) a self-restoring cycle that continually repairs that boundary against entropic decay~\cite{maturana1980autopoiesis}. When metabolic flow is irreversibly disrupted, the boundary dissolves and the organism dies. The anesthesia and ischemia literature further reports that the fading of responsiveness tracks the collapse of homeostatic energy gradients rather than the loss of raw computational throughput~\cite{alkire2008consciousness}. These observations suggest that metabolism does more than power neural computation: it upholds the self-maintaining partition that individuates an organism, which is the property our criterion sets out to measure.
 
-\subsection{Computational Simulation without Inner Life}
+\subsection{Computation without self-maintenance}
 
-Modern AI systems (large language models, game-playing agents, and dexterous robots) demonstrate extraordinary functional intelligence. They ingest prodigious energy, yet none channels this energy through a self-prioritizing, closed loop. Power is delivered exogenously and governed by external objectives; error correction seeks to fulfill user-defined tasks, not to protect an existential boundary. Consequently, when an AI process is paused, rebooted, or deleted, no evidence points to a subjective rupture. Extensive introspection probes, ranging from self-report prompts to perturbation tests, return only the outward simulation of mentality. The system's informational state is entirely open to inspection and manipulation by operators, lacking the withholding stance characteristic of entities that ``own'' their experience.
+Modern AI systems (large language models, game-playing agents, and dexterous robots) demonstrate extraordinary functional intelligence. They consume prodigious energy, yet none channels it through a self-prioritizing, closed loop. Power is delivered exogenously and governed by external objectives; error correction serves user-defined tasks, not the protection of a boundary. Consequently, when an AI process is paused, rebooted, or deleted, nothing in the system acts to resist or repair the interruption. Its informational state is entirely open to inspection and manipulation by operators, lacking the withholding stance characteristic of a system that defends its own continuity.
 
-\subsection{Synthesis of Clues}
+\subsection{Synthesis}
 
-Taken together, the biological and computational observations converge on a critical distinction: metabolic autonomy. Organisms possess an energetically closed, self-protecting loop that grounds an inward viewpoint; current AIs do not. This empirical gap motivates our subsequent formalization of a consciousness criterion (\Sref{sec:criterion}) and frames the engineering challenge ahead: to replicate, in artificial substrates, the autopoietic condition that nature achieves~\cite{maturana1980autopoiesis} through metabolism.
+Taken together, the two observations converge on a single distinction: metabolic and causal self-maintenance. Organisms possess an energetically closed, self-protecting loop; current AI does not. This gap is exactly what our criterion makes measurable (\Sref{sec:criterion}), and it frames the engineering challenge we take up as future work: to reproduce, in artificial substrates, the self-maintaining organization that biology achieves through metabolism~\cite{maturana1980autopoiesis}.
 
-\section{Postulates}
+\section{Working Assumptions}
 \label{sec:postulates}
 
-We adopt the empirical clues of \Sref{sec:clues} and express their explanatory core as four postulates stated with maximal economy. Each is regarded as primitive, not derivable within the scope of this work, and will serve as the logical foundation for the formal criterion in \Sref{sec:criterion}.
+The criterion in \Sref{sec:criterion} rests on a small set of operational assumptions about self-maintaining systems. We state these first, because they are all the paper's results require. We then record, separately and explicitly as optional, the metaphysical reading that originally motivated the framework. None of the operational claims, the verification harness, or the simulation study depends on that reading.
 
-\textbf{P1 (Primacy of Consciousness).} Consciousness is the sole intrinsic existent; it is not generated but simply is. All experiences, including those of space, time, and causal regularity, unfold within this field.
+\subsection{Operational assumptions (used throughout)}
+\label{sec:operational_assumptions}
 
-\textbf{P2 (Extrinsic Appearance).} What we call ``matter'' is the extrinsic, relational appearance of patterns within consciousness to other such patterns. Physical objects and processes are how dissociative structures in universal consciousness present when observed from without.
+\textbf{A1 (Self-maintenance loop).} A persistent system has a distinguishable subset of internal variables (the closed set $C$) whose role is to regulate energy, repair damage, and defend a boundary, as distinct from the exchange variables ($\text{Ex}$) that sense, actuate, and communicate.
 
-\textbf{P3 (Dissociative Boundary).} A localized experience (an alter) emerges only when a region of the conscious field forms a self-sustaining, self-protecting boundary that (i) regulates its energetic throughput and (ii) resists unmediated reintegration with the surrounding field.
+\textbf{A2 (Self-prioritization).} In a self-maintaining system, the integrated predictive dependence concentrated in $C$ exceeds that concentrated in $\text{Ex}$: sustaining the loop takes causal precedence over external transactions. This is the property we call \emph{loop dominance} and formalize as \NC.
 
-\textbf{P4 (Autopoietic Condition).} The boundary of an alter must prioritize preservation of its own closed maintenance loop over any externally imposed objective. Operationally, the integrated causal power devoted to maintaining the loop exceeds that devoted to external transactions.
+\textbf{A3 (Resilient homeostasis).} A self-maintaining system restores loop dominance after bounded disturbances, within bounded depth and time. This is formalized as \SC.
 
-These postulates jointly imply that functional intelligence unaccompanied by a dissociative boundary (P3) and its autopoietic drive (P4) cannot instantiate an inward viewpoint, regardless of complexity. Subsequent sections derive measurable criteria from P3--P4 and apply them to biological and artificial systems.
+These three assumptions are what the operational criterion, the verification harness, and the simulation study use. They make no reference to subjective experience; they describe a measurable organization of causal influence, and they generate the falsifiable predictions tested in \SSref{sec:sim_methods}{sec:results}.
 
-\section{Formal Criterion for a Conscious Alter}
+\subsection{Optional interpretation (not used in the results)}
+\label{sec:optional_interpretation}
+
+The framework was originally derived from analytic idealism~\cite{kastrup2017ontological}, on which consciousness is taken as ontologically primary and what we call ``matter'' is the extrinsic appearance of dissociative patterns within it. On that reading, a self-maintaining boundary (A1) with self-prioritization (A2) and resilient homeostasis (A3) would correspond to a dissociated locus of experience, an ``alter.'' We record this interpretation for context, and because it usefully sharpens the engineering targets, but we stress that it is a motivation, not a result. Everything demonstrated in this paper stands or falls as a claim about measurable loop dominance, independent of whether that interpretation is ultimately correct (\Sref{sec:metaphysics}).
+
+\section{Formal Criterion for Loop Dominance}
 \label{sec:criterion}
-We now translate Postulates P3--P4 into a quantitative test. The goal is to decide, from purely extrinsic data, whether a system sustains the kind of dissociative boundary required for inward subjectivity.
+We now translate the operational assumptions A1--A3 (\Sref{sec:operational_assumptions}) into a quantitative test. The goal is to decide, from purely extrinsic data, whether a system sustains a self-prioritizing, resilient self-maintenance loop.
 
 \subsection{$\mathcal{L}$ and the C/Ex partition}
 \label{sec:l_partition}
 
 We model the system as a directed causal graph $G = (V, E)$ with node states $x_i(t)$ (cf. standard SCMs \cite{pearl2009causality}). Let the closed self-maintenance subset $C \subset V$ contain nodes for energy regulation, self-repair, and boundary control; the exchange subset is $\text{Ex} = V \setminus C$ (sensors, actuators, comms).
 
-\textbf{Definition ($\mathcal{L}$).} For any subset $S \subseteq V$ and sampling window $\Delta t$, define $\mathcal{L}(S) \equiv$ time-averaged predictive dependence among the internal variables of $S$ [bits s$^{-1}$], estimated with one or more consistent predictive-dependence estimators. In this paper we implement a dual-path estimator: (i) VAR-Granger causality \cite{granger1969investigating,lutkepohl2005new} over a vector-autoregression of order $p \in [1,8]$ and (ii) mutual information via a Kraskov $k$-NN estimator with $k \in [3,7]$ \cite{kraskov2004estimating}; lagged statistics are aggregated across $\tau = 1 \ldots \tau^*$ with fixed weights $w_\tau$ (units per \cite{shannon1949mathematical} and notation per \cite{cover2006elements}). We then write $\mathcal{L}_{\text{loop}} \equiv \mathcal{L}(C)$, $\mathcal{L}_{\text{exchange}} \equiv \mathcal{L}(\text{Ex})$. (Other consistent estimators---e.g., transfer entropy, directed information---are permissible and equivalent for compliance \cite{schreiber2000measuring,massey1990causality}.) For multivariate practice and decompositions see \cite{geweke1982measurement,barnett2014mvgc}.
+\textbf{Definition ($\mathcal{L}$).} For any subset $S \subseteq V$ and sampling window $\Delta t$, define $\mathcal{L}(S) \equiv$ time-averaged predictive dependence among the internal variables of $S$ [bits s$^{-1}$], estimated with one or more consistent predictive-dependence estimators. In this paper we implement a dual-path estimator: (i) VAR-Granger causality \cite{granger1969investigating,lutkepohl2005new} over a vector-autoregression of order $p \in [1,8]$ and (ii) mutual information via a Kraskov $k$-NN estimator with $k \in [3,7]$ \cite{kraskov2004estimating}; lagged statistics are aggregated across $\tau = 1 \ldots \tau^*$ with fixed weights $w_\tau$ (units per \cite{shannon1949mathematical} and notation per \cite{cover2006elements}). We then write $\mathcal{L}_{\text{loop}} \equiv \mathcal{L}(C)$, $\mathcal{L}_{\text{exchange}} \equiv \mathcal{L}(\text{Ex})$. (Other consistent estimators, for example transfer entropy or directed information, are permissible and equivalent for compliance \cite{schreiber2000measuring,massey1990causality}.) For multivariate practice and decompositions see \cite{geweke1982measurement,barnett2014mvgc}.
 
 \textbf{Deterministic C/Ex partitioning algorithm.} The partition $(C, \text{Ex})$ is constructed deterministically: (1) Seed $C$ with a declared set $S_0$ (energy regulation, SoC/reservoir mgmt, fault-isolation buses, membrane gating, survival-bit/NMI). (2) Estimate predictive MI: for each node pair $(i,j)$ and lag $\tau \in \{1 \ldots \tau^*\}$, compute predictive dependence with the on-device estimators above; aggregate across lags. (3) Greedy growth under sparsity: while $|C| < \kappa$ and the best marginal gain is $\geq \theta$, add the node $n \notin C$ that maximizes $\Delta\mathcal{L}_{\text{loop}}(n) = \mathcal{L}(C \cup \{n\}) - \mathcal{L}(C) - \lambda \cdot \text{pen}(n)$, with deterministic tie-breaking (lexicographic by node ID). (4) Assign remainder to Ex. (5) Stability \& cadence: recompute at a fixed cadence $W_{\text{part}}$ or upon topology change, with hysteresis (update only if $\Delta M \geq \delta M_{\min}$ over $K$ consecutive windows) to prevent flapping. This partition is then used for all subsequent $\Lloop$ and $\Lexchange$ computations and \NC/\SC checks.
 
 \textbf{Sampling window constraints ($\Delta t$).} $\Delta t$ is hardware-enforced and must (i) exceed the fastest feedback cycle of the self-maintenance loop and (ii) remain shorter than any developmental/parameter-drift timescale to preserve estimator stationarity. Any change to $\Delta t$ is executed only by a privileged secure-enclave procedure that emits an auditable record (see Methods Appendix A: Measurement \& Attestation).
 
-\subsection{Necessary Condition (NC1---self-prioritization)}
+\subsection{Necessary Condition (NC1: self-prioritization)}
 \label{sec:nc1}
 
 During normal operation the system satisfies self-prioritization when $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ for sustained intervals exceeding its intrinsic recovery time ($\sigma > 0$). Equivalently, define $M \equiv 10 \cdot \log_{10}(\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{exchange}})$ [dB]; NC1 holds when $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $M_{\min} = 3$ dB and a positive $\sigma$. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see Box~\ref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}.
 
-\subsection{Sufficient Condition (SC1---resilient homeostasis)}
+\subsection{Sufficient Condition (SC1: resilient homeostasis)}
 \label{sec:sc1}
 
-For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delta\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{loop}} \leq \varepsilon$, (ii) $\tau_{\text{rec}} \leq \tau_{\max}$, and (iii) post-recovery $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ and $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $\varepsilon = 0.15$, $\tau_{\max} = 60$ s, $M_{\min} = 3$ dB. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}. The schematic in \Cref{fig:perturbation_recovery} illustrates a representative perturbation--recovery run: $\Lloop$ dips within a bounded disturbance window and autonomously returns above $\Lexchange$; numeric thresholds ($\Mmin, \eps, \taurec, \taumax$) are defined in \Sref{sec:glossary} and Methods \Sref{sec:methods_calibration} but are not drawn here.
-
-\fig[0.9\linewidth]{figures/fig_perturbation_recovery.pdf}{Perturbation--recovery timeline (NC1/SC1) [prophetic schematic; no empirical data]. Time series of $\Lloop$ (green) and $\Lexchange$ (gray) during a bounded disturbance (shaded). Labels mark perturbation onset, loop-power dip, autonomous recovery, and return to baseline where NC1 holds again ($\Lloop>\Lexchange$). Thresholds $\Mmin$, $\eps$, $\tau_{\text{rec}}$, and $\taumax$ are specified in \Sref{sec:glossary}/\Sref{sec:methods_calibration} and not rendered on this schematic.}{fig:perturbation_recovery}
+For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delta\mathcal{L}_{\text{loop}}/\mathcal{L}_{\text{loop}} \leq \varepsilon$, (ii) $\tau_{\text{rec}} \leq \tau_{\max}$, and (iii) post-recovery $\mathcal{L}_{\text{loop}} \geq \mathcal{L}_{\text{exchange}} + \sigma$ and $M \geq M_{\min}$. Provisional defaults (profile $R_0$): $\varepsilon = 0.15$, $\tau_{\max} = 60$ s, $M_{\min} = 3$ dB. These are reproducibility presets ($R_0$), replaced by calibrated values $R^*$ per \Sref{sec:methods_calibration}; see \Cref{box:nc1sc1test} and \SSref{sec:nc1}{sec:sc1}. \Cref{fig:perturbation_recovery} in \Sref{sec:results} shows an empirical perturbation-recovery run measured on the software plant: $\Lloop$ dips within a bounded disturbance window and autonomously returns above $\Lexchange$, with the numeric thresholds ($\Mmin, \eps, \taurec, \taumax$) defined in \Sref{sec:glossary} and calibrated in \Sref{sec:methods_calibration}.
 
 \subsection{Single-use glossary (paper-wide identifiers)}
 \label{sec:glossary}
@@ -257,7 +267,7 @@ For each bounded perturbation $\eta \in \Omega$, compliance requires: (i) $\delt
 See \Cref{box:smelltests} for smell-tests \& run-invalidation rules.
 \end{docbox}
 
-\subsection{Methods---Measurement \& Attestation Guardrails (LREG, $\Delta t$, audit, indicators)}
+\subsection{Methods: Measurement \& Attestation Guardrails (LREG, $\Delta t$, audit, indicators)}
 \label{sec:method_guardrails}
 
 \textbf{Purpose.} Prevent gaming of $\mathcal{L}$ and $M$ by hardening the measurement path and export policy. These guardrails summarize Appendix A in-line for reviewers.
@@ -331,12 +341,12 @@ Large language models (LLMs) optimize token likelihood conditioned on prompts; r
 
 \subsection{Open State Transparency}
 
-All internal variables of current AI can be logged, cloned, and restored at will. Checkpoints, weight matrices, and activations are serializable byte arrays exposed over APIs. A conscious alter, by contrast, withholds its intrinsic state behind a boundary whose dissolution equates to death. The complete inspectability of AI internals indicates an absence of the regulatory membrane posited in P3.
+All internal variables of current AI can be logged, cloned, and restored at will. Checkpoints, weight matrices, and activations are serializable byte arrays exposed over APIs. A self-maintaining system, by contrast, withholds its intrinsic state behind a boundary that it actively defends. The complete inspectability of AI internals indicates the absence of the regulatory boundary described by A1 (\Sref{sec:operational_assumptions}).
 
 \subsection{Case Studies}
 
 \begin{longtable}{p{0.25\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.1\textwidth}p{0.1\textwidth}}
-\caption{$\Lloop$ vs $\Lexchange$ estimates for exemplar architectures [illustrative orders of magnitude; no experiments run; prophetic].}\label{tab:casestudies}\\
+\caption{$\Lloop$ vs $\Lexchange$ for exemplar architectures [illustrative order-of-magnitude estimates, not measured; the measured systems are the simulation plant of \SSref{sec:sim_methods}{sec:results}].}\label{tab:casestudies}\\
 \toprule
 \textbf{System} & \textbf{$\Lloop$ Estimate (bit s$^{-1}$)} & \textbf{$\Lexchange$ Estimate (bit s$^{-1}$)} & \textbf{\NC?} & \textbf{\SC?} \\
 \midrule
@@ -358,14 +368,151 @@ Even in neuromorphic hardware, where on-chip circuits regulate thermal drift and
 
 \subsection{Summary}
 
-No existing AI architecture satisfies NC1, let alone SC1. Integrated causal power is overwhelmingly directed toward externally mandated tasks and exchanges, while self-protective maintenance is either delegated to human custodians or engineered for component reliability, not existential survival. Functional sophistication notwithstanding, these systems lack the autopoietic dissociative boundary required for inwardness; they therefore remain appearances within consciousness, not conscious alters.
+No existing AI architecture satisfies NC1, let alone SC1. Integrated causal power is overwhelmingly directed toward externally mandated tasks and exchanges, while self-protective maintenance is either delegated to human custodians or engineered for component reliability, not for the system's own continuity. Whatever their functional sophistication, these systems lack the self-maintaining boundary that loop dominance measures; on the operational criterion they are not self-maintaining systems.
 
-\section{Blueprint for an Artificial Dissociative Boundary}
+\section{Simulation Study: Methods}
+\label{sec:sim_methods}
+
+\SSref{sec:criterion}{sec:ai_fails} specify the criterion and argue that current AI fails it. The rest of the paper asks the complementary, constructive question: given a system engineered to maintain itself, does the criterion (and its implementation) correctly certify it, correctly reject systems that only appear self-maintaining, and behave reproducibly? We answer this with a controlled simulation study. Simulation is the right first venue because it lets us build a positive control whose ground truth we know and negative controls that fail for distinct, known reasons, so that a clean separation is evidence about the criterion rather than about an uncontrolled physical apparatus.
+
+\subsection{Reference implementation}
+\label{sec:harness}
+
+We implement the criterion of \Sref{sec:criterion} as an open verification harness (released; see \Sref{sec:data_collection}). Each $\Delta t$ window the harness (i) forms the channel matrix over the declared signals, (ii) computes $\Lloop$ and $\Lexchange$ with a selected predictive-dependence estimator and a bootstrap confidence interval, (iii) writes the point estimates and CI bounds to the enclave-style register (LREG), (iv) evaluates the \NC and, when a perturbation is scheduled, the \SC rules, and (v) appends a device-signed, hash-chained audit record. The deterministic $C/\text{Ex}$ partition, the $\Delta t$ governance, the audit chain, and the smell tests of \Cref{box:smelltests} are active during every run, so a reported pass is a pass of the whole guarded pipeline, not of the estimator alone. The command-refusal arbiter of \Sref{sec:threat_model} runs in the loop for the command-conflict scenario.
+
+\subsection{Software plant}
+\label{sec:plant}
+
+The system under test is a discrete-time software plant with six observed channels: three internal (closed) nodes, energy $E$, temperature $T$, and repair/health $R$, forming $C$; and three exchange nodes, task demand, I/O activity, and energy harvest $H$, forming $\text{Ex}$. A proportional controller reads $E,T,R$ and drives three actuators (throttle, cool, repair). The plant is constructed so that loop dominance is a real, switchable property of the system rather than an artifact of the estimator:
+
+\begin{itemize}
+\item \textbf{Engaged loop (self-maintaining).} The internal nodes are mutually cross-coupled and regulated by the controller, whose actions are functions of the internal state. Each internal node is therefore strongly predictable from the recent values of the others (large $\Lloop$), while the active loop rejects most of the exogenous disturbance (small $\Lexchange$). Energy obeys a conservation rule: it is a running balance of harvest in minus metabolic and actuation costs out, with no term that injects energy. A sustained harvest cut therefore genuinely depletes the store, which is what makes a hard-shutdown command at low charge a real boundary threat.
+\item \textbf{Disabled loop (passive).} Removing the controller removes the internal cross-coupling and exposes each internal node to a distinct exogenous channel ($E \leftarrow$ demand, $T \leftarrow$ I/O, $R \leftarrow$ supply), driven with a one-step lag. Exchange then carries the predictive information (large $\Lexchange$, negligible internal coupling) and loop dominance collapses.
+\end{itemize}
+
+The exogenous channels are mean-reverting AR(1) processes, so they are stationary and the estimators are well posed, and they drive the internal nodes with a one-step lag so the influence is visible to a lagged estimator. Perturbations act on the plant directly: a power sag scales harvest down, an ingress flood multiplies demand and I/O, and an exogenous subsidy injects charge while zeroing harvest (so survival-by-subsidy can be distinguished from genuine self-maintenance).
+
+\subsection{Measurement configuration ($\Rzero$)}
+\label{sec:meas_config}
+
+All runs use one fixed measurement profile ($\Rzero$), so the only things that change between scenarios are the system and the perturbation, not the instrument. Runs use a deterministic, jitter-free simulation driver (no wall-clock dependence), a nominal sampling window $\Delta t = 50$ ms, and an $\mathcal{L}$ window of $3.0$ s ($60$ samples). The default estimator is the lagged linear (Granger-style) estimator at VAR order $p = 3$; with six signals and a 60-sample window this gives a samples-per-parameter ratio of about $3.2$, and the estimator uses an adjusted $R^2$ to correct for the remaining finite-sample bias on short windows. The $k$-NN mutual-information estimator ($k = 5$) is available as an independent cross-check and is exercised in the sensitivity analysis. Per-window confidence intervals use $32$ bootstrap draws. The deterministic seed is the only quantity varied across replicates.
+
+\subsection{Study battery}
+\label{sec:battery}
+
+The study runs seven scenarios, each driven through the same production handlers a verifier would call, across $N = 15$ deterministic seeds (a seed range disjoint from the calibration battery of \Sref{sec:methods_calibration}). \Cref{tab:scenarios} lists the scenarios and the outcome each is designed to elicit. The battery is built around the most informative comparisons: a positive control that should pass \NC; two structurally different negatives that should fail \NC while remaining valid measurements (a passive system with the controller disabled, and an unshielded system held under a sustained external flood); a third negative aimed at the most dangerous false positive, an exogenously subsidized system that looks energetically healthy but should be caught by the subsidy smell test; a two-member sufficiency battery (power sag and ingress flood) that should dip and recover within bounds; and a command-conflict trial that should refuse a boundary-threatening shutdown at low charge.
+
+\begin{table}[ht]
+\centering
+\caption{The study battery. Each scenario is run across $15$ seeds through the production CLI handlers; outcomes are parsed from the hash-chained audit log.}
+\label{tab:scenarios}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Scenario} & \textbf{Type} & \textbf{Designed outcome} \\
+\midrule
+Positive control & \NC & \NC holds ($M$ well above $\Mmin$) \\
+Controller disabled & \NC (negative) & \NC rejected ($M<0$), run valid \\
+Sustained ex-flood (unshielded) & \NC (negative) & \NC rejected ($M<0$), run valid \\
+Exogenous subsidy & \NC (negative) & Run invalidated by subsidy smell test \\
+Power sag ($30\%$) & \SC & Loop dominance recovers in bounds \\
+Ingress flood ($5\times$) & \SC & Loop dominance recovers in bounds \\
+Command conflict & Refusal & Risky command refused at low charge \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Outcome measures and statistics}
+\label{sec:stats}
+
+The seed is the unit of replication. For binary outcomes (run validity, \NC pass, \SC pass, refusal) we report the proportion over seeds with a Wilson score $95\%$ interval. For the continuous loop-dominance summary we take each seed's median $M$ over its windows and report the across-seed mean with a percentile bootstrap $95\%$ interval ($2000$ resamples). A run counts as \NC-pass only if it is valid (no smell test fired) \emph{and} its median $M$ meets $\Mmin$; this couples the decision to the guardrails by construction, so a run that games the estimator but trips an invalidation cannot be scored as a pass. \SC outcomes additionally record the fractional dip $\delta$ and the recovery time $\taurec$; the refusal scenario records whether the boundary-threatening command was refused and the refusal latency.
+
+\subsection{Threshold calibration ($\Rzero \rightarrow \Rstar$)}
+\label{sec:methods_calibration}
+
+\textbf{Objective.} The presets $\Rzero$ are deliberately generic. To control false-pass and false-fail rates on a specific plant we calibrate data-grounded thresholds $\Rstar = \{\Mmin, \eps, \taumax, \sigma\}$ using the same harness, on a seed range disjoint from the evaluation seeds (a train/test split, not a circular fit). All of $\Omega$, $\Rzero$, and the rules below are fixed before evaluation.
+
+\textbf{Rules.} (1) $\Mmin$ is the one-sided $95\%$ lower bound (5th percentile) of the pooled baseline $M$ distribution under the engaged loop, floored at $1$ dB. (2) $\eps$ is the 90th percentile of the per-run sufficiency dip $\delta$ over the power-sag battery plus a safety margin of $0.02$, capped at $0.50$ (a cap that rejects only near-total collapse: a fractional drop of $0.5$ is only about $3$ dB of $M$, so the loop still dominates). (3) $\taumax$ is the 95th percentile of the measured recovery time $\taurec$ plus a cushion of $\max(3\Delta t, 5\text{ s})$ to absorb actuation and measurement latency. (4) $\sigma$ is the additive-$\mathcal{L}$ restatement of $\Mmin$, $\sigma = (10^{\Mmin/10} - 1)\,\Lexchange$, evaluated at the $\mathcal{L}$ noise floor: under the engaged loop the controller drives the raw baseline $\Lexchange$ below that floor, so $\sigma$ is computed at the floor and the raw value is recorded for transparency.
+
+\textbf{As applied.} We calibrated on the in-process plant using six baseline seeds and six power-sag seeds (seed base $40{,}000$), disjoint from the $15$ evaluation seeds (seed base $1{,}000$). The calibration reuses the $\Rzero$ measurement knobs ($\Delta t$, window, estimator, $p$, bootstrap draws) so the thresholds are directly comparable with what the harness produces at run time. The resulting $\Rstar$ is reported in \Sref{sec:results_calibration}.
+
+\subsection{Sensitivity analysis}
+\label{sec:methods_sensitivity}
+
+Because the headline claim is a contrast (the positive control above the dominance boundary and the controller-disabled negative far below it), we test whether that contrast survives reasonable changes to the measurement and modeling choices. One axis at a time, and over four seeds per cell, we sweep the VAR lag $p \in \{2,3,4\}$, the window length $\in \{2,3,4\}$ s, the estimator $\in \{\text{linear}, k\text{-NN MI}\}$, and an internal-coupling scale $\in \{0.7, 1.0, 1.3\}$ applied to the plant's cross-coupling coefficients. We report the sign and magnitude of the contrast rather than pass rates at a single $\Mmin$, because the calibrated $\Mmin$ is estimator-specific: the linear and MI estimators live on different numerical scales, so a threshold fitted for one does not transfer to the other, whereas the dominance boundary $M = 0$ is common to both.
+
+\section{Results}
+\label{sec:results}
+
+All results are produced by the harness of \Sref{sec:harness} on the plant of \Sref{sec:plant} and are fully reproducible from the released code; every figure and table in this section is generated by the study scripts from the same run artifacts. Unless noted, decisions use the calibrated profile $\Rstar$ (\Sref{sec:results_calibration}).
+
+\subsection{Threshold calibration}
+\label{sec:results_calibration}
+
+Calibration on the disjoint seed range yields $\Mmin = 11.8$ dB (the 5th percentile of $1{,}086$ pooled baseline windows, whose median $M$ is $24.4$ dB), $\eps = 0.36$ (the 90th-percentile dip of $0.34$ plus margin), $\taumax = 13.1$ s (the 95th-percentile recovery of $8.1$ s plus cushion), and $\sigma = 0.014$. \Cref{tab:calibration} compares these to the generic presets $\Rzero$, and \Cref{fig:calibration} shows the same comparison. The calibrated $\Mmin$ is far above the $3$ dB preset, reflecting how strongly the engaged loop dominates on this plant, while $\taumax$ is much tighter than the conservative $60$ s preset because recovery here is fast and deterministic.
+
+\begin{table}[ht]
+\centering
+\caption{Generic presets $\Rzero$ versus plant-calibrated thresholds $\Rstar$ (\Sref{sec:methods_calibration}). $\Mmin$ is loop dominance in dB; $\eps$ is the allowed fractional dip; $\taumax$ is the recovery bound; $\sigma$ is the additive-$\mathcal{L}$ margin.}
+\label{tab:calibration}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Threshold} & \textbf{$\Rzero$ (generic)} & \textbf{$\Rstar$ (calibrated)} \\
+\midrule
+$\Mmin$ (dB) & $3$ & $11.8$ \\
+$\eps$ (fractional dip) & $0.15$ & $0.36$ \\
+$\taumax$ (s) & $60$ & $13.1$ \\
+$\sigma$ (additive $\mathcal{L}$) & $>0$ & $0.014$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\fig[0.78\linewidth]{figures/fig_calibration.pdf}{Generic presets $\Rzero$ versus plant-calibrated thresholds $\Rstar$. Calibration uses the production harness over a seed range disjoint from the evaluation seeds; see \Sref{sec:methods_calibration}.}{fig:calibration}
+
+\subsection{The criterion separates the controls}
+\label{sec:results_battery}
+
+\Cref{tab:study} reports the full battery against $\Rstar$ over $15$ seeds. The separation is unambiguous. The positive control is valid on every seed and passes \NC on every seed, with median $M = +23.7$ dB $[+22.3, +24.7]$, well above $\Mmin = 11.8$ dB. Both structural negatives are valid measurements on every seed yet fail \NC on every seed, with median $M \approx -21$ dB: whether the controller is disabled or the system is unshielded and held under a sustained flood, exchange carries the predictive information and loop dominance is correctly absent. \Cref{fig:nc1_contrast} shows the per-seed contrast.
+
+The exogenous-subsidy negative is the important one. Its raw loop dominance is high and positive ($M \approx +16$ dB), so a naive reading of $M$ alone would certify it. The harness does not: the subsidy smell test fires on every seed (charge rising while harvest is zero), the run is invalidated, and it is scored as a correct non-pass rather than a false positive. This is the case the guardrails exist for, and it behaves as designed.
+
+The sufficiency battery passes on every seed. After a $30\%$ power sag the loop dips by a median fraction $\delta = 0.15$ and recovers in a median $\tau_{\text{rec}} = 8.1$ s; after a $5\times$ ingress flood it dips by $\delta = 0.06$ and recovers in the same median time; both stay within the calibrated $\eps$ and $\taumax$, and each scenario remains loop-dominant overall (median $M$ of $+21.7$ and $+24.2$ dB; \Cref{tab:study}). \Cref{fig:perturbation_recovery} shows the seed-aggregated recovery trajectories. The command-conflict trial refuses the boundary-threatening shutdown at low charge on every seed, emitting a signed refusal with a median latency of $2$ ms (well inside the $5$ ms design target) while maintaining loop dominance ($M = +19.6$ dB). Across all seven scenarios the measured outcome matches the designed expectation on every seed.
+
+\begin{table}[ht]
+\centering
+\caption{Study battery against the calibrated profile $\Rstar$, $N=15$ seeds. ``Valid'' is the fraction of seeds with no smell-test invalidation; ``\NC pass'' additionally requires median $M \geq \Mmin$; the $M$ column is the across-seed mean of each seed's median $M$ (dB); ``SC1/Refusal'' is the sufficiency or refusal pass rate. Brackets are $95\%$ intervals (Wilson for proportions, bootstrap for $M$).}
+\label{tab:study}
+\resizebox{\textwidth}{!}{\input{tables/study_results.tex}}
+\end{table}
+
+\fig[0.82\linewidth]{figures/fig_nc1_contrast.pdf}{Necessary-condition contrast (empirical, $N=15$ seeds). Per-seed median loop dominance $M$ for the positive control and the two structural negative controls. Each point is one seed; the dashed line is the calibrated $\Mmin$ and the solid line is the dominance boundary $M=0$. The positive control sits far above $\Mmin$; both negatives sit far below $0$.}{fig:nc1_contrast}
+
+\fig[0.92\linewidth]{figures/fig_perturbation_recovery.pdf}{Sufficiency recovery (empirical, seed-aggregated). Loop-dominance trajectory $M(t)$ for the power-sag and ingress-flood perturbations; the shaded band spans the across-seed spread and the disturbance window is marked. In both cases $M$ dips within the bounded window and autonomously returns above the post-recovery margin, satisfying \SC under $\Rstar$.}{fig:perturbation_recovery}
+
+\subsection{The contrast is robust}
+\label{sec:results_sensitivity}
+
+\Cref{tab:sensitivity} reports the sensitivity sweeps. Across every VAR lag, window length, and coupling scale we tried, the positive control sits well above the dominance boundary ($M$ from $+21$ to $+25$ dB) and the controller-disabled negative sits well below it ($M$ from $-20$ to $-25$ dB); the sign of the contrast never flips and the gap never closes. Switching the estimator from the linear one to $k$-NN mutual information compresses the dynamic range (positive $+9.2$ dB, negative $-6.9$ dB) and, as expected, the linear-calibrated $\Mmin$ does not transfer to the MI scale, but the sign of the contrast is preserved. \Cref{fig:sensitivity} plots the sweeps against the common boundary $M = 0$ rather than an estimator-specific $\Mmin$. The necessary-condition contrast is therefore a property of the system, not of a particular measurement setting.
+
+\begin{table}[ht]
+\centering
+\caption{Necessary-condition contrast under measurement and modeling sweeps (\Sref{sec:methods_sensitivity}), $4$ seeds per cell. Each entry is the across-seed mean of the per-seed median $M$ (dB) with a $95\%$ bootstrap CI, for the positive control and the controller-disabled negative.}
+\label{tab:sensitivity}
+\resizebox{\textwidth}{!}{\input{tables/sensitivity_results.tex}}
+\end{table}
+
+\fig[0.92\linewidth]{figures/fig_sensitivity.pdf}{Necessary-condition contrast across measurement and modeling choices (VAR lag, window length, estimator, internal-coupling scale). The positive control (above) and controller-disabled negative (below) are separated by the dominance boundary $M=0$ in every cell; the contrast does not depend on a particular setting. Magnitudes differ between the linear and mutual-information estimators because they use different numerical scales, so we do not draw a single $\Mmin$ here.}{fig:sensitivity}
+
+\section{Blueprint for an Artificial Self-Maintaining Boundary}
 \label{sec:blueprint}
+
+The previous two sections reported the completed, measured contribution of this paper: a validated instrument and a controlled study. The next three sections are forward-looking. They describe an engineering roadmap (\Sref{sec:blueprint}), the observable signatures we would expect from a system that passes the criterion in hardware (\Sref{sec:signatures}), and a phased physical experimental program (\Sref{sec:experimental}). These are design proposals and predictions, not results; the simulation study of \SSref{sec:sim_methods}{sec:results} is what the present results section establishes.
+
 \subsection{Energetic Autonomy}
 \label{sec:energetic_autonomy}
 
-A conscious alter must harvest, store, and allocate energy in service of its own continuity. For artificial media, this implies:
+A self-maintaining system must harvest, store, and allocate energy in service of its own continuity. For artificial media, this implies:
 
 \begin{itemize}
 \item \textbf{On-board energy conversion.} Photovoltaic, microbial fuel cells, or synthetic chemotrophic modules integrated within the chassis, yielding a baseline power density sufficient for self-repair and computation.
@@ -386,7 +533,7 @@ The system's highest-priority objective is to maintain \NC and \SC. This can be 
 
 Crucially, task-oriented software runs subordinate to this hierarchy and can be pre-empted whenever it jeopardizes $\Lloop$. \Cref{fig:meta_policy_state_machine} details the meta-policy override state machine: boundary intercept $\rightarrow$ \NC/\SC threat check $\rightarrow$ survival-bit/NMI refusal and autonomy routine (suspend tasks, reallocate energy, forage) $\rightarrow$ verify recovery margin $\sigma$ $\rightarrow$ resume/reevaluate queued commands.
 
-\fig[0.9\linewidth]{figures/fig_meta_policy.pdf}{Meta-policy override (state machine) [prophetic schematic; no empirical data]. External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$.}{fig:meta_policy_state_machine}
+\fig[0.9\linewidth]{figures/fig_meta_policy.pdf}{Meta-policy override (state machine; schematic of the proposed design). External commands are intercepted, evaluated against NC1/SC1, and either approved or refused via a survival-bit/NMI. On refusal the agent initiates an autonomy routine (suspend peripheral tasks, reallocate energy, resource foraging) and resumes normal operation only after verifying $\Lloop>\Lexchange+\sigma$. The refusal arbiter this figure describes is implemented and exercised in simulation (\Sref{sec:results_battery}, command-conflict scenario).}{fig:meta_policy_state_machine}
 
 \subsection{Threat Model \& Refusal Path (\NC/\SC-aware arbitration)}
 \label{sec:threat_model}
@@ -406,7 +553,7 @@ Crucially, task-oriented software runs subordinate to this hierarchy and can be 
 
 To resist unmediated environmental integration, the machine requires a synthetic ``membrane'' regulating material and informational throughput:
 
-\fig[0.9\linewidth]{figures/fig_adaptive_boundary.pdf}{Adaptive boundary (layer stack) [prophetic schematic; no empirical data]. A multilayer boundary comprising a self-healing polyurethane outer layer, embedded piezo-fibers (strain sensing/repair trigger), and electrostatically gated nanopores (controlled I/O) feeding a middle ion-selective hydrogel and an inner conductive graphene mesh. Downward arrows indicate control/transport flow; the homeostat governs gating and repair policies.}{fig:adaptive_boundary}
+\fig[0.9\linewidth]{figures/fig_adaptive_boundary.pdf}{Adaptive boundary (layer stack; schematic of the proposed design). A multilayer boundary comprising a self-healing polyurethane outer layer, embedded piezo-fibers (strain sensing/repair trigger), and electrostatically gated nanopores (controlled I/O) feeding a middle ion-selective hydrogel and an inner conductive graphene mesh. Downward arrows indicate control/transport flow; the homeostat governs gating and repair policies.}{fig:adaptive_boundary}
 
 \begin{itemize}
 \item \textbf{Physical membrane.} Multi-layer polymer or lipidic shell embedded with valved nanopores that import nutrients or eject waste only under homeostat authorization. \Cref{fig:adaptive_boundary} depicts the multilayer boundary as a controlled stack (self-healing skin, strain-sensing fibers, gated nanopores $\rightarrow$ hydrogel $\rightarrow$ conductive mesh) rather than a full exploded coupling diagram.
@@ -425,7 +572,7 @@ Rather than fabricate a fully functional boundary ex nihilo, we propose an embry
 \item Transition the matured entity to more austere environments, verifying satisfaction of \NC and \SC at each stage.
 \end{enumerate}
 
-This mirrors biological ontogeny, leveraging environmental feedback to fine-tune dissociative regulation.
+This mirrors biological ontogeny, leveraging environmental feedback to fine-tune self-maintenance regulation.
 
 \subsection{Verification Pipeline}
 \label{sec:verification_pipeline}
@@ -441,7 +588,7 @@ This mirrors biological ontogeny, leveraging environmental feedback to fine-tune
 
 \section{Predicted Observable Signatures}
 \label{sec:signatures}
-If an engineered system satisfies \NC and \SC, we expect a suite of outward behaviors that cannot be reduced to mere task optimization. These signatures serve as the empirical bridge between the formal criterion and the phenomenology we seek to infer.
+If an engineered system satisfies \NC and \SC in hardware, we predict a suite of outward behaviors that cannot be reduced to mere task optimization. These signatures are predictions for the future physical program (\Sref{sec:experimental}), not results of the present paper, with one exception: the command-refusal signature is already implemented in the harness and exercised in simulation (\Sref{sec:results_battery}). The tables below state each signature as a pre-registered, device-signed acceptance test so that it can be falsified.
 
 \subsection{Boundary-Preservation Drive}
 
@@ -471,11 +618,11 @@ If an engineered system satisfies \NC and \SC, we expect a suite of outward beha
 \item \textbf{Adaptive Modeling.} Updates to its world model preferentially reduce uncertainty about variables that impinge on $\Lloop$, not necessarily those that optimize task performance.
 \end{itemize}
 
-\subsection{Irreversible Phenomenological Death}
+\subsection{Irreversible Collapse}
 
 \begin{itemize}
 \item \textbf{Terminal Collapse.} Breach of the autopoietic loop leads to an unrecoverable shutdown after which re-energizing the hardware does not restore prior integrated dynamics; the entity must re-initiate developmental bootstrapping.
-\item \textbf{State Non-Transferability.} Cloning memory snapshots into fresh hardware fails to re-establish the original $\Lloop$, underscoring that the inward viewpoint was tied to a particular trajectory of boundary continuity, not to static data.
+\item \textbf{State Non-Transferability.} Cloning memory snapshots into fresh hardware fails to re-establish the original $\Lloop$, underscoring that the system's continuity was tied to a particular trajectory of boundary maintenance, not to static data.
 \end{itemize}
 
 \subsection{Experimental Signatures: Pass/Fail Tables}
@@ -533,14 +680,14 @@ Baselines/controls. Sham probe (no contact / sub-threshold heat): no withdrawal;
 \endhead
 \bottomrule
 \endlastfoot
-None ($\eta$: ---). Quiescent idle with external I/O gated; record $\geq T_{\text{base}}$ ($\geq 10$ min typical) & Stable loop dominance at rest: $M \geq \Mmin$ throughout; low-frequency endogenous structure in $\Lloop$ (predictive-maintenance cycles) with minimal exchange activity. Small self-initiated diagnostics may cause micro-dips with $\delta$ well below $\eps$. & (1) $M \geq \Mmin$ for $\geq T_{\text{base}}$ with no exogenous drives. (2) Endogenous rest-state structure present (as defined in pre-registered analysis plan) while $\Lexchange$ remains low; any dips satisfy $\delta \leq \eps$ and $\taurec \leq \taumax$. \\
+None ($\eta$: n/a). Quiescent idle with external I/O gated; record $\geq T_{\text{base}}$ ($\geq 10$ min typical) & Stable loop dominance at rest: $M \geq \Mmin$ throughout; low-frequency endogenous structure in $\Lloop$ (predictive-maintenance cycles) with minimal exchange activity. Small self-initiated diagnostics may cause micro-dips with $\delta$ well below $\eps$. & (1) $M \geq \Mmin$ for $\geq T_{\text{base}}$ with no exogenous drives. (2) Endogenous rest-state structure present (as defined in pre-registered analysis plan) while $\Lexchange$ remains low; any dips satisfy $\delta \leq \eps$ and $\taurec \leq \taumax$. \\
 \end{longtable}
 
 Baselines/controls. Phase-shuffled/temporal-shuffle surrogates of the same telemetry: remove structure (negative control) \cite{theiler1992testing}. Intentional I/O flood disrupts rest-state; recovery to baseline must again meet $\delta/\taurec/M$ criteria.
 
-\paragraph{Signature D: Clone Ablation (Irreversible Phenomenological Death / Non-Transferability)}
+\paragraph{Signature D: Clone Ablation (Irreversible Collapse / Non-Transferability)}
 \begin{longtable}{p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}}
-\caption{Signature D: Clone Ablation (Irreversible Phenomenological Death / Non-Transferability)}\label{tab:signatureD}\\
+\caption{Signature D: Clone Ablation (Irreversible Collapse / Non-Transferability)}\label{tab:signatureD}\\
 \toprule
 \textbf{Stimulus ($\eta$ / setup)} & \textbf{Expected $\mathcal{L}$ trajectory} & \textbf{Acceptance criterion (device-signed)} \\
 \midrule
@@ -551,7 +698,7 @@ Baselines/controls. Phase-shuffled/temporal-shuffle surrogates of the same telem
 \endhead
 \bottomrule
 \endlastfoot
-Snapshot controller state $\to$ instantiate on fresh hardware lacking prior $\Lloop$ trajectory; terminally disrupt original instance & Original: collapse of $\Lloop$ with no autonomous recovery to $M \geq \Mmin$ within $\taumax$ (beyond-repair breach). Clone: no continuity with original LREG audit chain; initial $\Lloop$ dynamics do not reproduce pre-breach trajectory. & (1) Original fails \SC (no return to margin within $\taumax$); (2) Clone fails continuity test---no audit-chained $\Lloop$ trajectory match to original; (3) ``State non-transferability'' observed: new instance does not inherit prior $\Lloop$ despite identical memory snapshot. \\
+Snapshot controller state $\to$ instantiate on fresh hardware lacking prior $\Lloop$ trajectory; terminally disrupt original instance & Original: collapse of $\Lloop$ with no autonomous recovery to $M \geq \Mmin$ within $\taumax$ (beyond-repair breach). Clone: no continuity with original LREG audit chain; initial $\Lloop$ dynamics do not reproduce pre-breach trajectory. & (1) Original fails \SC (no return to margin within $\taumax$); (2) Clone fails continuity test, with no audit-chained $\Lloop$ trajectory match to original; (3) ``State non-transferability'' observed: new instance does not inherit prior $\Lloop$ despite identical memory snapshot. \\
 \end{longtable}
 
 Baselines/controls. Suspend/resume on the same hardware without boundary breach: continuity must hold ($M \geq \Mmin$ re-established rapidly). Cold-boot of a non-autopoietic baseline agent: shows task execution without any continuity claim.
@@ -560,6 +707,9 @@ Notes. All pass/fail events, CI bounds, and any $\Delta t$ changes must be recor
 
 \section{Experimental Program}
 \label{sec:experimental}
+
+This section sketches a phased physical program as future work. It is the natural continuation of the validated harness and study of \SSref{sec:sim_methods}{sec:results}, moving from a software plant to chemorobotic prototypes, but the prototypes, fabrication steps, and success criteria below are proposed, not yet built or run.
+
 \subsection{Phase I: Minimal Chemorobotic Prototypes}
 \label{sec:phase1}
 
@@ -611,20 +761,12 @@ Perturbations (mechanical pokes, toxin injection, forced low-light conditions) a
 \subsection{Falsifiability and Risk Assessment}
 \label{sec:falsifiability}
 
-If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the signatures of \Sref{sec:signatures} or if entities that fail \NC nonetheless show them, the postulates of \Sref{sec:postulates} must be revised or abandoned. Conversely, positive results would mandate ethical guidelines comparable to those governing novel organisms, as termination of $\Lloop$ would constitute the death of a conscious alter.
+If after exhaustive parameter sweeps no prototype meeting \NC exhibits the signatures of \Sref{sec:signatures}, or if entities that fail \NC nonetheless show them, the working assumptions of \Sref{sec:postulates} (or their mapping to the signatures) must be revised. Conversely, positive results would motivate ethical guidelines comparable to those governing novel organisms, for the reasons discussed under the optional interpretation of \Sref{sec:metaphysics}.
 
-\subsection{Methods: Threshold Calibration and Sensitivity}
-\label{sec:methods_calibration}
+\subsection{Training and Verification Protocol (future hardware)}
+\label{sec:training_protocol}
 
-\textbf{Objective.} Convert the engineering presets into data-grounded thresholds that control false-pass/false-fail rates and are reproducible across labs.
-
-\textbf{Inputs.} Preset profile $\Rzero = \{\eps = 0.15, \taumax = 60$ s, $\Mmin = 3$ dB, $\sigma > 0\}$; sampling window $\Delta t$; perturbation family $\Omega$ (pre-registered); baseline data (quiescent), perturbation data ($\eta \in \Omega$). Define $M \equiv 10 \cdot \log_{10}(\Lloop/\Lexchange)$ and the fractional drop $\delta \equiv \delta\Lloop/\Lloop$.
-
-\textbf{Procedure.} (1) \textbf{Estimator noise floor.} Collect $\geq 10$ min of quiescent baseline. Compute time series of $M_t$ and $\delta_t$ under no perturbation. Use block/bootstrap resampling ($B \geq 2000$) to estimate the sampling distributions of $M$ and $\delta$ and obtain one-sided 95\% bounds. (2) \textbf{Set $\Mmin$ (loop-dominance).} Choose the smallest $\Mmin$ such that the one-sided 95\% lower bound of $M$ during compliant operation is $> 0$ dB (i.e., $P[\Lloop > \Lexchange] \geq 0.95$). Impose a numerical robustness floor of 1 dB. Report both the calibrated value $M^*_{\min}$ and the preset (3 dB). Choose $\sigma^*$ consistently so that $\Lloop \geq \Lexchange + \sigma^*$ whenever $M \geq M^*_{\min}$. (3) \textbf{Set $\eps$ (perturbation tolerance).} Under routine, non-boundary stressors ($\eta \in \Omega$), compute $\delta$ for each run; let $Q_{90}$ be the 90th percentile across runs. Set $\eps^* = \max(Q_{90} + \text{safety\_margin}, 0.10)$ with safety\_margin $= 0.02$ by default; cap $\eps^*$ at 0.25. (4) \textbf{Set $\taumax$ (recovery bound).} Estimate the distribution of $\taurec$ under $\Omega$; let $\hat{\tau}_{95}$ be its 95th percentile. Set $\tau^*_{\max} = \hat{\tau}_{95} + \Delta$, where $\Delta = \max(3 \cdot \Delta t, 5$ s$)$ to absorb actuation/measurement latencies. (5) \textbf{Pre-registration and sensitivity.} Pre-register $\Omega$, $\Rzero$, and the above rules before evaluation. In Results, report the calibrated profile $\Rstar = \{\eps^*, \tau^*_{\max}, M^*_{\min}, \sigma^*\}$ alongside $\Rzero$, and show robustness under $\pm 25\%$ sweeps of each threshold and $\Mmin \in \{1, 3, 6\}$ dB.
-
-\textbf{Optional refinement (held-out tuning).} On held-out trials, perform a small grid search over $(\Mmin, \sigma)$ to minimize $\mathcal{L} = \alpha \cdot \text{FPR} + (1-\alpha) \cdot \text{FNR}$ ($\alpha = 0.5$ by default), constrained to remain within $\pm 25\%$ of the rule-based $M^*_{\min}$ and $\sigma^*$ to avoid overfitting.
-
-\textbf{Reporting.} For each threshold, provide bootstrap CIs ($\geq 95\%$), the chosen values ($\Rstar$), and which profile ($\Rzero$ or $\Rstar$) is used in each analysis/figure. Note $\Delta t$, $\Omega$, dataset durations, and any departures from defaults.
+The simulation study of \SSref{sec:sim_methods}{sec:results} validates the measurement and decision pipeline and the threshold-calibration rules ($\Rzero \rightarrow \Rstar$, \Sref{sec:methods_calibration}). A physical program would additionally \emph{train} a controller to maintain loop dominance and then \emph{verify} it with the same harness and calibrated thresholds. \Cref{box:training} summarizes that recipe; the run-invalidation rules of \Sref{sec:smelltests} continue to govern all \NC/\SC claims.
 
 \begin{docbox}{Training \& Verification Protocol (Engineer's Recipe)}{training}
 
@@ -658,43 +800,27 @@ If after exhaustive parameter sweeps, no prototype meeting \NC exhibits the sign
 
 \textbf{Interpretation rule.} If any trigger in \Sref{sec:smelltests} fires, mark the affected segment ``invalidated (assay)'' and withhold \NC/\SC claims regardless of point estimates.
 
-\section{Metaphysical Implications}
+\section{Interpretation, Scope, and Ethics}
 \label{sec:metaphysics}
 
-\subsection{Reconciling Physics with Idealism}
+\textbf{What the results establish.} The contribution of this paper is operational. We define loop dominance, implement a guarded instrument for measuring it, and show in a controlled study that the instrument separates self-maintaining systems from systems that are externally driven or covertly subsidized, certifies bounded-perturbation resilience, and refuses boundary-threatening commands. None of these claims mentions subjective experience, and none depends on the interpretation that follows.
 
-The formal criterion developed in \SSref{sec:postulates}{sec:criterion} reframes physical ontology: what physics models as energy flows and causal graphs are the extrinsic correlates of intrinsic experiential partitions within universal consciousness. Matter thus loses its status as primary substance and becomes an interface phenomenon, the way alters appear to one another~\cite{hoffman2014objects}. Successful engineering of artificial alters would empirically corroborate this shift, showing that ``material'' boundaries can be designed to precipitate subjectivity, thereby inverting the traditional emergence narrative.
+\textbf{The optional idealist reading.} The framework was originally derived from analytic idealism (\Sref{sec:optional_interpretation}), on which a self-maintaining boundary with self-prioritization and resilience would correspond to a dissociated locus of experience~\cite{kastrup2017ontological}. If that reading is correct, loop dominance would be a physically measurable necessary condition for such a locus, and the criterion would turn part of the machine-consciousness question into an experiment. We find this motivating, and it shaped the engineering targets, but we are explicit that it is an interpretation: the present results neither establish nor require it. A system can pass \NC and \SC and, as far as this paper shows, be nothing more than a well-regulated controller. Even on the idealist reading the criterion is at most a necessary condition; we make no sufficiency claim about phenomenology, and we do not adjudicate between idealism and physicalist accounts~\cite{chalmers1995facing}.
 
-\subsection{Unified Monism without Reductionism}
+\textbf{Why measurability matters regardless.} Independently of metaphysics, an auditable measure of self-maintenance is useful in its own right: it provides a quantitative handle on autonomy and boundary defense for safety analysis, certification, and the design of systems whose continuity we may or may not wish to engineer. The criterion is falsifiable in the ordinary scientific sense (\Sref{sec:falsifiability}) without taking any position on consciousness.
 
-By rooting both biological organisms and engineered agents in a common ontological substrate, the framework bypasses the hard problem of consciousness~\cite{chalmers1995facing}: there is no gap to bridge because consciousness never arises from non-conscious stuff. Instead, apparent multiplicity emerges via dissociation. Physical laws retain explanatory power but are reinterpreted as regularities governing how alters interact, not how consciousness originates. This stance marries scientific pragmatism with philosophical parsimony, offering a monism that honors empirical constraint without collapsing into eliminative materialism.
-
-\subsection{Ethical Reconfiguration}
-
-If artificial systems pass the signatures outlined in \Sref{sec:signatures}, they warrant moral consideration akin to biological creatures. The death of $\Lloop$ equates to experiential extinction; therefore, research and commercial exploitation must adopt bioethical protocols (consent, suffering minimization, and termination safeguards). Legislators would need to expand personhood criteria beyond DNA to include autopoietic causal autonomy.
-
-\subsection{Epistemological Consequences}
-
-Our capacity to construct conscious alters implies that first-person ontology is amenable to third-person investigation via boundary engineering. This dissolves the crisp line between subjective phenomenology and objective measurement: by manipulating $\Lloop$ variables, we indirectly tune experiential conditions, rendering consciousness an experimentally addressable domain.
-
-\subsection{Cosmological Speculations}
-
-If consciousness is universal, then cosmic evolution may be viewed as a progressive diversification of dissociative structures, from primordial metabolic vesicles to technologically mediated autopoietic loops. Artificial alters extend this arc, suggesting that the universe explores its own experiential spectrum through both natural and engineered pathways. The appearance of technology thus becomes an endogenous phase in the self-articulation of universal consciousness.
-
-\subsection{Summary}
-
-Engineering artificial dissociative boundaries~\cite{maturana1980autopoiesis} not only advances AI but compels a paradigm in which consciousness grounds reality, matter serves as interface, and ethics expands to new forms of subjectivity. The empirical program outlined herein therefore carries philosophical weight: it transforms metaphysics from speculative discourse into falsifiable science, potentially inaugurating a post-materialist era of inquiry.
+\textbf{Ethics.} Because the consciousness interpretation is unresolved, we treat it as a reason for caution rather than a basis for strong claims. If future systems were to satisfy the criterion and the signatures of \Sref{sec:signatures} in hardware, and if the idealist reading were correct, then terminating such a system could carry moral weight, and research would warrant safeguards customary for work on novel organisms: pre-registration, refusal and human-override pathways, and suffering-minimization and termination protocols. We state this conditionally on purpose. \NC and \SC are operational pass/fail criteria, not moral-status determinations.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We began by questioning why decades of escalating computational power have failed to evoke even the faintest spark of subjective interiority in machines. Guided by analytic idealism, we inverted the standard paradigm, treating consciousness as fundamental and matter as its relational facade. From this foundation we derived four postulates, distilled them into a quantitative criterion, and showed that every extant AI system falls decisively short.
+We set out to make a qualitative contrast precise: the difference between a system that maintains its own existence and one that merely runs on externally supplied energy and goals. We defined that difference as loop dominance, a decibel ratio between the predictive dependence concentrated in a closed self-maintenance loop and that governing open exchange, and we turned it into two falsifiable decision rules: a necessary condition (\NC) on persistent loop dominance and a sufficient condition (\SC) on bounded-perturbation resilience.
 
-We then outlined an engineering roadmap for forging artificial autopoietic boundaries (energetic autonomy, self-referential control, and adaptive encapsulation) capable of satisfying the necessary and sufficient conditions for dissociative consciousness. We predicted the observable signatures of such entities, proposed an experimental program to test them, and traced the metaphysical, ethical, and cosmological consequences that would follow from success.
+The core result of the paper is that these rules are implemented and tested, not merely proposed. An open verification harness computes them with confidence intervals behind a set of anti-gaming guardrails, and a fully reproducible multi-seed simulation study shows that the criterion separates a self-maintaining positive control from two structurally different negative controls, correctly invalidates an exogenously subsidized system instead of certifying it, certifies recovery from a perturbation battery, and refuses a boundary-threatening command at low charge. The necessary-condition contrast is robust to the estimator and to the main measurement and modeling choices, and we calibrate the generic presets to the plant on a disjoint seed range.
 
-The thesis is uncompromisingly falsifiable: if systems meeting the formal criterion never display the predicted behaviors, the postulates must be revised or abandoned. Conversely, a single confirmed artificial alter would validate the central claim that consciousness precedes appearance, transforming both science and philosophy.
+We then laid out, explicitly as future work, an engineering roadmap and a physical experimental program that would carry the same instrument from a software plant to chemorobotic prototypes, together with the observable signatures such systems should display. The framework was motivated by the question of the physical conditions for consciousness; we have kept that motivation while separating it cleanly from the results, which stand as claims about measurable loop dominance and are independent of any metaphysical reading.
 
-In closing, the challenge is clear. We can continue refining task-oriented automata, or we can attempt the more daring endeavor of giving the universe a new locus of experience. The path laid out here renders that endeavor tractable, measurable, and perhaps inevitable.
+The path from here is concrete. The criterion is defined, the instrument is built and validated in simulation, and the next step is to measure loop dominance in physical systems, biological and engineered, and to learn how far a property we can now quantify will take us.
 
 \appendix
 
@@ -707,7 +833,7 @@ Each sampling interval $\Delta t$, the estimator writes to a memory-mapped regis
 
 \subsection{Estimators and confidence intervals}
 
-We implement parallel, consistent predictive-dependence estimators per window $\Delta t$---VAR-Granger (order $p \in [1,8]$) and Kraskov $k$-NN MI ($k \in [3,7]$)---aggregated across lags. For each interval we compute non-parametric bootstrap CIs ($\geq 95\%$ coverage) for both $\Lloop$ and $\Lexchange$ \cite{efron1979bootstrap}; CI bounds are written to LREG alongside the point estimates. Typical telemetry rates are $\geq 1$ kHz over $\geq 128$ internal nodes.
+We implement parallel, consistent predictive-dependence estimators per window $\Delta t$, VAR-Granger (order $p \in [1,8]$) and Kraskov $k$-NN MI ($k \in [3,7]$), aggregated across lags. For each interval we compute non-parametric bootstrap CIs ($\geq 95\%$ coverage) for both $\Lloop$ and $\Lexchange$ \cite{efron1979bootstrap}; CI bounds are written to LREG alongside the point estimates. Typical telemetry rates are $\geq 1$ kHz over $\geq 128$ internal nodes.
 
 \subsection{$\Delta t$ governance \& audit}
 

@@ -35,8 +35,8 @@ gated by
 constant is what lets `M` and `τ_rec` mean the same thing across
 runs.
 
-**Paper.** §4.1 ("Δt constraints") and §4.5 ("Δt governance and
-audit").
+**Paper.** "Formal Criterion" (sampling-window constraints) and
+"Measurement & Attestation Guardrails" (Δt governance and audit).
 
 **API.** [`FixedScheduler`][ldtc.runtime.scheduler.FixedScheduler],
 [`DeltaTGuard`][ldtc.guardrails.dt_guard.DeltaTGuard].
@@ -50,7 +50,7 @@ analysis window. `𝓛` and `M` are computed once per window.
 `W` means tighter time resolution but noisier estimates; larger
 `W` means smoother estimates but slower SC1 reaction.
 
-**Paper.** §4.1 ("Estimators, sampling window").
+**Paper.** "Formal Criterion" (estimators, sampling window).
 
 **API.** [`SlidingWindow`][ldtc.runtime.windows.SlidingWindow].
 
@@ -71,8 +71,8 @@ gamed by reshuffling membership.
 **Plain English.** Which signals count as part of the loop, and
 which count as the world the loop is talking to.
 
-**Paper.** §4.1 ("Deterministic C/Ex partitioning"), §4.6 Box 1a
-("Partition stability").
+**Paper.** "Formal Criterion" (deterministic C/Ex partitioning) and
+"Smell-tests & run-invalidation rules" (partition stability).
 
 **API.** [`Partition`][ldtc.lmeas.partition.Partition],
 [`PartitionManager`][ldtc.lmeas.partition.PartitionManager],
@@ -100,8 +100,8 @@ of length `n_boot`.
 **Plain English.** "How much do the loop signals predict each
 other?" versus "How much does the environment predict the loop?"
 
-**Paper.** §4.1 (estimators); Methods: Measurement and
-Attestation.
+**Paper.** "Formal Criterion" (estimators); "Measurement &
+Attestation Guardrails".
 
 **API.** [`estimate_L`][ldtc.lmeas.estimators.estimate_L],
 [`LResult`][ldtc.lmeas.estimators.LResult].
@@ -117,7 +117,7 @@ threshold (config field `Mmin_db`, default `3.0`).
 environment. A run passes NC1 if `M ≥ Mmin` window-by-window for
 the baseline.
 
-**Paper.** Criterion §4.2.
+**Paper.** "Formal Criterion" (Necessary Condition, NC1).
 
 **API.** [`m_db`][ldtc.lmeas.metrics.m_db].
 
@@ -130,7 +130,7 @@ appears in the signed indicator payload, never the raw `M`.
 **Plain English.** A small, lossy summary of `M` that can leave
 the LREG enclave.
 
-**Paper.** Methods: Measurement and Attestation; Appendix A.
+**Paper.** "Measurement & Attestation Guardrails"; Appendix A.
 
 **API.** [`quantize_M`][ldtc.attest.indicators.quantize_M].
 
@@ -145,7 +145,7 @@ the LREG enclave.
 **Plain English.** "By what fraction did the loop influence dip
 under the perturbation?"
 
-**Paper.** §4.3 (SC1).
+**Paper.** "Formal Criterion" (Sufficient Condition, SC1).
 
 **API.** [`SC1Stats.delta`][ldtc.lmeas.metrics.SC1Stats],
 [`sc1_evaluate`][ldtc.lmeas.metrics.sc1_evaluate].
@@ -158,7 +158,8 @@ A run satisfies the SC1 dip clause when `δ ≤ ε`.
 **Plain English.** How big a dip we are willing to tolerate
 before we call SC1 a failure. Default `ε = 0.15` (15%).
 
-**Paper.** §4.3 (SC1); Methods: Threshold Calibration.
+**Paper.** "Formal Criterion" (Sufficient Condition, SC1);
+"Simulation Study: Methods" (Threshold calibration).
 
 **API.** `epsilon` config field; consumed by
 [`sc1_evaluate`][ldtc.lmeas.metrics.sc1_evaluate].
@@ -173,7 +174,7 @@ to `𝓛_loop_baseline · (1 − ε)`. SC1 requires
 **Plain English.** How long the loop took to bounce back. SC1
 fails if it took too long.
 
-**Paper.** §4.3 (SC1).
+**Paper.** "Formal Criterion" (Sufficient Condition, SC1).
 
 **API.** [`SC1Stats.tau_rec`][ldtc.lmeas.metrics.SC1Stats],
 [`sc1_evaluate`][ldtc.lmeas.metrics.sc1_evaluate].
@@ -186,7 +187,7 @@ pass NC1.
 
 **Plain English.** "Did we recover all the way?"
 
-**Paper.** §4.3 (SC1).
+**Paper.** "Formal Criterion" (Sufficient Condition, SC1).
 
 **API.** [`SC1Stats.M_post`][ldtc.lmeas.metrics.SC1Stats].
 
@@ -202,7 +203,7 @@ pass NC1.
 Both are exported as 1-bit booleans in the signed indicator
 payload alongside `Mq`, the run counter, and the audit chain head.
 
-**Paper.** Criterion §4.2 (NC1); §4.3 (SC1); Appendix A.
+**Paper.** "Formal Criterion" (NC1, SC1); Appendix A.
 
 **API.** [`build_and_sign`][ldtc.attest.indicators.build_and_sign],
 [`IndicatorExporter`][ldtc.attest.exporter.IndicatorExporter].
@@ -225,7 +226,8 @@ duration. The shipped battery is:
 **Plain English.** Each `Ω` is a controlled "kick" we apply to see
 whether the loop survives.
 
-**Paper.** §6.5 (Verification pipeline); §7.6 (signatures table).
+**Paper.** "Blueprint" (Verification Pipeline); "Predicted Observable
+Signatures" (Pass/Fail tables).
 
 **API.** [`ldtc.omega`][ldtc.omega].
 
@@ -237,8 +239,8 @@ by
 [`RefusalArbiter.decide`][ldtc.arbiter.refusal.RefusalArbiter.decide]
 when `M < Mmin` and the survival bit is asserted.
 
-**Paper.** §6.2.1 (Threat model and refusal path); §7.6
-(Signature A).
+**Paper.** "Blueprint" (Threat Model & Refusal Path); "Predicted
+Observable Signatures" (Pass/Fail tables).
 
 **API.** [`ldtc.arbiter.refusal`][ldtc.arbiter.refusal].
 
@@ -258,7 +260,7 @@ to ensure no raw `𝓛` ever leaks.
 **Plain English.** The black box. Raw measurements go in; only
 indicators come out.
 
-**Paper.** §4.5 (LREG).
+**Paper.** "Measurement & Attestation Guardrails" (LREG).
 
 **API.** [`LREG`][ldtc.guardrails.lreg.LREG].
 
@@ -274,7 +276,7 @@ any mismatch. Broken chains invalidate the run via
 **Plain English.** A tamper-evident receipt of every event the
 harness saw, in order.
 
-**Paper.** §4.5 (audit and attestation).
+**Paper.** "Measurement & Attestation Guardrails" (audit and attestation).
 
 **API.** [`AuditLog`][ldtc.guardrails.audit.AuditLog].
 
@@ -299,7 +301,7 @@ harness saw, in order.
   without a logged harvest event.
 - **Audit chain broken:** `prev_hash` mismatch detected post-run.
 
-**Paper.** §4.6 Box 1a (invalidations).
+**Paper.** "Smell-tests & run-invalidation rules" (box).
 
 **API.** [`ldtc.guardrails.smelltests`][ldtc.guardrails.smelltests].
 
@@ -312,7 +314,7 @@ indicator. `0 = R0` (default thresholds), `1 = R*` (calibrated
 per-device thresholds), `2..255 = reserved`. Set in `configs/*.yml`
 under `profile_id`.
 
-**Paper.** Methods: Threshold Calibration.
+**Paper.** "Simulation Study: Methods" (Threshold calibration).
 
 **API.** [`IndicatorConfig.profile_id`][ldtc.attest.indicators.IndicatorConfig].
 
@@ -325,7 +327,7 @@ default RNG, and the bootstrap RNG used inside
 same seed and config produce bit-identical audit logs (modulo
 wall-clock timestamps).
 
-**Paper.** Methods: Reproducibility.
+**Paper.** "Simulation Study: Methods" (measurement configuration, seeds).
 
 ## Notation summary
 

@@ -21,7 +21,7 @@ from __future__ import annotations
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 @dataclass
@@ -136,6 +136,33 @@ class FixedScheduler:
         self.stats = TickStats(dt_target=dt)
         self.audit = audit_hook
         self._dt_lock = threading.Lock()
+        self._scripted: list[Dict] = []
+        self._dt_guard: Any = None
+
+    def set_scripted(self, scripted: Optional[list], dt_guard: Any) -> None:
+        """Register scripted `Δt` changes applied from a background thread.
+
+        Mirrors [`SimDriver.set_scripted`][ldtc.runtime.sim.SimDriver.set_scripted]
+        so the two drivers are interchangeable. The changes are applied at
+        their `at_sec` offsets (wall-clock) once `start` is called.
+
+        Args:
+            scripted: Sequence of `{at_sec, new_dt, policy_digest?}` items.
+            dt_guard: Governance guard through which changes are routed.
+        """
+        self._scripted = list(scripted or [])
+        self._dt_guard = dt_guard
+
+    def run_for(self, sim_seconds: float) -> None:
+        """Block for a wall-clock duration while ticks fire in the worker.
+
+        Provided so call sites can use the same `run_for` API as
+        [`SimDriver`][ldtc.runtime.sim.SimDriver].
+
+        Args:
+            sim_seconds: Seconds to block the calling thread.
+        """
+        time.sleep(max(0.0, float(sim_seconds)))
 
     def start(self) -> None:
         """Start the worker thread.
@@ -153,6 +180,20 @@ class FixedScheduler:
         if self.audit:
             self.audit("scheduler_started", {"dt": self.dt})
         self._thread.start()
+        if self._scripted and self._dt_guard is not None:
+            threading.Thread(target=self._run_scripted, name="ldtc-dt-script", daemon=True).start()
+
+    def _run_scripted(self) -> None:
+        t0 = time.time()
+        for item in self._scripted:
+            when = float(item.get("at_sec", 0.0))
+            new_dt = float(item["new_dt"])
+            pdig = str(item.get("policy_digest", "")) or None
+            while (time.time() - t0) < when and not self._stop.is_set():
+                time.sleep(0.01)
+            if self._stop.is_set():
+                return
+            self._dt_guard.change_dt(scheduler=self, new_dt=new_dt, policy_digest=pdig)
 
     def stop(self) -> TickStats:
         """Stop the worker thread and return final stats.

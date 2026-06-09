@@ -1,10 +1,13 @@
 # ldtc.runtime
 
-Fixed-`Δt` real-time loop primitives. Two pieces:
+Fixed-`Δt` real-time loop primitives. Three pieces:
 
 - [`scheduler`](#scheduler): a daemon-thread `FixedScheduler`
   that runs a tick callback every `Δt` seconds and tracks per-
   tick jitter for the [`Δt` guard][ldtc.guardrails.dt_guard].
+- [`sim`](#sim): a deterministic, wall-clock-free
+  [`SimDriver`][ldtc.runtime.sim.SimDriver] exposing the same API as
+  the scheduler, used for reproducible in-process simulation runs.
 - [`windows`](#windows): a `SlidingWindow` ring buffer that
   collects state vectors for the next [estimator][ldtc.lmeas]
   pass.
@@ -22,6 +25,10 @@ constructs both and hands them to the run loop in
 ## scheduler
 
 ::: ldtc.runtime.scheduler
+
+## sim
+
+::: ldtc.runtime.sim
 
 ## windows
 

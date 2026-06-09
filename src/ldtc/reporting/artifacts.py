@@ -190,6 +190,21 @@ def bundle(artifact_dir: str, audit_path: str) -> Dict[str, str]:
     Raises:
         FileNotFoundError: If the audit log is missing or empty.
     """
+    # Fast path for batch studies: skip the (matplotlib) timeline render and
+    # artifact bundling entirely when LDTC_SKIP_REPORT is set. The audit log and
+    # all measurement/SC1/refusal events are written before this call, so the
+    # study harness still has everything it parses; only the per-run figure
+    # bundle is skipped. Returns empty paths the callers treat as "no figure".
+    if os.environ.get("LDTC_SKIP_REPORT"):
+        return {
+            "timeline_png": "",
+            "timeline_svg": "",
+            "sc1_table": "",
+            "manifest": "",
+            "config_snapshot": "",
+            "notice": "",
+        }
+
     os.makedirs(artifact_dir, exist_ok=True)
     recs = _read_audit(audit_path)
     if not recs:

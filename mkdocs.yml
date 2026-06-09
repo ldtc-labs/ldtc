@@ -69,6 +69,7 @@ nav:
     - Guardrails and Invalidations: concepts/guardrails.md
     - Paper to Code: concepts/paper-to-code.md
   - Guides:
+    - Study and Results: guides/study.md
     - Calibration (R*): guides/calibration.md
     - Reporting and Figures: guides/reporting.md
     - Runs and Ω Battery: guides/runs.md

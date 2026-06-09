@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean
+.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean study sensitivity results
 
 help:
 	@echo "Targets:"
@@ -20,6 +20,10 @@ help:
 	@echo "  omega-ingress  - run Ω ingress-flood demo"
 	@echo "  omega-cc       - run Ω command-conflict demo (prints Trefuse + reason)"
 	@echo "  omega-subsidy  - run Ω exogenous-SoC (subsidy) demo (negative-control heuristic)"
+	@echo "  study          - run the multi-seed battery vs R0 guesses (tables + figures in artifacts/study)"
+	@echo "  study-rstar    - run the battery vs calibrated R* thresholds (run calibrate first)"
+	@echo "  sensitivity    - run NC1 sensitivity sweeps (table + figure in artifacts/sensitivity)"
+	@echo "  results        - calibrate + study-rstar + sensitivity (full headline pipeline)"
 	@echo "  calibrate      - calibrate R* thresholds and write configs/profile_rstar.yml"
 	@echo "  run-rstar      - run baseline loop with R* profile"
 	@echo "  omega-rstar    - run Ω power-sag with R* profile"
@@ -88,11 +92,25 @@ omega-cc:
 omega-subsidy:
 	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_r0.yml --delta 0.2 --zero-harvest --duration 3
 
+# Multi-seed results pipeline (Phase 1)
+# `study` runs against the uncalibrated R0 guesses; `study-rstar` evaluates the
+# same battery against the plant-calibrated R* thresholds (calibrate first).
+study:
+	$(PY) scripts/study.py --seeds 15
+
+study-rstar:
+	$(PY) scripts/study.py --seeds 15 --rstar
+
+sensitivity:
+	$(PY) scripts/sensitivity.py --seeds 4
+
+# Full headline pipeline: calibrate R* on a disjoint seed range, evaluate the
+# battery against those calibrated thresholds, then run the NC1 sensitivity sweeps.
+results: calibrate study-rstar sensitivity
+	@echo "Results written to artifacts/study, artifacts/calibration, artifacts/sensitivity"
+
 calibrate:
-	$(PY) scripts/calibrate_rstar.py --dt 0.01 --window-sec 0.25 --method linear \
-	  --baseline-sec 15 --omega-trials 6 --sag-drop 0.3 --sag-duration 8 \
-	  --out configs/profile_rstar.yml \
-	  --summary artifacts/calibration/rstar_summary.json
+	$(PY) scripts/calibrate_rstar.py --baseline-seeds 6 --sag-seeds 6
 
 run-rstar:
 	$(PY) -m ldtc.cli.main run --config configs/profile_rstar.yml

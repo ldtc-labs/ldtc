@@ -89,8 +89,13 @@ def test_bootstrap_ci_shrinks_with_more_samples():
 
 def test_mi_and_linear_estimators_agree_on_linear_system():
     """Different estimators should share the monotonic trend on linear data."""
-    # Both estimators should reflect the same ordering as intra-loop coupling increases
-    ks = [0.1, 0.4, 0.7]
+    # Both estimators should reflect the same ordering as intra-loop coupling
+    # increases. The coupling must keep the 2-node loop stationary: with a
+    # self-lag of 0.4 the symmetric coupling c gives eigenvalues 0.4 +/- c, so
+    # c must stay below 0.6 to avoid an explosive unit-plus root. (At c = 0.7 the
+    # loop is explosive and its nodes become collinear, in which case the honest
+    # adjusted-R2 estimator correctly declines to certify added loop influence.)
+    ks = [0.1, 0.3, 0.5]
     Ms_lin = []
     Ms_mi = []
     Ms_ksg = []

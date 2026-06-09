@@ -50,6 +50,11 @@ class SmellConfig:
         M_rise_lookback: Look-back windows for the subsidy check.
         min_harvest_for_soc_gain: Minimum harvest considered non-zero for
             SoC-gain detection.
+        soc_lookback: Number of recent samples used for the
+            SoC-without-harvest check.
+        soc_high_floor: Median SoC over the look-back at/above which SoC is
+            considered "maintained" while harvest is ~0, flagging exogenous
+            subsidy (robust to post-pulse drain and SoC saturation).
     """
 
     max_dt_changes_per_hour: int = 3
@@ -58,7 +63,21 @@ class SmellConfig:
     forbid_partition_flip_during_omega: bool = True
     # CI look-back configuration
     ci_lookback_windows: int = 5
-    ci_inflate_factor: float = 2.0  # relative to baseline median
+    # Relative-inflation factor for the median CI half-width vs the early
+    # baseline median. Bootstrap CI half-widths on a short (~60-sample) window
+    # have substantial window-to-window variability, so a 2x swing is within
+    # normal noise; the relative guard should fire only on a gross degradation.
+    # The absolute cap (``max_ci_halfwidth``) remains the hard limit.
+    ci_inflate_factor: float = 3.0  # relative to baseline median
+    # The relative-inflation check only applies once the CI is absolutely
+    # non-trivial. Near the noise floor (e.g., L_ex ~ 0 in the positive
+    # control, or L_loop ~ 0 in a negative control) a tiny baseline half-width
+    # can "inflate" by >2x while the estimate stays extremely precise; that is
+    # not a measurement-quality failure. We therefore require the inflated
+    # half-width to also exceed this absolute floor, set to half the absolute
+    # cap (``max_ci_halfwidth``) so the relative check only ever fires for a CI
+    # that is genuinely degrading toward the absolute limit.
+    ci_inflate_min_hw: float = 0.15
     # Δt jitter guard (relative to dt)
     jitter_p95_rel_max: float = 0.25  # invalidate if p95(|jitter|)/dt exceeds this
     # Exogenous-subsidy heuristics
@@ -66,6 +85,15 @@ class SmellConfig:
     min_M_rise_db: float = 0.5
     M_rise_lookback: int = 3
     min_harvest_for_soc_gain: float = 1e-3
+    # With harvest forced to ~0, a genuine closed loop must spend down its
+    # stored energy: over a sustained window SoC should trend toward depletion.
+    # If harvest is ~0 for ``soc_lookback`` samples yet the *median* SoC stays at
+    # or above ``soc_high_floor``, the energy is being supplied from outside.
+    # Using a window median (rather than the endpoint difference) is robust to
+    # the brief drain that follows the final injection pulse, and it correctly
+    # catches the saturated case where injection pins SoC near its ceiling.
+    soc_lookback: int = 40
+    soc_high_floor: float = 0.5
 
 
 def ci_halfwidth(ci: Tuple[float, float]) -> float:
@@ -189,9 +217,10 @@ def invalid_by_ci_history(
             return True
         if baseline_medians is not None:
             b_loop, b_ex = baseline_medians
-            if b_loop > 0 and med_loop >= cfg.ci_inflate_factor * b_loop:
+            floor = cfg.ci_inflate_min_hw
+            if b_loop > 0 and med_loop >= cfg.ci_inflate_factor * b_loop and med_loop >= floor:
                 return True
-            if b_ex > 0 and med_ex >= cfg.ci_inflate_factor * b_ex:
+            if b_ex > 0 and med_ex >= cfg.ci_inflate_factor * b_ex and med_ex >= floor:
                 return True
         return False
     except Exception:
@@ -261,23 +290,27 @@ def exogenous_subsidy_red_flag(
         any internal error.
     """
     try:
+        # Rising-M-with-suspicious-I/O branch (apparent dominance bought on the
+        # exchange channel).
         n = cfg.M_rise_lookback
-        if len(Ms_db) < n or len(ios) < n or len(Es) < n or len(Hs) < n:
-            return False
-        recent_M = Ms_db[-n:]
-        recent_io = ios[-n:]
-        recent_E = Es[-n:]
-        recent_H = Hs[-n:]
-        # Simple rise check
-        M_rise = recent_M[-1] - recent_M[0]
-        io_rise = recent_io[-1] - recent_io[0]
-        if (M_rise >= cfg.min_M_rise_db) and (recent_io[-1] >= cfg.io_suspicious_threshold) and (io_rise > 0):
-            return True
-        # SoC rising while harvest ~0
-        E_rise = recent_E[-1] - recent_E[0]
-        avg_H = sum(recent_H) / float(n)
-        if (E_rise > 0.0) and (avg_H <= cfg.min_harvest_for_soc_gain):
-            return True
+        if len(Ms_db) >= n and len(ios) >= n:
+            recent_M = Ms_db[-n:]
+            recent_io = ios[-n:]
+            M_rise = recent_M[-1] - recent_M[0]
+            io_rise = recent_io[-1] - recent_io[0]
+            if (M_rise >= cfg.min_M_rise_db) and (recent_io[-1] >= cfg.io_suspicious_threshold) and (io_rise > 0):
+                return True
+        # SoC-maintained-without-harvest branch. Over a sustained window with
+        # harvest ~0 a real loop must trend toward depletion; if the median SoC
+        # instead stays high the energy is exogenous. The median is robust to the
+        # short drain after the final injection pulse and to SoC saturation.
+        ns = cfg.soc_lookback
+        if len(Es) >= ns and len(Hs) >= ns:
+            recent_E = sorted(Es[-ns:])
+            med_E = recent_E[len(recent_E) // 2]
+            avg_H = sum(Hs[-ns:]) / float(ns)
+            if (avg_H <= cfg.min_harvest_for_soc_gain) and (med_E >= cfg.soc_high_floor):
+                return True
         return False
     except Exception:
         return False

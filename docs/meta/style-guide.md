@@ -13,8 +13,9 @@ Python REPL or Jupyter notebook.
   Markdown, not plain `>` blockquotes.
 - Cross-link API symbols using mkdocstrings autorefs:
   `` [`estimate_L`][ldtc.lmeas.estimators.estimate_L] ``.
-- Reference the paper by section or box (for example,
-  "see paper §4.2 NC1") rather than by page number.
+- Reference the paper by section or box *name* (for example,
+  "see the paper's Formal Criterion, NC1") rather than by section
+  or page number, which drift between revisions.
 - Comments explain **why**, not **what** (the code already says what).
 
 ## Grammar and punctuation
@@ -119,7 +120,8 @@ class FixedScheduler:
     Enforces a constant sampling interval Δt and invokes a tick
     callback every period until stopped. Tracks jitter statistics and
     emits optional audit events through a user-provided hook (see
-    paper §4.5 Δt governance).
+    the paper's Measurement & Attestation Guardrails, Δt
+    governance).
 
     Attributes:
         dt: Current target period in seconds.
@@ -240,9 +242,10 @@ Inside a docstring, plain backticks plus the qualified name are
 typically enough; autorefs picks them up via signature annotations
 (`signature_crossrefs: true`).
 
-When linking to the paper, use a short text reference such as
-"paper §4.2 (NC1)" or "Box 1a (Invalidations)" rather than page
-numbers, which can drift between revisions.
+When linking to the paper, use a short text reference by section
+name such as "the Formal Criterion (NC1)" or "the Smell-tests
+box" rather than section or page numbers, which drift between
+revisions.
 
 ## Code samples
 

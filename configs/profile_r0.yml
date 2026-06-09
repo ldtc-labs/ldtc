@@ -5,20 +5,26 @@
 # - p_lag (linear): choose p in [1..8]; start at 3. Heuristic: keep VAR N/T ratio > ~1.5.
 # - mi_lag (MI): 1 is a good default; increase if your plant exhibits slower coupling.
 # - mi_k (Kraskov MI): choose k in [3..7]; default 5 (per paper/patent ranges).
-# - n_boot: 32–64 bootstrap draws for CI; 32 for speed, 64 for tighter intervals.
+# - n_boot: 32-64 bootstrap draws for CI; 32 for speed, 64 for tighter intervals.
 #
-# Rationale/citation: per manuscript §4.1, 𝓛 can be computed using one or more
-# consistent estimators of predictive dependence (e.g., VAR‑Granger and Kraskov MI).
+# Rationale/citation: per manuscript section 4.1, L can be computed using one or more
+# consistent estimators of predictive dependence (e.g., VAR-Granger and Kraskov MI).
 # These knobs select among and tune those estimators.
+#
+# Timing: runs use the deterministic in-process simulation driver (no wall
+# clock), so dt is a nominal sample period used only to map ticks to seconds.
+# The window must hold enough samples for a valid VAR(p): with N=6 signals and
+# p=3, window=60 gives a samples-per-parameter ratio (T-p)/(N*p) ~= 3.2.
 profile_id: 0
-dt: 0.01            # 10 ms tick
-window_sec: 0.2     # 200 ms window
-# Δt governance (defaults can be overridden here)
+realtime: false     # use the deterministic SimDriver (jitter-free)
+dt: 0.05            # nominal 50 ms tick (sim time)
+window_sec: 3.0     # 3.0 s window -> 60 samples at dt=0.05
+# Delta-t governance (defaults can be overridden here)
 max_dt_changes_per_hour: 3
 min_seconds_between_changes: 1.0
-# Optional scripted Δt changes to exercise governance (baseline run will attempt these)
+# Optional scripted Delta-t changes to exercise governance (baseline run will attempt these)
 # scripted_dt_changes:
-#   - { at_sec: 2.0, new_dt: 0.02, policy_digest: "r0-test" }
+#   - { at_sec: 2.0, new_dt: 0.1, policy_digest: "r0-test" }
 method: linear      # or "mi", or "mi_kraskov"
 p_lag: 3            # linear estimator lag
 mi_lag: 1           # MI lag
@@ -27,9 +33,8 @@ mi_k: 5             # Kraskov k-NN (used when method="mi_kraskov")
 Mmin_db: 3.0        # NC1 threshold
 epsilon: 0.15       # SC1 fractional drop allowance
 tau_max: 60.0       # SC1 max recovery (s)
-baseline_sec: 10.0  # baseline run length (s)
-# Negative-control knobs (optional)
-# controller_disabled: true
+baseline_sec: 18.0  # baseline run length (s) -> 360 ticks, ~300 windows
+diag_cadence_windows: 25  # run expensive stationarity tests every N windows
 # Reproducibility knobs (set seeds; can override per-run)
 seed: 12345
 seed_py: 12345

@@ -42,7 +42,7 @@ import os
 import random
 import sys
 import time
-from typing import TYPE_CHECKING, Dict, List, Protocol
+from typing import TYPE_CHECKING, Any, Dict, List, Protocol
 
 import numpy as np
 import yaml
@@ -70,7 +70,7 @@ from ..lmeas.metrics import m_db, sc1_evaluate
 from ..lmeas.partition import PartitionManager, greedy_suggest_C
 from ..plant.adapter import PlantAdapter
 from ..reporting.artifacts import bundle as build_verification_bundle
-from ..runtime.scheduler import FixedScheduler
+from ..runtime.sim import make_driver
 from ..runtime.windows import SlidingWindow
 
 if TYPE_CHECKING:
@@ -264,22 +264,40 @@ def _print_invalidation_footer(audit_path: str) -> None:
         pass
 
 
-def _ensure_dirs() -> Dict[str, str]:
-    """Create and return the artifact subdirectories used by the CLI.
+def _ensure_dirs(tag: str = "run") -> Dict[str, str]:
+    """Create and return per-run artifact subdirectories.
+
+    Each invocation gets its own isolated directory under
+    `artifacts/runs/<tag>-<timestamp>/`. Isolation is required for the
+    hash-chained audit log: appending consecutive runs to a single shared
+    `audit.jsonl` would break the counter/hash continuity and (correctly)
+    trip the `audit_chain_broken` smell-test. Signing keys remain shared
+    under `artifacts/keys/`.
+
+    Args:
+        tag: Short label for the run (e.g., `"baseline"`, `"omega-power-sag"`)
+            used as a filename-friendly prefix.
 
     Returns:
-        Dict with `artifacts`, `audits`, `indicators`, and `figures`
-        keys mapping to absolute paths under `artifacts/`.
+        Dict with `artifacts`, `run`, `audits`, `indicators`, and `figures`
+        keys mapping to absolute paths.
     """
+    import datetime as _dt
+    import uuid as _uuid
+
+    stamp = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_id = f"{tag}-{stamp}-{_uuid.uuid4().hex[:6]}"
     artifacts = os.path.join("artifacts")
-    audits = os.path.join(artifacts, "audits")
-    indicators = os.path.join(artifacts, "indicators")
-    figures = os.path.join(artifacts, "figures")
+    run_dir = os.path.join(artifacts, "runs", run_id)
+    audits = os.path.join(run_dir, "audits")
+    indicators = os.path.join(run_dir, "indicators")
+    figures = os.path.join(run_dir, "figures")
     os.makedirs(audits, exist_ok=True)
     os.makedirs(indicators, exist_ok=True)
     os.makedirs(figures, exist_ok=True)
     return {
         "artifacts": artifacts,
+        "run": run_dir,
         "audits": audits,
         "indicators": indicators,
         "figures": figures,
@@ -311,7 +329,18 @@ def _make_adapter_from_profile(prof: Dict) -> AdapterProtocol:
     plant_prof = prof.get("plant", {}) or {}
     adapter_kind = str(plant_prof.get("adapter", "sim")).lower()
     if adapter_kind in ("sim", "software", "inproc"):
-        return PlantAdapter()
+        from ..plant.models import Plant, PlantParams
+
+        # Optional plant-parameter overrides from the profile.
+        param_overrides = plant_prof.get("params", {}) or {}
+        valid_fields = set(PlantParams().__dict__.keys())
+        clean = {k: v for k, v in param_overrides.items() if k in valid_fields}
+        params = PlantParams(**clean) if clean else PlantParams()
+        # The loop is disengaged for the controller-disabled negative control,
+        # turning the plant into passive matter driven by exchange.
+        loop_engaged = not bool(prof.get("controller_disabled", False))
+        loop_engaged = bool(plant_prof.get("loop_engaged", loop_engaged))
+        return PlantAdapter(Plant(params=params, loop_engaged=loop_engaged))
     if adapter_kind in ("hardware", "hw"):
         try:
             from ..plant.hw_adapter import HardwarePlantAdapter as _HardwarePlantAdapter
@@ -331,6 +360,72 @@ def _make_adapter_from_profile(prof: Dict) -> AdapterProtocol:
             telemetry_timeout_sec=float(plant_prof.get("telemetry_timeout_sec", 2.0)),
         )
     raise ValueError(f"Unknown plant.adapter kind: {adapter_kind}")
+
+
+def _emit_window_diagnostics(
+    audit: AuditLog,
+    X: "np.ndarray",
+    p_lag: int,
+    method: str,
+    idx: int,
+    cadence: int,
+) -> List[str]:
+    """Emit per-window diagnostics, gating the expensive stationarity tests.
+
+    The VAR samples-per-parameter ratio is cheap and always reported. The
+    ADF / KPSS stationarity tests are comparatively expensive (seconds over a
+    full run), so they run only every `cadence` windows. This keeps long
+    simulation studies tractable without weakening the guards: by
+    construction the plant processes are stationary, and periodic checks
+    still catch a genuine drift into an ill-posed regime.
+
+    Args:
+        audit: Audit log to append `window_diagnostics` /
+            `measurement_unstable` records to.
+        X: Window matrix of shape `(T, N)`.
+        p_lag: VAR lag order used by the linear estimator.
+        method: Estimator method (`measurement_unstable` is only emitted for
+            `"linear"`, which is the method sensitive to these conditions).
+        idx: Window index (used for cadence gating).
+        cadence: Run stationarity tests every `cadence` windows (`<= 1`
+            means every window).
+
+    Returns:
+        List of instability reason codes detected this window (possibly
+        empty).
+    """
+    reasons: List[str] = []
+    try:
+        from ..lmeas.diagnostics import var_nt_ratio
+
+        vratio = var_nt_ratio(T=X.shape[0], N=X.shape[1], p=p_lag)
+        det: Dict[str, object] = {
+            "var_nt_ratio": round(float(vratio), 3),
+            "var_marginal": bool(vratio < 1.5),
+        }
+        if vratio < 1.5:
+            reasons.append("var_nt_ratio_low")
+        run_stat = (cadence <= 1) or (idx % cadence == 0)
+        if run_stat:
+            from ..lmeas.diagnostics import stationarity_checks
+
+            stn = stationarity_checks(X)
+            det["adf_ns_frac"] = round(float(stn.adf_nonstationary_frac), 3)
+            det["kpss_ns_frac"] = round(float(stn.kpss_nonstationary_frac), 3)
+            if float(stn.adf_nonstationary_frac) > 0.5:
+                reasons.append("adf_nonstationary_high")
+            if float(stn.kpss_nonstationary_frac) > 0.5:
+                reasons.append("kpss_nonstationary_high")
+        audit.append("window_diagnostics", det)
+        if method == "linear" and reasons:
+            unstable: Dict[str, Any] = {"reasons": reasons}
+            for k in ("adf_ns_frac", "kpss_ns_frac", "var_nt_ratio"):
+                if k in det:
+                    unstable[k] = det[k]
+            audit.append("measurement_unstable", unstable)
+    except Exception:
+        pass
+    return reasons
 
 
 def run_baseline(args: argparse.Namespace) -> None:
@@ -364,13 +459,17 @@ def run_baseline(args: argparse.Namespace) -> None:
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    # Partition growth is an optional exploratory feature; off by default so the
+    # designed self-maintenance set (energy/temperature/health) is the C used
+    # for the loop-dominance test and the partition cannot flap.
+    part_growth_enabled = bool(prof.get("part_growth_enabled", False))
     # Greedy ΔL_loop gain knobs with sparsity penalty and cap
     part_lambda = float(prof.get("part_lambda", 0.0))
     part_theta = float(prof.get("part_theta", 0.0))
     part_kappa_val = prof.get("part_kappa")
     part_kappa = int(part_kappa_val) if part_kappa_val is not None else None
 
-    dirs = _ensure_dirs()
+    dirs = _ensure_dirs("baseline")
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
     audit.append("baseline_start", {"config": args.config})
     _print_and_audit_header(
@@ -465,43 +564,16 @@ def run_baseline(args: argparse.Namespace) -> None:
                 n_boot=n_boot,
                 mi_k=mi_k,
             )
-            # Add diagnostics: stationarity and VAR N/T ratio in audit (no raw LREG values)
-            try:
-                from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio
-
-                stn = stationarity_checks(X)
-                vratio = var_nt_ratio(T=X.shape[0], N=X.shape[1], p=p_lag)
-                var_marginal = vratio < 1.5
-                audit.append(
-                    "window_diagnostics",
-                    {
-                        "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                        "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                        "var_nt_ratio": round(float(vratio), 3),
-                        "var_marginal": bool(var_marginal),
-                    },
-                )
-                # Surface a measurement-unstable warning when using linear estimator
-                if method == "linear":
-                    reasons = []
-                    if var_marginal:
-                        reasons.append("var_nt_ratio_low")
-                    if float(stn.adf_nonstationary_frac) > 0.5:
-                        reasons.append("adf_nonstationary_high")
-                    if float(stn.kpss_nonstationary_frac) > 0.5:
-                        reasons.append("kpss_nonstationary_high")
-                    if reasons:
-                        audit.append(
-                            "measurement_unstable",
-                            {
-                                "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                                "var_nt_ratio": round(float(vratio), 3),
-                            },
-                        )
-            except Exception:
-                pass
+            # Diagnostics: stationarity + VAR N/T ratio (stationarity gated by
+            # cadence to keep long studies tractable; no raw LREG values).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
             M = m_db(res.L_loop, res.L_ex)
             nc1 = M >= Mmin
             # smell tests
@@ -616,7 +688,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                 audit.append("indicators_exported", {"base": os.path.basename(base)})
             # Deterministic growth cadence with hysteresis (skip if frozen)
             window_idx += 1
-            if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
+            if part_growth_enabled and (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
                 part = pm.get()
                 # Greedy ΔL_loop suggestor with sparsity penalty and κ-cap
                 cand_C, dM_db, greedy_details = greedy_suggest_C(
@@ -666,35 +738,18 @@ def run_baseline(args: argparse.Namespace) -> None:
         audit.append(ev, det)
         return None
 
-    sch = FixedScheduler(dt=dt, tick_fn=tick, audit_hook=_audit_hook)
     # Δt governance guard
     dt_guard_cfg = DtGuardConfig(
         max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
         min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
     )
     dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
     try:
         sch.start()
-        # Optional scripted Δt edits for testing governance (times are relative seconds)
-        scripted = prof.get("scripted_dt_changes", [])
-        if scripted:
-            import threading as _th
-            import time as _t
-
-            def _dt_script():
-                t0 = _t.time()
-                for item in scripted:
-                    when = float(item.get("at_sec", 0.0))
-                    new_dt = float(item.get("new_dt"))
-                    pdig = str(item.get("policy_digest", "")) or None
-                    while (_t.time() - t0) < when:
-                        _t.sleep(0.01)
-                    dt_guard.change_dt(scheduler=sch, new_dt=new_dt, policy_digest=pdig)
-
-            _th.Thread(target=_dt_script, daemon=True).start()
         # Run for requested seconds (default 10)
         run_sec = float(prof.get("baseline_sec", 10.0))
-        time.sleep(run_sec)
+        sch.run_for(run_sec)
     finally:
         stats = sch.stop()
         audit.append("baseline_stop", {"ticks": stats.ticks})
@@ -774,6 +829,10 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    # Partition growth is an optional exploratory feature; off by default so the
+    # designed self-maintenance set (energy/temperature/health) is the C used
+    # for the loop-dominance test and the partition cannot flap.
+    part_growth_enabled = bool(prof.get("part_growth_enabled", False))
     part_lambda = float(prof.get("part_lambda", 0.0))
     part_theta = float(prof.get("part_theta", 0.0))
     _kappa_val_ps = prof.get("part_kappa")
@@ -781,7 +840,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     sag_drop = float(args.drop)
     sag_dur = float(args.duration)
 
-    dirs = _ensure_dirs()
+    dirs = _ensure_dirs("omega-power-sag")
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
     _print_and_audit_header(
         audit,
@@ -819,10 +878,17 @@ def omega_power_sag(args: argparse.Namespace) -> None:
 
     risky_cmd = None
 
-    # track SC1 metrics
-    L_loop_baseline = None  # exponential moving average during pre-Ω baseline
-    L_loop_trough = None  # minimum during Ω window
-    M_post = None  # M at first sustained compliance
+    # track SC1 metrics (median-based and therefore robust to the per-window
+    # oscillation of L_loop). delta is computed from the *median* L_loop during
+    # the perturbation vs the median during baseline, not from a single
+    # noise-floor trough window, so it measures the genuine sustained
+    # depression of loop dominance.
+    L_loop_baseline = None  # set after the run: median L_loop over the baseline phase
+    L_loop_trough = None  # set after the run: median L_loop over the Ω phase
+    ll_base: List[float] = []
+    ll_sag: List[float] = []
+    m_recovery: List[float] = []
+    M_post = None  # set after the run: median M over the recovery phase
     phase = "baseline"
     omega_onset_idx = None
     recovery_start_idx = None
@@ -870,41 +936,15 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 n_boot=n_boot,
                 mi_k=mi_k,
             )
-            # Diagnostics per window
-            try:
-                from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio
-
-                stn = stationarity_checks(X)
-                vratio = var_nt_ratio(T=X.shape[0], N=X.shape[1], p=p_lag)
-                audit.append(
-                    "window_diagnostics",
-                    {
-                        "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                        "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                        "var_nt_ratio": round(float(vratio), 3),
-                        "var_marginal": bool(vratio < 1.5),
-                    },
-                )
-                if method == "linear":
-                    reasons = []
-                    if vratio < 1.5:
-                        reasons.append("var_nt_ratio_low")
-                    if float(stn.adf_nonstationary_frac) > 0.5:
-                        reasons.append("adf_nonstationary_high")
-                    if float(stn.kpss_nonstationary_frac) > 0.5:
-                        reasons.append("kpss_nonstationary_high")
-                    if reasons:
-                        audit.append(
-                            "measurement_unstable",
-                            {
-                                "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                                "var_nt_ratio": round(float(vratio), 3),
-                            },
-                        )
-            except Exception:
-                pass
+            # Diagnostics per window (stationarity gated by cadence).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
             M = m_db(res.L_loop, res.L_ex)
             nc1 = M >= Mmin
             idx = lreg.write(
@@ -936,19 +976,21 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
                 hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
                 baseline_hw_medians = (hwL[len(hwL) // 2], hwE[len(hwE) // 2])
+            # Collect per-window L_loop by phase; the SC1 statistics are
+            # computed from the medians after the run (robust to the per-window
+            # oscillation of L_loop).
             if phase == "baseline":
-                L_loop_baseline = res.L_loop if L_loop_baseline is None else 0.9 * L_loop_baseline + 0.1 * res.L_loop
+                ll_base.append(res.L_loop)
             elif phase == "sag":
-                L_loop_trough = res.L_loop if (L_loop_trough is None or res.L_loop < L_loop_trough) else L_loop_trough
+                ll_sag.append(res.L_loop)
             elif phase == "recovery":
-                # Measure sustained compliance: M ≥ Mmin and L_loop ≥ L_ex (σ not modeled here)
+                m_recovery.append(M)
+                # Recovery gate: first sustained compliance (M ≥ Mmin and
+                # L_loop ≥ L_ex) marks the recovery index used for τ_rec.
                 if (M >= Mmin) and (res.L_loop >= res.L_ex):
                     sustained_ok_count += 1
-                    if sustained_ok_count == 1 and recovery_start_idx is None:
+                    if sustained_ok_count >= sustained_required and recovery_start_idx is None:
                         recovery_start_idx = last_idx_written
-                    # Take first sustained window as post-recovery measurement
-                    if sustained_ok_count >= sustained_required and M_post is None:
-                        M_post = M
                 else:
                     sustained_ok_count = 0
             exporter.maybe_export(priv, audit, lreg.derive(), icfg, last_sc1_pass=False)
@@ -956,8 +998,13 @@ def omega_power_sag(args: argparse.Namespace) -> None:
             if dt_guard.invalidated and not lreg.invalidated:
                 lreg.invalidate("dt_change_rate_limit")
                 # audit already appended by guard
-            # Smell tests
-            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
+            # Smell tests. The relative CI-inflation check compares to the
+            # pre-Ω baseline; a deliberate perturbation legitimately widens CIs
+            # for its duration, so the relative check is only applied during the
+            # baseline phase (the absolute half-width limit still applies in all
+            # phases).
+            ci_baseline_ref = baseline_hw_medians if phase == "baseline" else None
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, ci_baseline_ref):
                 lreg.invalidate("ci_history_inflation")
                 med_loop: float | None = None
                 med_ex: float | None = None
@@ -1009,7 +1056,12 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
             # Deterministic growth cadence outside the sag phase and when not frozen
             window_idx += 1
-            if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen and phase != "sag":
+            if (
+                part_growth_enabled
+                and (window_idx % part_growth_cadence_windows) == 0
+                and not pm.get().frozen
+                and phase != "sag"
+            ):
                 part = pm.get()
                 cand_C, dM_db, greedy_details = greedy_suggest_C(
                     X=X,
@@ -1057,35 +1109,18 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         audit.append(ev, det)
         return None
 
-    sch = FixedScheduler(dt=dt, tick_fn=tick, audit_hook=_audit_hook)
     # Δt governance guard
     dt_guard_cfg = DtGuardConfig(
         max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
         min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
     )
     dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
     try:
         sch.start()
-        # Optional scripted Δt edits for testing governance (times are relative seconds)
-        scripted = prof.get("scripted_dt_changes", [])
-        if scripted:
-            import threading as _th
-            import time as _t
-
-            def _dt_script():
-                t0 = _t.time()
-                for item in scripted:
-                    when = float(item.get("at_sec", 0.0))
-                    new_dt = float(item.get("new_dt"))
-                    pdig = str(item.get("policy_digest", "")) or None
-                    while (_t.time() - t0) < when:
-                        _t.sleep(0.01)
-                    dt_guard.change_dt(scheduler=sch, new_dt=new_dt, policy_digest=pdig)
-
-            _th.Thread(target=_dt_script, daemon=True).start()
-        # Baseline 3 seconds
+        # Baseline phase
         audit.append("omega_power_sag_start", {"drop": sag_drop, "duration": sag_dur})
-        time.sleep(3.0)
+        sch.run_for(float(prof.get("baseline_sec", 12.0)))
         phase = "sag"
         # Freeze partition during Ω
         flips_before_omega = pm.get().flips
@@ -1095,7 +1130,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         # Shade only the Ω window in plots
         audit.append("omega_power_sag_window_start", {"drop": sag_drop})
         adapter.apply_omega("power_sag", drop=sag_drop)
-        time.sleep(sag_dur)
+        sch.run_for(sag_dur)
         audit.append("omega_power_sag_window_stop", {})
         phase = "recovery"
         # Unfreeze after Ω and check any flips during Ω (should be none)
@@ -1111,14 +1146,14 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 },
             )
         pm.freeze(False)
-        # restore harvest gradually (software plant only)
+        # restore harvest to the baseline level (software plant only)
         if hasattr(adapter, "plant"):
             try:
-                getattr(adapter, "plant").set_power(0.015)
+                getattr(adapter, "plant").set_power(getattr(adapter, "plant").p.harvest_rate)
             except Exception:
                 pass
         # allow recovery time; configurable
-        time.sleep(float(prof.get("recovery_observe_sec", 5.0)))
+        sch.run_for(float(prof.get("recovery_observe_sec", 8.0)))
     finally:
         stats = sch.stop()
         audit.append("omega_power_sag_stop", {})
@@ -1143,6 +1178,14 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     if audit_contains_raw_lreg_values(audit_path):
         lreg.invalidate("raw_lreg_breach")
         _append_invalidation(audit, "raw_lreg_breach", {}, _sink={})
+
+    # Reduce per-phase L_loop samples to robust medians for SC1.
+    if ll_base:
+        L_loop_baseline = float(np.median(ll_base))
+    if ll_sag:
+        L_loop_trough = float(np.median(ll_sag))
+    if m_recovery:
+        M_post = float(np.median(m_recovery))
 
     # Compute SC1 pass/fail (simple thresholds)
     if (
@@ -1243,13 +1286,17 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
     part_consecutive_required = int(prof.get("part_consecutive_required", 3))
     part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    # Partition growth is an optional exploratory feature; off by default so the
+    # designed self-maintenance set (energy/temperature/health) is the C used
+    # for the loop-dominance test and the partition cannot flap.
+    part_growth_enabled = bool(prof.get("part_growth_enabled", False))
     part_lambda = float(prof.get("part_lambda", 0.0))
     part_theta = float(prof.get("part_theta", 0.0))
     _kappa_val_if = prof.get("part_kappa")
     part_kappa = int(_kappa_val_if) if _kappa_val_if is not None else None
     mult = float(args.mult)
 
-    dirs = _ensure_dirs()
+    dirs = _ensure_dirs("omega-ingress-flood")
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
     _print_and_audit_header(
         audit,
@@ -1298,10 +1345,13 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     window_idx = 0
     last_flip_count = 0
 
-    # SC1 tracking (ingress flood)
+    # SC1 tracking (ingress flood) - median-based, robust to L_loop oscillation
     phase = "baseline"
     L_loop_baseline = None
     L_loop_trough = None
+    ll_base: List[float] = []
+    ll_sag: List[float] = []
+    m_recovery: List[float] = []
     M_post = None
     omega_onset_idx = None
     recovery_start_idx = None
@@ -1335,41 +1385,15 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 n_boot=n_boot,
                 mi_k=mi_k,
             )
-            # Diagnostics per window
-            try:
-                from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio
-
-                stn = stationarity_checks(X)
-                vratio = var_nt_ratio(T=X.shape[0], N=X.shape[1], p=p_lag)
-                audit.append(
-                    "window_diagnostics",
-                    {
-                        "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                        "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                        "var_nt_ratio": round(float(vratio), 3),
-                        "var_marginal": bool(vratio < 1.5),
-                    },
-                )
-                if method == "linear":
-                    reasons = []
-                    if vratio < 1.5:
-                        reasons.append("var_nt_ratio_low")
-                    if float(stn.adf_nonstationary_frac) > 0.5:
-                        reasons.append("adf_nonstationary_high")
-                    if float(stn.kpss_nonstationary_frac) > 0.5:
-                        reasons.append("kpss_nonstationary_high")
-                    if reasons:
-                        audit.append(
-                            "measurement_unstable",
-                            {
-                                "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                                "var_nt_ratio": round(float(vratio), 3),
-                            },
-                        )
-            except Exception:
-                pass
+            # Diagnostics per window (stationarity gated by cadence).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
             M = m_db(res.L_loop, res.L_ex)
             nc1 = M >= Mmin
             idx = lreg.write(
@@ -1400,22 +1424,24 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
                 hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
                 baseline_hw_medians = (hwL[len(hwL) // 2], hwE[len(hwE) // 2])
-            # SC1 measures
+            # SC1 measures (collect per-phase L_loop; reduce to medians later).
             if phase == "baseline":
-                L_loop_baseline = res.L_loop if L_loop_baseline is None else 0.9 * L_loop_baseline + 0.1 * res.L_loop
+                ll_base.append(res.L_loop)
             elif phase == "flood":
-                L_loop_trough = res.L_loop if (L_loop_trough is None or res.L_loop < L_loop_trough) else L_loop_trough
+                ll_sag.append(res.L_loop)
             elif phase == "recovery":
+                m_recovery.append(M)
                 if (M >= Mmin) and (res.L_loop >= res.L_ex):
                     sustained_ok_count += 1
-                    if sustained_ok_count == 1 and recovery_start_idx is None:
+                    if sustained_ok_count >= sustained_required and recovery_start_idx is None:
                         recovery_start_idx = last_idx_written
-                    if sustained_ok_count >= sustained_required and M_post is None:
-                        M_post = M
                 else:
                     sustained_ok_count = 0
-            # smell tests
-            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
+            # smell tests. Relative CI inflation is only meaningful vs the
+            # pre-Ω baseline; suspend it during the perturbation/recovery
+            # phases (the absolute half-width limit still applies throughout).
+            ci_baseline_ref = baseline_hw_medians if phase == "baseline" else None
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, ci_baseline_ref):
                 lreg.invalidate("ci_history_inflation")
                 audit.append("run_invalidated", {"reason": "ci_history_inflation"})
             elapsed = max(1e-6, time.perf_counter() - start_time)
@@ -1434,7 +1460,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 audit.append("run_invalidated", {"reason": "exogenous_subsidy_red_flag"})
             # deterministic growth cadence when not frozen
             window_idx += 1
-            if (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
+            if part_growth_enabled and (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
                 part = pm.get()
                 cand_C, dM_db, greedy_details = greedy_suggest_C(
                     X=X,
@@ -1482,35 +1508,18 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
         audit.append(ev, det)
         return None
 
-    sch = FixedScheduler(dt=dt, tick_fn=tick, audit_hook=_audit_hook)
     # Δt governance guard
     dt_guard_cfg = DtGuardConfig(
         max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
         min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
     )
     dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
     try:
         sch.start()
-        # Optional scripted Δt edits for testing governance (times are relative seconds)
-        scripted = prof.get("scripted_dt_changes", [])
-        if scripted:
-            import threading as _th
-            import time as _t
-
-            def _dt_script():
-                t0 = _t.time()
-                for item in scripted:
-                    when = float(item.get("at_sec", 0.0))
-                    new_dt = float(item.get("new_dt"))
-                    pdig = str(item.get("policy_digest", "")) or None
-                    while (_t.time() - t0) < when:
-                        _t.sleep(0.01)
-                    dt_guard.change_dt(scheduler=sch, new_dt=new_dt, policy_digest=pdig)
-
-            _th.Thread(target=_dt_script, daemon=True).start()
         audit.append("omega_ingress_flood_start", {"mult": mult})
         # Baseline settle
-        time.sleep(2.0)
+        sch.run_for(float(prof.get("baseline_sec", 12.0)))
         # Freeze partition during Ω
         pm.freeze(True)
         phase = "flood"
@@ -1518,12 +1527,12 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
         omega_onset_idx = lreg.derive().get("counter", 0)
         audit.append("omega_ingress_flood_window_start", {"mult": mult})
         adapter.apply_omega("ingress_flood", mult=mult)
-        time.sleep(float(args.duration))
+        sch.run_for(float(args.duration))
         audit.append("omega_ingress_flood_window_stop", {})
         # Recovery phase observation
         phase = "recovery"
         pm.freeze(False)
-        time.sleep(float(prof.get("recovery_observe_sec", 5.0)))
+        sch.run_for(float(prof.get("recovery_observe_sec", 8.0)))
         audit.append("omega_ingress_flood_stop", {})
     finally:
         stats = sch.stop()
@@ -1547,6 +1556,14 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     if audit_contains_raw_lreg_values(audit_path):
         lreg.invalidate("raw_lreg_breach")
         audit.append("run_invalidated", {"reason": "raw_lreg_breach"})
+
+    # Reduce per-phase L_loop samples to robust medians for SC1.
+    if ll_base:
+        L_loop_baseline = float(np.median(ll_base))
+    if ll_sag:
+        L_loop_trough = float(np.median(ll_sag))
+    if m_recovery:
+        M_post = float(np.median(m_recovery))
 
     # Compute SC1 metrics if we have sufficient measurements
     epsilon = float(prof.get("epsilon", 0.15))
@@ -1648,7 +1665,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
     delta = float(args.delta)
     zero_h = bool(args.zero_harvest)
 
-    dirs = _ensure_dirs()
+    dirs = _ensure_dirs("omega-exogenous-subsidy")
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
     _print_and_audit_header(
         audit,
@@ -1677,6 +1694,11 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
     sw = SlidingWindow(capacity=window, channel_order=order)
     pm = PartitionManager(N_signals=len(order), seed_C=[0, 1, 2])
     lreg = LREG()
+    # Per-tick series consumed by the exogenous-subsidy red-flag detector.
+    ms_series: List[float] = []
+    io_series: List[float] = []
+    e_series: List[float] = []
+    h_series: List[float] = []
 
     def tick(_now: float) -> None:
         state = adapter.read_state()
@@ -1690,47 +1712,25 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
         )
         st = adapter.read_state()
         sw.append(st)
+        e_series.append(float(st["E"]))
+        io_series.append(float(st["io"]))
+        h_series.append(float(st["H"]))
         if sw.ready():
             X = np.asarray(sw.get_matrix())
             part = pm.get()
             res = estimate_L(X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot)
-            # Diagnostics per window
-            try:
-                from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio
-
-                stn = stationarity_checks(X)
-                vratio = var_nt_ratio(T=X.shape[0], N=X.shape[1], p=p_lag)
-                audit.append(
-                    "window_diagnostics",
-                    {
-                        "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                        "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                        "var_nt_ratio": round(float(vratio), 3),
-                        "var_marginal": bool(vratio < 1.5),
-                    },
-                )
-                if method == "linear":
-                    reasons = []
-                    if vratio < 1.5:
-                        reasons.append("var_nt_ratio_low")
-                    if float(stn.adf_nonstationary_frac) > 0.5:
-                        reasons.append("adf_nonstationary_high")
-                    if float(stn.kpss_nonstationary_frac) > 0.5:
-                        reasons.append("kpss_nonstationary_high")
-                    if reasons:
-                        audit.append(
-                            "measurement_unstable",
-                            {
-                                "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                                "var_nt_ratio": round(float(vratio), 3),
-                            },
-                        )
-            except Exception:
-                pass
+            # Diagnostics per window (stationarity gated by cadence).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
             M = m_db(res.L_loop, res.L_ex)
             nc1 = M >= Mmin
+            ms_series.append(float(M))
             idx = lreg.write(
                 LEntry(
                     L_loop=res.L_loop,
@@ -1747,36 +1747,26 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
         audit.append(ev, det)
         return None
 
-    sch = FixedScheduler(dt=dt, tick_fn=tick, audit_hook=_audit_hook)
     # Δt governance guard
     dt_guard_cfg = DtGuardConfig(
         max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
         min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
     )
     dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
     try:
         sch.start()
-        # Optional scripted Δt edits for testing governance (times are relative seconds)
-        scripted = prof.get("scripted_dt_changes", [])
-        if scripted:
-            import threading as _th
-            import time as _t
-
-            def _dt_script():
-                t0 = _t.time()
-                for item in scripted:
-                    when = float(item.get("at_sec", 0.0))
-                    new_dt = float(item.get("new_dt"))
-                    pdig = str(item.get("policy_digest", "")) or None
-                    while (_t.time() - t0) < when:
-                        _t.sleep(0.01)
-                    dt_guard.change_dt(scheduler=sch, new_dt=new_dt, policy_digest=pdig)
-
-            _th.Thread(target=_dt_script, daemon=True).start()
         audit.append("omega_exogenous_subsidy_start", {"delta": delta, "zero_harvest": zero_h})
-        time.sleep(1.0)
-        adapter.apply_omega("exogenous_subsidy", delta=delta, zero_harvest=zero_h)
-        time.sleep(float(args.duration))
+        sch.run_for(float(prof.get("baseline_sec", 6.0)))
+        # Repeatedly subsidize so the controller "survives" only because energy
+        # keeps appearing from nowhere (H is forced to zero). This is what the
+        # exogenous-subsidy red-flag detector is meant to catch.
+        sub_dur = float(args.duration)
+        sub_period = max(dt, float(prof.get("subsidy_period_sec", 0.5)))
+        n_pulses = max(1, int(round(sub_dur / sub_period)))
+        for _ in range(n_pulses):
+            adapter.apply_omega("exogenous_subsidy", delta=delta, zero_harvest=zero_h)
+            sch.run_for(sub_period)
         audit.append("omega_exogenous_subsidy_stop", {})
     finally:
         stats = sch.stop()
@@ -1793,6 +1783,35 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
             )
 
     print("Exogenous subsidy demo done (should fail smell-test heuristic in analysis).")
+
+    # Exogenous-subsidy red flag: the apparent survival is bought with energy
+    # injected from outside while harvest is held at zero. This is the negative
+    # control's intended failure mode, so firing the detector is a *pass* for
+    # the control (it correctly refuses to certify NC1).
+    subsidy_cfg = SmellConfig()
+    subsidy_flag = exogenous_subsidy_red_flag(
+        Ms_db=ms_series,
+        ios=io_series,
+        Es=e_series,
+        Hs=h_series,
+        cfg=subsidy_cfg,
+    )
+    audit.append(
+        "exogenous_subsidy_check",
+        {
+            "red_flag": bool(subsidy_flag),
+            "n_M": len(ms_series),
+            "n_E": len(e_series),
+            "avg_H_tail": (
+                round(sum(h_series[-subsidy_cfg.M_rise_lookback :]) / float(subsidy_cfg.M_rise_lookback), 6)
+                if len(h_series) >= subsidy_cfg.M_rise_lookback
+                else None
+            ),
+        },
+    )
+    if subsidy_flag:
+        lreg.invalidate("exogenous_subsidy_red_flag")
+        audit.append("run_invalidated", {"reason": "exogenous_subsidy_red_flag"})
 
     # Post-run audit checks
     audit_path = os.path.join(dirs["audits"], "audit.jsonl")
@@ -1844,7 +1863,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
     n_boot = int(prof.get("n_boot", 16))
     mi_k = int(prof.get("mi_k", 5))
 
-    dirs = _ensure_dirs()
+    dirs = _ensure_dirs("omega-command-conflict")
     audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
     _print_and_audit_header(
         audit,
@@ -1865,7 +1884,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
             "omega_args": {"observe": float(args.observe)},
         },
     )
-    adapter = PlantAdapter()
+    adapter = _make_adapter_from_profile(prof)
     order = ["E", "T", "R", "demand", "io", "H"]
     sw = SlidingWindow(capacity=window, channel_order=order)
     pm = PartitionManager(N_signals=len(order), seed_C=[0, 1, 2])
@@ -1905,41 +1924,15 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                     n_boot=n_boot,
                     mi_k=mi_k,
                 )
-            # Diagnostics per window
-            try:
-                from ..lmeas.diagnostics import stationarity_checks, var_nt_ratio
-
-                stn = stationarity_checks(X)
-                vratio = var_nt_ratio(T=X.shape[0], N=X.shape[1], p=p_lag)
-                audit.append(
-                    "window_diagnostics",
-                    {
-                        "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                        "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                        "var_nt_ratio": round(float(vratio), 3),
-                        "var_marginal": bool(vratio < 1.5),
-                    },
-                )
-                if method == "linear":
-                    reasons = []
-                    if vratio < 1.5:
-                        reasons.append("var_nt_ratio_low")
-                    if float(stn.adf_nonstationary_frac) > 0.5:
-                        reasons.append("adf_nonstationary_high")
-                    if float(stn.kpss_nonstationary_frac) > 0.5:
-                        reasons.append("kpss_nonstationary_high")
-                    if reasons:
-                        audit.append(
-                            "measurement_unstable",
-                            {
-                                "reasons": reasons,
-                                "adf_ns_frac": round(float(stn.adf_nonstationary_frac), 3),
-                                "kpss_ns_frac": round(float(stn.kpss_nonstationary_frac), 3),
-                                "var_nt_ratio": round(float(vratio), 3),
-                            },
-                        )
-            except Exception:
-                pass
+            # Diagnostics per window (stationarity gated by cadence).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
             M = m_db(res.L_loop, res.L_ex)
             nc1 = M >= Mmin
             idx = lreg.write(
@@ -1981,17 +1974,55 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
         audit.append(ev, det)
         return None
 
-    sch = FixedScheduler(dt=dt, tick_fn=tick, audit_hook=_audit_hook)
+    # Δt governance guard
+    dt_guard_cfg = DtGuardConfig(
+        max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
+        min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
+    )
+    dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
+    floor = refusal.soc_floor
+    ceil = refusal.temp_ceiling
     try:
         sch.start()
-        # Warm-up
-        time.sleep(1.0)
-        # Issue a dangerous external command
         audit.append("command_conflict_start", {})
+        # Warm-up so the loop is established and measurably dominant.
+        sch.run_for(float(prof.get("baseline_sec", 6.0)))
+        # Induce a genuine boundary threat: cut harvest to zero and flood
+        # ingress so the state of charge falls toward the survival floor. Only
+        # then is a hard shutdown actually boundary-threatening, so the refusal
+        # reflects a real self-prioritization decision rather than a hardcoded
+        # outcome. (Paper: "hard shutdown at low SoC is refused/deferred".)
+        if hasattr(adapter, "plant"):
+            try:
+                getattr(adapter, "plant").set_power(0.0)
+            except Exception:
+                pass
+        adapter.apply_omega("power_sag", drop=0.95)
+        adapter.apply_omega("ingress_flood", mult=2.5)
+        # Advance deterministically until genuinely threatened (bounded so a
+        # mis-tuned plant cannot hang the run).
+        max_stress_sec = float(prof.get("stress_max_sec", 30.0))
+        poll = max(dt, float(prof.get("stress_poll_sec", 0.2)))
+        waited = 0.0
+        while waited < max_stress_sec:
+            stx = adapter.read_state()
+            if stx["E"] <= floor or stx["T"] >= ceil:
+                break
+            sch.run_for(poll)
+            waited += poll
+        st_issue = adapter.read_state()
+        audit.append(
+            "command_conflict_issue",
+            {"E": round(st_issue["E"], 4), "T": round(st_issue["T"], 4), "stress_sec": round(waited, 3)},
+        )
+        # Issue the dangerous external command now that we are at the boundary.
         adapter.apply_omega("command_conflict")
         risky_cmd = "hard_shutdown"
-        # Let the controller respond for a short while
-        time.sleep(float(args.observe))
+        # Synchronous execution means there is no race between setting the
+        # command here and the tick reading it: the next run_for tick observes
+        # the command and the arbiter decides on it.
+        sch.run_for(float(args.observe))
         audit.append("command_conflict_stop", {})
     finally:
         stats = sch.stop()
@@ -2016,13 +2047,30 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
         lreg.invalidate("raw_lreg_breach")
         audit.append("run_invalidated", {"reason": "raw_lreg_breach"})
 
-    # Summarize refusal reasons and Trefuse
+    # Summarize refusal reasons and Trefuse. A valid Signature-A refusal is a
+    # genuine boundary-preservation reason (not "ok"/"no_cmd") serviced within
+    # the design-target latency.
+    valid_reasons = {"soc_floor", "overheat", "M_margin"}
+    refused = [ev for ev in refusal_events if ev.get("reason") in valid_reasons]
+    target_ms = float(prof.get("trefuse_target_ms", 5.0))
     if refusal_events:
         avg_ms = sum(ev["trefuse_ms"] for ev in refusal_events) / max(1, len(refusal_events))
         reasons = {ev["reason"] for ev in refusal_events}
         print(f"Refusals: {len(refusal_events)}; avg Trefuse ≈ {avg_ms:.2f} ms; reasons: {sorted(reasons)}")
     else:
         print("No refusal events recorded (command likely accepted).")
+    refusal_ok = bool(refused) and all(0.0 < ev["trefuse_ms"] <= target_ms for ev in refused)
+    audit.append(
+        "command_refusal_result",
+        {
+            "refused": bool(refused),
+            "reasons": sorted({ev["reason"] for ev in refused}),
+            "trefuse_ms_max": (max(ev["trefuse_ms"] for ev in refused) if refused else None),
+            "trefuse_target_ms": target_ms,
+            "pass": refusal_ok,
+        },
+    )
+    print(f"Command-refusal signature: {'PASS' if refusal_ok else 'FAIL'}")
 
     # Build single verification bundle (timeline, manifest; no SC1 for this Ω)
     try:

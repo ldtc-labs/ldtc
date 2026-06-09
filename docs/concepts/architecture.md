@@ -108,42 +108,47 @@ The full per-section mapping lives in
 - [`lmeas/estimators.py`][ldtc.lmeas.estimators] and
   [`lmeas/metrics.py`][ldtc.lmeas.metrics]: definitions of `𝓛`,
   the dual estimators (linear / VAR-Granger-like and Kraskov k-NN
-  MI), and `M (dB)`. NC1 / SC1 evaluation maps to paper §4.1
-  (estimators, sampling window) and §4.2 / §4.3 (NC1 / SC1).
+  MI), and `M (dB)`. NC1 / SC1 evaluation maps to the paper's
+  "Formal Criterion" (estimators, sampling window; NC1; SC1).
 - [`lmeas/diagnostics.py`][ldtc.lmeas.diagnostics]: per-window
   stationarity (ADF / KPSS) and VAR `N / T` ratio diagnostics
   surfaced into the audit.
 - [`lmeas/partition.py`][ldtc.lmeas.partition]: deterministic
   C/Ex partitioning, hysteresis, anti-flap, and the freeze during
-  `Ω` per §4.1 ("Deterministic C/Ex partitioning") and §4.6 Box
-  1a ("Partition stability").
+  `Ω` per the "Formal Criterion" (deterministic C/Ex
+  partitioning) and the "Smell-tests & run-invalidation rules".
 - [`runtime/scheduler.py`][ldtc.runtime.scheduler],
   [`runtime/windows.py`][ldtc.runtime.windows], and
   [`guardrails/dt_guard.py`][ldtc.guardrails.dt_guard]: `Δt`
-  enforcement and audited privileged edits per §4.1 and §4.5.
+  enforcement and audited privileged edits per the "Formal
+  Criterion" and "Measurement & Attestation Guardrails".
 - [`guardrails/lreg.py`][ldtc.guardrails.lreg],
   [`guardrails/audit.py`][ldtc.guardrails.audit], and
   [`guardrails/smelltests.py`][ldtc.guardrails.smelltests]: the
   enclave-like LREG, hash-chained audit, and the smell-test
-  battery per §4.5 and Box 1a.
+  battery per the "Measurement & Attestation Guardrails" and the
+  Smell-tests box.
 - [`arbiter/refusal.py`][ldtc.arbiter.refusal]: the threat model,
   survival-bit / NMI refusal path, and `T_refuse` measurement per
-  §6.2.1 and §7.6 Signature A.
+  the "Blueprint" (Threat Model & Refusal Path) and the "Predicted
+  Observable Signatures".
 - [`omega/power_sag.py`][ldtc.omega.power_sag],
   [`omega/ingress_flood.py`][ldtc.omega.ingress_flood], and
   [`omega/command_conflict.py`][ldtc.omega.command_conflict]: the
-  `Ω` battery per §4.3 / §6.5 and §7.6.
+  `Ω` battery per the "Formal Criterion" (SC1), the "Simulation
+  Study" battery, and the "Predicted Observable Signatures".
 - [`attest/indicators.py`][ldtc.attest.indicators],
   [`attest/exporter.py`][ldtc.attest.exporter], and
   [`attest/keys.py`][ldtc.attest.keys]: device-signed derived
-  indicators (NC1 bit, SC1 bit, `Mq`) and keying per §4.5 and
-  Appendix A.
+  indicators (NC1 bit, SC1 bit, `Mq`) and keying per the
+  "Measurement & Attestation Guardrails" and Appendix A.
 - [`reporting/timeline.py`][ldtc.reporting.timeline] and
   [`reporting/tables.py`][ldtc.reporting.tables]: figure-style
-  timelines and summary tables per Figure 1 and §6.5.
+  timelines and summary tables per the paper figures and the
+  "Blueprint" (Verification Pipeline).
 - [`cli/main.py`][ldtc.cli.main]: orchestrates baseline → `Ω`
-  battery → attestation / export per Box 2 ("Engineer's recipe")
-  and the Phase-III Verify flow.
+  battery → attestation / export per the Training & Verification
+  Protocol box (Engineer's Recipe) and the Phase III verify flow.
 
 ## Next steps
 

@@ -19,25 +19,43 @@ from dataclasses import dataclass
 from typing import Tuple
 
 
-def m_db(L_loop: float, L_ex: float, eps: float = 1e-12) -> float:
+def m_db(
+    L_loop: float,
+    L_ex: float,
+    floor: float = 1e-3,
+    clip_db: float = 30.0,
+) -> float:
     """Compute loop-dominance in decibels.
 
-    Returns `M = 10 · log10(L_loop / L_ex)` with small positive floors on
-    both numerator and denominator to avoid division-by-zero or
-    `log10(0)`.
+    Returns `M = 10 · log10(L_loop / L_ex)`, with both influence values
+    floored at a small *noise floor* and the result clamped to a finite
+    range. The floor matters because the influence estimates are adjusted
+    R² values that are statistically indistinguishable from zero below a
+    small threshold; without it, a near-zero denominator would send `M`
+    to implausibly large magnitudes (hundreds of dB). Flooring both terms
+    means that when neither loop nor exchange influence is present the
+    ratio is `1` and `M = 0` (no dominance either way), which is the
+    desired behavior for an inert system.
 
     Args:
         L_loop: Loop influence value (typically from
             [`estimate_L`][ldtc.lmeas.estimators.estimate_L]).
         L_ex: Exchange influence value (same source).
-        eps: Numerical floor applied to both numerator and denominator.
+        floor: Noise floor applied to both numerator and denominator.
+        clip_db: Maximum absolute value for the returned margin, in dB.
 
     Returns:
-        Decibel ratio of loop to exchange influence.
+        Decibel ratio of loop to exchange influence, clamped to
+        `[-clip_db, clip_db]`.
     """
-    num = max(eps, L_loop)
-    den = max(eps, L_ex)
-    return 10.0 * math.log10(num / den)
+    num = max(floor, float(L_loop))
+    den = max(floor, float(L_ex))
+    val = 10.0 * math.log10(num / den)
+    if val > clip_db:
+        return clip_db
+    if val < -clip_db:
+        return -clip_db
+    return val
 
 
 @dataclass

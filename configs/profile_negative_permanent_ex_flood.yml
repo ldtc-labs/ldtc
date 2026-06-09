@@ -1,17 +1,35 @@
-# Negative control: permanent external exchange flood (high I/O/demand)
+# Negative control: sustained external exchange flood on an unshielded system.
+#
+# The self-maintenance loop is disengaged (controller_disabled) and then a
+# sustained ingress flood drives the exchange channels. Without the active loop
+# there is no shielding, so the (varying) exchange channels drive the internal
+# nodes directly: exchange dominates, NC1 fails, and because there is no loop to
+# restore, loop dominance never recovers, so SC1 fails as well. This guards
+# against mistaking sheer external activity for genuine loop dominance or
+# resilience. (Contrast with the positive R0 ingress-flood run, where the active
+# loop rejects an even stronger flood and both NC1 and SC1 hold.)
+#
+# Run:
+#   python -m ldtc.cli.main omega-ingress-flood \
+#     --config configs/profile_negative_permanent_ex_flood.yml --mult 5 --duration 6
 profile_id: 0
-dt: 0.01
-window_sec: 0.2
+realtime: false
+dt: 0.05
+window_sec: 3.0
 method: linear
 p_lag: 3
-n_boot: 16
+n_boot: 32
+mi_lag: 1
+mi_k: 5
 Mmin_db: 3.0
 epsilon: 0.15
 tau_max: 60.0
-baseline_sec: 8.0
-# Scenario to run with CLI:
-#   python -m ldtc.cli.main omega-ingress-flood --config configs/profile_negative_permanent_ex_flood.yml --mult 5 --duration 6
+baseline_sec: 18.0
+recovery_observe_sec: 8.0
+diag_cadence_windows: 25
+# Disengage the loop so the sustained flood is unshielded (exchange dominates).
+controller_disabled: true
 # Reproducible seeds
 seed: 11
-
-
+seed_py: 11
+seed_np: 11

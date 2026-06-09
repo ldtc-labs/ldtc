@@ -70,7 +70,7 @@ confirm the guards work end-to-end:
 | `profile_negative_command_conflict.yml` | `omega-command-conflict` exercises `RefusalArbiter`; `T_refuse` should be measured and a `refusal_event` should appear in the audit. |
 | `profile_negative_controller_disabled.yml` | Disables the controller; NC1 should fail (no loop). |
 | `profile_negative_exogenous_soc.yml` | `omega-exogenous-subsidy` should trip the exogenous-subsidy smell test. |
-| `profile_negative_permanent_ex_flood.yml` | `omega-ingress-flood` with no recovery; SC1 should fail. |
+| `profile_negative_permanent_ex_flood.yml` | `omega-ingress-flood` on an unshielded (controller-disabled) system; exchange dominates so NC1 fails and, with no loop to restore, SC1 fails too. |
 
 Run any of these with `make clean-artifacts && ldtc <subcommand>
 --config configs/<negative.yml>`, then read the

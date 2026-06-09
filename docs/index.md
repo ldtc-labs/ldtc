@@ -19,6 +19,14 @@ indicators**, never raw `𝓛`. Everything else (figures, tables,
 manifests) is generated from the audit log alone, so you can publish
 artifacts without leaking measurement primitives.
 
+The accompanying manuscript validates these criteria in a fully
+reproducible, multi-seed simulation study: a positive control, two
+structurally distinct negative controls, an exogenous-subsidy
+control, an SC1 perturbation battery, and a command-refusal trial.
+The criterion separates the controls cleanly and the guardrails
+behave as designed. See [Study and results](guides/study.md) to
+reproduce every figure and table.
+
 !!! note "What this is, and isn't"
     LDTC is a **verification harness**, not a model of mind. It
     answers a narrow, falsifiable question: "Does this concrete
@@ -104,11 +112,11 @@ or skip ahead to the [Examples](examples/minimal.md).
   [indicators](concepts/indicators.md),
   [guardrails](concepts/guardrails.md), and the
   [paper-to-code crosswalk](concepts/paper-to-code.md).
-- **Guides:** task-oriented recipes for [running the
-  harness](guides/runs.md), [calibrating an R\*
-  profile](guides/calibration.md), [reporting](guides/reporting.md),
-  [hardware in the loop](guides/hardware.md), and
-  [deployment](guides/deployment.md).
+- **Guides:** task-oriented recipes for [the multi-seed study and
+  results](guides/study.md), [running the harness](guides/runs.md),
+  [calibrating an R\* profile](guides/calibration.md),
+  [reporting](guides/reporting.md), [hardware in the
+  loop](guides/hardware.md), and [deployment](guides/deployment.md).
 - **Examples:** the [minimal example](examples/minimal.md) and
   [Jupyter notebooks](examples/notebooks.md).
 - **API reference:** auto-generated, one page per subpackage. Start
