@@ -36,6 +36,7 @@ LDTC is a minimal, substrate-agnostic verification harness for the Loop-Dominanc
 - **Guardrails and attestation:** LREG enclave, hash-chained audit log, Δt governance, and smell tests that can invalidate runs.
 - **Device-signed indicators:** Ed25519-signed derived indicators (NC1, SC1, Mq, counters); raw LREG values are never exported.
 - **Ω perturbation battery:** Power sag, sustained ingress flood, control outage (designed SC1 failure), command conflict, and exogenous subsidy trials.
+- **Adversarial gaming battery:** Replayed actuation tapes, hidden-tether (wizard-of-oz) control, and oscillator telemetry inflation; the harness must refuse to certify all three (NC1 fails or the run is invalidated).
 - **Refusal semantics:** An arbiter refuses risky commands when M is below threshold and measures refusal latency.
 - **Reporting and figures:** Timeline plots, SC1 tables, and verification bundles under `artifacts/`.
 - **Reproducible configs:** R₀ defaults, negative controls, and example R* profiles for calibration.

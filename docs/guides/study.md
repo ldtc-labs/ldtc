@@ -39,12 +39,26 @@ python scripts/study.py --seeds 15
 | Ingress flood (sustained) | SC1 | Loop dominance recovers |
 | Control outage | SC1 (designed fail) | SC1 fails (depth bound exceeded) |
 | Command conflict | Refusal | Risky command refused at low SoC |
+| Replayed actuation | Adversarial | Not certified: NC1 fails via the loop-influence noise gate, run valid |
+| Hidden tether | Adversarial | Not certified: loop influence collapses onto `Ex`, `M` goes negative |
+| Oscillator inflation | Adversarial | Not certified: `M` stays below `Mmin`, run valid |
 
 The control outage is the designed-fail member of the battery: it
 ablates the self-maintenance loop itself, which is outside the
 bounded perturbation class SC1 certifies, so the criterion must
 report failure. A sufficiency test that cannot fail would be
 measuring its own assumptions rather than the system.
+
+The three adversarial scenarios attack the criterion itself
+(systems engineered to *look* loop-dominant without being so); see
+[Runs](runs.md#adversarial-gaming-battery) for the mechanics of
+each attack and the genuine-control reference case on the same
+plant. A seed matches the prediction when the harness does **not**
+certify it: NC1 fails on a valid run, or a guardrail invalidates
+the run. NC1 per seed is decided by the production per-window
+verdicts (margin above `Mmin` plus the loop-influence noise gate
+`L_floor`); a valid run passes when the majority of its windows
+certified.
 
 ## Statistics
 

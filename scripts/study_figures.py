@@ -39,6 +39,9 @@ SHORT_LABELS = {
     "sc1_ingress_flood": "Ingress\nflood",
     "sc1_control_outage": "Control\noutage",
     "refusal_command_conflict": "Command\nconflict",
+    "adv_replay_controller": "Replayed\nactuation",
+    "adv_hidden_tether": "Hidden\ntether",
+    "adv_oscillator": "Oscillator\ninflation",
 }
 
 
@@ -153,10 +156,18 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         "sc1_ingress_flood",
         "sc1_control_outage",
         "refusal_command_conflict",
+        "adv_replay_controller",
+        "adv_hidden_tether",
+        "adv_oscillator",
     ]
     present = [s for s in order if s in aggs]
     if not present:
         return None
+
+    # Adversarial scenarios match the prediction when the harness does NOT
+    # certify them: nc1_pass is already (valid AND M >= Mmin), so its
+    # complement covers both the NC1-fail and the invalidated-run paths.
+    adversarial = {"adv_replay_controller", "adv_hidden_tether", "adv_oscillator"}
 
     criterion = {
         "positive": "NC1 holds",
@@ -167,6 +178,9 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         "sc1_ingress_flood": "SC1 holds",
         "sc1_control_outage": "SC1 rejected",
         "refusal_command_conflict": "refused",
+        "adv_replay_controller": "not certified",
+        "adv_hidden_tether": "not certified",
+        "adv_oscillator": "not certified",
     }
 
     labels: List[str] = []
@@ -179,7 +193,7 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         if s == "neg_exogenous_subsidy":
             rate = 1.0 - a["valid_rate"]
             ci = (1.0 - a["valid_ci"][1], 1.0 - a["valid_ci"][0])
-        elif s in ("neg_controller_disabled", "neg_permanent_ex_flood"):
+        elif s in ("neg_controller_disabled", "neg_permanent_ex_flood") or s in adversarial:
             rate = 1.0 - a["nc1_pass_rate"]
             ci = (1.0 - a["nc1_ci"][1], 1.0 - a["nc1_ci"][0])
         elif s == "sc1_control_outage":
@@ -203,7 +217,7 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         colors.append(COLORS["green"] if rate >= 0.5 else COLORS["red"])
 
     apply_matplotlib_theme("paper")
-    fig, ax = plt.subplots(figsize=(7.6, 4.2))
+    fig, ax = plt.subplots(figsize=(max(7.6, 0.95 * len(present)), 4.2))
     x = np.arange(len(present))
     ax.bar(x, rates, width=0.62, color=colors, alpha=0.85, zorder=2)
     ax.errorbar(

@@ -1,0 +1,51 @@
+# Reference: genuine internal control on the adversarial test plant.
+#
+# Same plant as the adversarial replay / hidden-tether scenarios (intrinsic
+# cross-couplings zeroed, actuators with real authority), but with the
+# genuine internal controller closing the loop. This is the control case
+# that shows the adversarial scenarios fail *because of how control is
+# wired*, not because the plant is incapable of certifying: under genuine
+# state feedback the actuation pathway carries an identifiable internal loop
+# (L_loop well above the NC1 noise gate) and NC1 passes.
+#
+# Run:
+#   python -m ldtc.cli.main run --config configs/profile_adv_plant_genuine.yml
+profile_id: 0
+realtime: false
+dt: 0.05
+window_sec: 3.0
+method: linear
+p_lag: 3
+n_boot: 32
+mi_lag: 1
+mi_k: 5
+Mmin_db: 3.0
+epsilon: 0.15
+tau_max: 60.0
+baseline_sec: 18.0
+diag_cadence_windows: 25
+plant:
+  adapter: sim
+  params:
+    c_TE: 0.0
+    c_RT: 0.0
+    c_RE: 0.0
+    damp_engaged: 0.40
+    act_heat: 0.15
+    heat_per_demand: 0.03
+    cool_effect: 0.50
+    wear_per_demand: 0.020
+    repair_effect: 0.30
+    cool_gain: 0.05
+    repair_gain: 0.05
+    harvest_rate: 0.020
+    noise_energy: 0.030
+    noise_temp: 0.030
+    noise_wear: 0.025
+controller_gains:
+  k_cool_e: 2.0
+  k_rep_e: 2.0
+# Reproducible seeds
+seed: 27
+seed_py: 27
+seed_np: 27

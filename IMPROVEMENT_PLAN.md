@@ -48,7 +48,7 @@ Recommended implementation order: 1.1 → 1.2 → 1.3 → 1.4 → 1.5, then the 
 pipeline rerun and paper rebuild (1.6). Tasks 1.1 and 1.2 are independent and
 can be parallelized.
 
-### Task 1.1: adversarial gaming battery `[ ]`
+### Task 1.1: adversarial gaming battery `[x]`
 
 The subsidy red flag is currently the only adversarial rejection case. Add a
 battery of systems that try to look loop-dominant without being so, and show

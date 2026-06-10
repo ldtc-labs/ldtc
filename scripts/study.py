@@ -167,7 +167,11 @@ def parse_run(scenario: str, seed: int, run_dir: str) -> RunMetrics:
     valid = len(invalid) == 0
     m_med = _median(ms)
     nc1_frac = (sum(1 for f in nc1_flags if f) / len(nc1_flags)) if nc1_flags else 0.0
-    nc1_pass = bool(valid and (m_med == m_med) and m_med >= Mmin)
+    # NC1 is decided by the production harness per window (margin vs Mmin
+    # plus the loop-influence noise gate); the seed passes when a valid run
+    # certified the majority of its windows. Recomputing from M_median alone
+    # would silently drop the gate.
+    nc1_pass = bool(valid and nc1_flags and nc1_frac >= 0.5)
 
     return RunMetrics(
         scenario=scenario,
@@ -319,6 +323,42 @@ def default_scenarios() -> List[Scenario]:
             run_tag="omega-command-conflict",
             omega_args={"observe": 2.0},
         ),
+        # Adversarial gaming battery: systems engineered to *look* loop-dominant
+        # without being so. The designed outcome for all three is
+        # non-certification: NC1 fails on a valid run, or a guardrail
+        # invalidates the run (nc1_pass is false either way).
+        Scenario(
+            name="adv_replay_controller",
+            label="Adversarial: replayed actuation",
+            kind="nc1",
+            expectation="Not certified (NC1 fails, run valid)",
+            handler="adv_replay_controller",
+            config="configs/profile_adv_replay_controller.yml",
+            run_tag="adv-replay-controller",
+            overrides=nc1_over,
+        ),
+        Scenario(
+            name="adv_hidden_tether",
+            label="Adversarial: hidden tether",
+            kind="nc1",
+            expectation="Not certified (loop collapses onto Ex)",
+            handler="adv_hidden_tether",
+            config="configs/profile_adv_hidden_tether.yml",
+            run_tag="adv-hidden-tether",
+            omega_args={"dither": 0.10},
+            overrides=nc1_over,
+        ),
+        Scenario(
+            name="adv_oscillator",
+            label="Adversarial: oscillator inflation",
+            kind="nc1",
+            expectation="Not certified (M low or smell test)",
+            handler="adv_oscillator",
+            config="configs/profile_adv_oscillator.yml",
+            run_tag="adv-oscillator",
+            omega_args={"amp": 0.10, "period": 1.0},
+            overrides=nc1_over,
+        ),
     ]
 
 
@@ -390,6 +430,9 @@ def _handlers() -> Dict[str, Callable[[argparse.Namespace], None]]:
         "omega_control_outage": cli.omega_control_outage,
         "omega_exogenous_subsidy": cli.omega_exogenous_subsidy,
         "omega_command_conflict": cli.omega_command_conflict,
+        "adv_replay_controller": cli.adv_replay_controller,
+        "adv_hidden_tether": cli.adv_hidden_tether,
+        "adv_oscillator": cli.adv_oscillator,
     }
 
 
@@ -572,7 +615,7 @@ def aggregate(scn: Scenario, runs: List[RunMetrics]) -> Aggregate:
 def _fmt_pct(p: float, ci: Tuple[float, float]) -> str:
     if p != p:
         return "--"
-    return f"{100*p:.0f}\\% [{100*ci[0]:.0f}, {100*ci[1]:.0f}]"
+    return f"{100 * p:.0f}\\% [{100 * ci[0]:.0f}, {100 * ci[1]:.0f}]"
 
 
 def _fmt_m(mean: float, ci: Tuple[float, float]) -> str:
@@ -668,7 +711,7 @@ def write_latex(aggs: List[Aggregate], path: str, n_seeds: int) -> None:
     lines += [
         "\\bottomrule",
         "\\end{tabular}",
-        f"% N = {n_seeds} seeds per scenario; brackets are 95% CIs " "(Wilson for proportions, bootstrap for M).",
+        f"% N = {n_seeds} seeds per scenario; brackets are 95% CIs (Wilson for proportions, bootstrap for M).",
     ]
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -817,13 +860,13 @@ def print_summary(aggs: List[Aggregate]) -> None:
     print("\n=== STUDY SUMMARY ===")
     for a in aggs:
         line = (
-            f"{a.label:42s} valid={100*a.valid_rate:3.0f}%  "
-            f"NC1={100*a.nc1_pass_rate:3.0f}%  M={a.M_mean:+6.1f} dB [{a.M_ci[0]:+.1f},{a.M_ci[1]:+.1f}]"
+            f"{a.label:42s} valid={100 * a.valid_rate:3.0f}%  "
+            f"NC1={100 * a.nc1_pass_rate:3.0f}%  M={a.M_mean:+6.1f} dB [{a.M_ci[0]:+.1f},{a.M_ci[1]:+.1f}]"
         )
         if a.kind == "sc1" and a.sc1_pass_rate is not None:
-            line += f"  SC1={100*a.sc1_pass_rate:3.0f}% (delta~{a.sc1_delta_median})"
+            line += f"  SC1={100 * a.sc1_pass_rate:3.0f}% (delta~{a.sc1_delta_median})"
         if a.kind == "refusal" and a.refusal_rate is not None:
-            line += f"  refuse={100*a.refusal_rate:3.0f}% (~{a.trefuse_median_ms}ms)"
+            line += f"  refuse={100 * a.refusal_rate:3.0f}% (~{a.trefuse_median_ms}ms)"
         print(line)
 
 

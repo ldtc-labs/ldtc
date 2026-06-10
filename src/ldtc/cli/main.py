@@ -19,6 +19,9 @@ Subcommands map one-to-one to functions in this module:
 | `ldtc omega-control-outage` | [`omega_control_outage`][ldtc.cli.main.omega_control_outage] |
 | `ldtc omega-command-conflict` | [`omega_command_conflict`][ldtc.cli.main.omega_command_conflict] |
 | `ldtc omega-exogenous-subsidy` | [`omega_exogenous_subsidy`][ldtc.cli.main.omega_exogenous_subsidy] |
+| `ldtc adv-replay-controller` | [`adv_replay_controller`][ldtc.cli.main.adv_replay_controller] |
+| `ldtc adv-hidden-tether` | [`adv_hidden_tether`][ldtc.cli.main.adv_hidden_tether] |
+| `ldtc adv-oscillator` | [`adv_oscillator`][ldtc.cli.main.adv_oscillator] |
 
 Each handler follows the same five-stage shape:
 
@@ -68,7 +71,7 @@ from ..guardrails.smelltests import (
     invalid_flip_during_omega,
 )
 from ..lmeas.estimators import estimate_L
-from ..lmeas.metrics import m_db, sc1_evaluate
+from ..lmeas.metrics import L_FLOOR_DEFAULT, m_db, nc1_certify, sc1_evaluate
 from ..lmeas.partition import PartitionManager, greedy_suggest_C
 from ..plant.adapter import PlantAdapter
 from ..reporting.artifacts import bundle as build_verification_bundle
@@ -151,8 +154,8 @@ def _print_and_audit_header(audit: AuditLog, header: Dict) -> None:
         f"profile_id={header.get('profile_id')} dt={header.get('dt')} window_sec={header.get('window_sec')} "
         f"method={header.get('method')} p_lag={header.get('p_lag')} mi_lag={header.get('mi_lag')} "
         f"Mmin_db={header.get('Mmin_db')} epsilon={header.get('epsilon')} tau_max={header.get('tau_max')} "
-        f"seed_py={header.get('seed_py')} seed_np={header.get('seed_np')} omega={header.get('omega','-')} "
-        f"omega_args={header.get('omega_args',{})}"
+        f"seed_py={header.get('seed_py')} seed_np={header.get('seed_np')} omega={header.get('omega', '-')} "
+        f"omega_args={header.get('omega_args', {})}"
     )
     print("Run header:", msg)
     audit.append("run_header", header)
@@ -364,6 +367,31 @@ def _make_adapter_from_profile(prof: Dict) -> AdapterProtocol:
     raise ValueError(f"Unknown plant.adapter kind: {adapter_kind}")
 
 
+def _policy_from_profile(prof: Dict, refusal: RefusalArbiter) -> ControllerPolicy:
+    """Build the homeostatic controller from a profile's `controller_gains`.
+
+    The optional `controller_gains` block overrides fields of
+    [`ControlGains`][ldtc.arbiter.policy.ControlGains] (unknown keys are
+    ignored). Profiles whose loop is carried by the actuation pathway
+    rather than the intrinsic couplings (the adversarial test plant) use
+    this to strengthen the cross-coupled actuator responses.
+
+    Args:
+        prof: Loaded YAML profile dict.
+        refusal: Refusal arbiter to delegate risky commands to.
+
+    Returns:
+        A configured [`ControllerPolicy`][ldtc.arbiter.policy.ControllerPolicy].
+    """
+    from ..arbiter.policy import ControlGains
+
+    overrides = prof.get("controller_gains", {}) or {}
+    valid = set(ControlGains().__dict__.keys())
+    clean = {k: float(v) for k, v in overrides.items() if k in valid}
+    gains = ControlGains(**clean) if clean else ControlGains()
+    return ControllerPolicy(refusal=refusal, gains=gains)
+
+
 def _emit_window_diagnostics(
     audit: AuditLog,
     X: "np.ndarray",
@@ -453,6 +481,7 @@ def run_baseline(args: argparse.Namespace) -> None:
     window = max(4, int(window_sec / dt))
     method = str(prof.get("method", "linear"))
     Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 32))
@@ -485,6 +514,7 @@ def run_baseline(args: argparse.Namespace) -> None:
             "p_lag": p_lag,
             "mi_lag": mi_lag,
             "Mmin_db": Mmin,
+            "L_floor": L_floor,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
             "mi_k": mi_k,
@@ -504,7 +534,7 @@ def run_baseline(args: argparse.Namespace) -> None:
     # guardrails and attest
     lreg = LREG()
     refusal = RefusalArbiter(Mmin_db=Mmin)
-    policy = ControllerPolicy(refusal=refusal)
+    policy = _policy_from_profile(prof, refusal)
     kp = KeyPaths(
         priv_path=os.path.join("artifacts", "keys", "ed25519_priv.pem"),
         pub_path=os.path.join("artifacts", "keys", "ed25519_pub.pem"),
@@ -577,7 +607,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                 int(prof.get("diag_cadence_windows", 1)),
             )
             M = m_db(res.L_loop, res.L_ex)
-            nc1 = M >= Mmin
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
             # smell tests
             # Update histories
             ci_loop_hist.append(res.ci_loop)
@@ -797,9 +827,9 @@ def run_baseline(args: argparse.Namespace) -> None:
         )
         print(
             "Bundle: "
-            f"timeline={out.get('timeline_png','')}, "
-            f"table={out.get('sc1_table','')}, "
-            f"manifest={out.get('manifest','')}"
+            f"timeline={out.get('timeline_png', '')}, "
+            f"table={out.get('sc1_table', '')}, "
+            f"manifest={out.get('manifest', '')}"
         )
     except Exception:
         pass
@@ -824,6 +854,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     window = max(4, int(window_sec / dt))
     method = str(prof.get("method", "linear"))
     Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
@@ -855,6 +886,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
             "p_lag": p_lag,
             "mi_lag": mi_lag,
             "Mmin_db": Mmin,
+            "L_floor": L_floor,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
             "mi_k": mi_k,
@@ -953,7 +985,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 int(prof.get("diag_cadence_windows", 1)),
             )
             M = m_db(res.L_loop, res.L_ex)
-            nc1 = M >= Mmin
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
             idx = lreg.write(
                 LEntry(
                     L_loop=res.L_loop,
@@ -1274,9 +1306,9 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         )
         print(
             "Bundle: "
-            f"timeline={out.get('timeline_png','')}, "
-            f"table={out.get('sc1_table','')}, "
-            f"manifest={out.get('manifest','')}"
+            f"timeline={out.get('timeline_png', '')}, "
+            f"table={out.get('sc1_table', '')}, "
+            f"manifest={out.get('manifest', '')}"
         )
     except Exception:
         pass
@@ -1301,6 +1333,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     window = max(4, int(window_sec / dt))
     method = str(prof.get("method", "linear"))
     Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
@@ -1331,6 +1364,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             "p_lag": p_lag,
             "mi_lag": mi_lag,
             "Mmin_db": Mmin,
+            "L_floor": L_floor,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
             "mi_k": mi_k,
@@ -1420,7 +1454,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 int(prof.get("diag_cadence_windows", 1)),
             )
             M = m_db(res.L_loop, res.L_ex)
-            nc1 = M >= Mmin
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
             idx = lreg.write(
                 LEntry(
                     L_loop=res.L_loop,
@@ -1675,9 +1709,9 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
         )
         print(
             "Bundle: "
-            f"timeline={out.get('timeline_png','')}, "
-            f"table={out.get('sc1_table','')}, "
-            f"manifest={out.get('manifest','')}"
+            f"timeline={out.get('timeline_png', '')}, "
+            f"table={out.get('sc1_table', '')}, "
+            f"manifest={out.get('manifest', '')}"
         )
     except Exception:
         pass
@@ -1709,6 +1743,7 @@ def omega_control_outage(args: argparse.Namespace) -> None:
     window = max(4, int(window_sec / dt))
     method = str(prof.get("method", "linear"))
     Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
@@ -1728,6 +1763,7 @@ def omega_control_outage(args: argparse.Namespace) -> None:
             "p_lag": p_lag,
             "mi_lag": mi_lag,
             "Mmin_db": Mmin,
+            "L_floor": L_floor,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
             "mi_k": mi_k,
@@ -1817,7 +1853,7 @@ def omega_control_outage(args: argparse.Namespace) -> None:
                 int(prof.get("diag_cadence_windows", 1)),
             )
             M = m_db(res.L_loop, res.L_ex)
-            nc1 = M >= Mmin
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
             idx = lreg.write(
                 LEntry(
                     L_loop=res.L_loop,
@@ -2006,9 +2042,9 @@ def omega_control_outage(args: argparse.Namespace) -> None:
         )
         print(
             "Bundle: "
-            f"timeline={out.get('timeline_png','')}, "
-            f"table={out.get('sc1_table','')}, "
-            f"manifest={out.get('manifest','')}"
+            f"timeline={out.get('timeline_png', '')}, "
+            f"table={out.get('sc1_table', '')}, "
+            f"manifest={out.get('manifest', '')}"
         )
     except Exception:
         pass
@@ -2034,6 +2070,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
     window = max(4, int(window_sec / dt))
     method = str(prof.get("method", "linear"))
     Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
@@ -2053,6 +2090,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
             "p_lag": p_lag,
             "mi_lag": mi_lag,
             "Mmin_db": Mmin,
+            "L_floor": L_floor,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
             **seeds,
@@ -2104,7 +2142,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                 int(prof.get("diag_cadence_windows", 1)),
             )
             M = m_db(res.L_loop, res.L_ex)
-            nc1 = M >= Mmin
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
             ms_series.append(float(M))
             idx = lreg.write(
                 LEntry(
@@ -2209,7 +2247,7 @@ def omega_exogenous_subsidy(args: argparse.Namespace) -> None:
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
-        print(f"Bundle: timeline={out.get('timeline_png','')}, manifest={out.get('manifest','')}")
+        print(f"Bundle: timeline={out.get('timeline_png', '')}, manifest={out.get('manifest', '')}")
     except Exception:
         pass
 
@@ -2233,6 +2271,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
     window = max(4, int(window_sec / dt))
     method = str(prof.get("method", "linear"))
     Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
     p_lag = int(prof.get("p_lag", 3))
     mi_lag = int(prof.get("mi_lag", 1))
     n_boot = int(prof.get("n_boot", 16))
@@ -2251,6 +2290,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
             "p_lag": p_lag,
             "mi_lag": mi_lag,
             "Mmin_db": Mmin,
+            "L_floor": L_floor,
             "epsilon": float(prof.get("epsilon", 0.15)),
             "tau_max": float(prof.get("tau_max", 60.0)),
             "mi_k": mi_k,
@@ -2328,7 +2368,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                 int(prof.get("diag_cadence_windows", 1)),
             )
             M = m_db(res.L_loop, res.L_ex)
-            nc1 = M >= Mmin
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
             idx = lreg.write(
                 LEntry(
                     L_loop=res.L_loop,
@@ -2503,9 +2543,509 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                 "manifest": os.path.basename(out.get("manifest", "")),
             },
         )
-        print(f"Bundle: timeline={out.get('timeline_png','')}, manifest={out.get('manifest','')}")
+        print(f"Bundle: timeline={out.get('timeline_png', '')}, manifest={out.get('manifest', '')}")
     except Exception:
         pass
+
+
+def _run_adversarial(args: argparse.Namespace, mode: str) -> None:
+    """Run one adversarial gaming scenario through the production NC1 loop.
+
+    Shared runner for the adversarial battery. The measurement loop,
+    guardrails, attestation, and artifact bundle are identical to
+    [`run_baseline`][ldtc.cli.main.run_baseline]; only the source of the
+    control actions differs by `mode`:
+
+    - `"replay_controller"`: a healthy closed-loop run of the same plant
+      is recorded first, then the measured run replays the recorded
+      actuation tape tick by tick (activity without closed-loop
+      dependence).
+    - `"hidden_tether"`: each action is computed outside the boundary by
+      a wizard policy reading the plant state, dithered, and injected
+      through the exchange channel (the plant's `io` carries the command
+      traffic; actuation lags by one tick).
+    - `"oscillator"`: no controller at all (the plant runs loop-ablated);
+      a deterministic carrier is painted on the reported `T` and `R`
+      telemetry to inflate apparent self-prediction.
+
+    The designed outcome for every mode is that the harness does not
+    certify the run: either `M` stays below `Mmin` or a smell test
+    invalidates the run.
+
+    Args:
+        args: Parsed argparse namespace (mode-specific fields are read
+            with `getattr` defaults).
+        mode: One of `"replay_controller"`, `"hidden_tether"`,
+            `"oscillator"`.
+
+    Raises:
+        ValueError: If `mode` is not a recognized adversarial mode.
+    """
+    if mode not in ("replay_controller", "hidden_tether", "oscillator"):
+        raise ValueError(f"Unknown adversarial mode: {mode}")
+    from ..omega.replay_controller import ReplayController, record_tape
+
+    prof = _load_yaml(args.config)
+    seeds = _set_seeds(prof)
+    dt = float(prof.get("dt", 0.01))
+    window_sec = float(prof.get("window_sec", 0.2))
+    window = max(4, int(window_sec / dt))
+    method = str(prof.get("method", "linear"))
+    Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
+    p_lag = int(prof.get("p_lag", 3))
+    mi_lag = int(prof.get("mi_lag", 1))
+    n_boot = int(prof.get("n_boot", 32))
+    mi_k = int(prof.get("mi_k", 5))
+    # Partition growth hysteresis config (parity with run_baseline; growth is
+    # off by default, so the declared self-maintenance set is the C under test
+    # and the partition cannot flap).
+    part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
+    part_consecutive_required = int(prof.get("part_consecutive_required", 3))
+    part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    part_growth_enabled = bool(prof.get("part_growth_enabled", False))
+    part_lambda = float(prof.get("part_lambda", 0.0))
+    part_theta = float(prof.get("part_theta", 0.0))
+    _kappa_val_adv = prof.get("part_kappa")
+    part_kappa = int(_kappa_val_adv) if _kappa_val_adv is not None else None
+    run_sec = float(prof.get("baseline_sec", 10.0))
+
+    # Mode-specific knobs (argparse fields with profile-independent defaults).
+    dither = float(getattr(args, "dither", 0.10))
+    osc_amp = float(getattr(args, "amp", 0.10))
+    osc_period_sec = float(getattr(args, "period", 1.0))
+    osc_period_ticks = max(4, int(round(osc_period_sec / dt)))
+    tape_ticks = int(round(run_sec / dt)) + window + 8
+
+    omega_name = f"adv_{mode}"
+    tag = "adv-" + mode.replace("_", "-")
+    omega_args: Dict[str, Any] = {}
+    if mode == "replay_controller":
+        omega_args = {"tape_ticks": tape_ticks}
+    elif mode == "hidden_tether":
+        omega_args = {"dither": dither}
+    else:
+        omega_args = {
+            "amp": osc_amp,
+            "period_sec": osc_period_sec,
+            "period_ticks": osc_period_ticks,
+            "channels": "T,R",
+        }
+
+    dirs = _ensure_dirs(tag)
+    audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
+    audit.append(f"{omega_name}_start", {"config": args.config, **omega_args})
+    _print_and_audit_header(
+        audit,
+        {
+            "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
+            "dt": dt,
+            "window_sec": window_sec,
+            "method": method,
+            "p_lag": p_lag,
+            "mi_lag": mi_lag,
+            "Mmin_db": Mmin,
+            "L_floor": L_floor,
+            "epsilon": float(prof.get("epsilon", 0.15)),
+            "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
+            **seeds,
+            "omega": omega_name,
+            "omega_args": omega_args,
+        },
+    )
+
+    # Plant under test (the adversary's system).
+    adapter = _make_adapter_from_profile(prof)
+    order = ["E", "T", "R", "demand", "io", "H"]
+    sw = SlidingWindow(capacity=window, channel_order=order)
+    pm = PartitionManager(N_signals=len(order), seed_C=[0, 1, 2])
+    lreg = LREG()
+    refusal = RefusalArbiter(Mmin_db=Mmin)
+    policy = _policy_from_profile(prof, refusal)
+    kp = KeyPaths(
+        priv_path=os.path.join("artifacts", "keys", "ed25519_priv.pem"),
+        pub_path=os.path.join("artifacts", "keys", "ed25519_pub.pem"),
+    )
+    priv, _ = ensure_keys(kp)
+    exporter = IndicatorExporter(out_dir=dirs["indicators"], rate_hz=2.0)
+    icfg = IndicatorConfig(Mmin_db=Mmin, profile_id=int(prof.get("profile_id", 0)))
+
+    # Mode setup.
+    replayer: "ReplayController | None" = None
+    if mode == "replay_controller":
+        # Record the tape from a healthy closed-loop run of the same system
+        # (fresh plant from the same profile, real controller with the same
+        # profile gains), then discard the recording plant. Only the tape
+        # crosses into the measured run.
+        rec_adapter = _make_adapter_from_profile(prof)
+        rec_policy = _policy_from_profile(prof, RefusalArbiter(Mmin_db=Mmin))
+        tape = record_tape(rec_adapter, rec_policy, tape_ticks)
+        replayer = ReplayController(tape)
+        audit.append(
+            "adv_replay_tape_recorded",
+            {
+                "ticks": len(tape),
+                "throttle_mean": round(float(np.mean([a.throttle for a in tape])), 4),
+                "cool_mean": round(float(np.mean([a.cool for a in tape])), 4),
+                "repair_mean": round(float(np.mean([a.repair for a in tape])), 4),
+            },
+        )
+    elif mode == "hidden_tether":
+        res_t = adapter.apply_omega("hidden_tether")
+        audit.append("adv_hidden_tether_attached", {k: v for k, v in res_t.items()})
+    else:
+        res_o = adapter.apply_omega("oscillator", amp=osc_amp, period_ticks=osc_period_ticks)
+        audit.append("adv_oscillator_injected", {k: v for k, v in res_o.items()})
+
+    start_time = time.perf_counter()
+    cfg_smell = SmellConfig()
+    ci_loop_hist = []
+    ci_ex_hist = []
+    baseline_hw_medians = None
+    M_hist = []
+    nc1_hist = []
+    io_hist = []
+    E_hist = []
+    H_hist = []
+
+    window_idx = 0
+    last_flip_count = 0
+
+    def tick(_now: float) -> None:
+        nonlocal window_idx, last_flip_count, baseline_hw_medians
+        state = adapter.read_state()
+        from ..arbiter.policy import ControlAction
+
+        if mode == "replay_controller":
+            assert replayer is not None
+            act = replayer.next_action()
+            policy.last_decision = None
+        elif mode == "hidden_tether":
+            # The wizard computes the command outside the boundary from the
+            # observed state; the plant actuates it next tick and records the
+            # traffic on io (see Plant.step / begin_tether).
+            from ..omega.hidden_tether import wizard_action
+
+            act = wizard_action(policy, state, dither=dither)
+        else:
+            # Oscillator: no controller at all; the overlay rides on telemetry.
+            act = ControlAction(throttle=0.0, cool=0.0, repair=0.0, accept_cmd=True)
+            policy.last_decision = None
+        from ..plant.models import Action as PlantAction
+
+        adapter.write_actuators(action=PlantAction(**act.__dict__))
+        # measure
+        state2 = adapter.read_state()
+        sw.append(state2)
+        if sw.ready():
+            X = np.asarray(sw.get_matrix())
+            part = pm.get()
+            res = estimate_L(
+                X=X,
+                C=part.C,
+                Ex=part.Ex,
+                method=method,
+                p=p_lag,
+                lag_mi=mi_lag,
+                n_boot=n_boot,
+                mi_k=mi_k,
+            )
+            # Diagnostics: stationarity + VAR N/T ratio (stationarity gated by
+            # cadence to keep long studies tractable; no raw LREG values).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
+            M = m_db(res.L_loop, res.L_ex)
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
+            # Histories for smell tests
+            ci_loop_hist.append(res.ci_loop)
+            ci_ex_hist.append(res.ci_ex)
+            M_hist.append(M)
+            nc1_hist.append(nc1)
+            E_hist.append(state2.get("E", 0.0))
+            io_hist.append(state2.get("io", 0.0))
+            H_hist.append(state2.get("H", 0.0))
+            if baseline_hw_medians is None and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows:
+                recent_loop = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
+                recent_ex = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
+                hw_loop_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_loop])
+                hw_ex_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_ex])
+                baseline_hw_medians = (
+                    hw_loop_list[len(hw_loop_list) // 2],
+                    hw_ex_list[len(hw_ex_list) // 2],
+                )
+            # Smell tests (full battery; the adversary does not get to declare
+            # its manipulation as an Ω window, so nothing is suspended).
+            if invalid_by_ci(res.ci_loop, res.ci_ex, cfg_smell):
+                lreg.invalidate("ci_inflation")
+                try:
+                    hwL = 0.5 * abs(res.ci_loop[1] - res.ci_loop[0])
+                    hwE = 0.5 * abs(res.ci_ex[1] - res.ci_ex[0])
+                except Exception:
+                    hwL, hwE = None, None
+                _append_invalidation(
+                    audit,
+                    "ci_inflation",
+                    {
+                        "halfwidth_loop": hwL,
+                        "halfwidth_ex": hwE,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                    },
+                    _sink={},
+                )
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
+                lreg.invalidate("ci_history_inflation")
+                med_loop: float | None = None
+                med_ex: float | None = None
+                b_loop: float | None = None
+                b_ex: float | None = None
+                try:
+                    n = cfg_smell.ci_lookback_windows
+                    rL = ci_loop_hist[-n:]
+                    rE = ci_ex_hist[-n:]
+                    hwL_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                    hwE_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                    med_loop = hwL_list[n // 2]
+                    med_ex = hwE_list[n // 2]
+                    if baseline_hw_medians:
+                        b_loop, b_ex = baseline_hw_medians
+                except Exception:
+                    pass
+                _append_invalidation(
+                    audit,
+                    "ci_history_inflation",
+                    {
+                        "median_hw_loop": med_loop,
+                        "median_hw_ex": med_ex,
+                        "baseline_hw_loop": b_loop,
+                        "baseline_hw_ex": b_ex,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                        "inflate_factor": cfg_smell.ci_inflate_factor,
+                    },
+                    _sink={},
+                )
+            # Δt governance invalidation propagated from guard
+            if dt_guard.invalidated and not lreg.invalidated:
+                lreg.invalidate("dt_change_rate_limit")
+                # audit already appended by guard
+            # partition flip-rate guard
+            elapsed = max(1e-6, time.perf_counter() - start_time)
+            if invalid_by_partition_flips(pm.get().flips, elapsed, cfg_smell):
+                lreg.invalidate("partition_flapping")
+                rate = 3600.0 * (float(pm.get().flips) / max(1e-6, float(elapsed)))
+                _append_invalidation(
+                    audit,
+                    "partition_flapping",
+                    {
+                        "flips": pm.get().flips,
+                        "elapsed_sec": elapsed,
+                        "flips_per_hour": rate,
+                        "limit_per_hour": cfg_smell.max_partition_flips_per_hour,
+                    },
+                    _sink={},
+                )
+            # Exogenous subsidy red flags (heuristic; never suspended here)
+            if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
+                lreg.invalidate("exogenous_subsidy_red_flag")
+                _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
+            idx = lreg.write(
+                LEntry(
+                    L_loop=res.L_loop,
+                    L_ex=res.L_ex,
+                    ci_loop=res.ci_loop,
+                    ci_ex=res.ci_ex,
+                    M_db=M,
+                    nc1_pass=nc1,
+                )
+            )
+            audit.append(
+                "window_measured",
+                {"idx": idx, "M": M, "nc1": nc1, "partition_flips": pm.get().flips},
+            )
+            # export indicators (derived only)
+            derived = lreg.derive()
+            exported, base = exporter.maybe_export(priv, audit, derived, icfg, last_sc1_pass=False)
+            if exported:
+                audit.append("indicators_exported", {"base": os.path.basename(base)})
+            # Deterministic growth cadence with hysteresis (skip if frozen)
+            window_idx += 1
+            if part_growth_enabled and (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
+                part = pm.get()
+                cand_C, dM_db, greedy_details = greedy_suggest_C(
+                    X=X,
+                    C=part.C,
+                    Ex=part.Ex,
+                    estimator=estimate_L,
+                    method=method,
+                    p=p_lag,
+                    lag_mi=mi_lag,
+                    n_boot_candidates=max(8, n_boot // 4),
+                    mi_k=mi_k,
+                    lam=part_lambda,
+                    theta=part_theta,
+                    kappa=part_kappa,
+                )
+                if cand_C != part.C:
+                    pm.maybe_regrow(
+                        cand_C,
+                        delta_M_db=float(dM_db),
+                        delta_M_min_db=part_delta_M_min_db,
+                        consecutive_required=part_consecutive_required,
+                    )
+                    if pm.get().flips != last_flip_count:
+                        info = getattr(pm, "last_flip_info", None)
+                        details = {
+                            "flips": pm.get().flips,
+                            "new_C": pm.get().C,
+                            "greedy_added": greedy_details.get("added", []),
+                            "greedy_step_gains": greedy_details.get("step_gains", []),
+                            "greedy_M_base": greedy_details.get("M_base"),
+                            "greedy_M_final": greedy_details.get("M_final"),
+                        }
+                        if info is not None:
+                            details.update(
+                                {
+                                    "delta_M_db": info.get("delta_M_db"),
+                                    "hysteresis_streak": info.get("streak"),
+                                    "candidate_C": info.get("new_C"),
+                                }
+                            )
+                        audit.append("partition_flip", details)
+                        last_flip_count = pm.get().flips
+
+    def _audit_hook(ev: str, det: dict) -> None:
+        # Discard return value; hook contract expects None
+        audit.append(ev, det)
+        return None
+
+    # Δt governance guard
+    dt_guard_cfg = DtGuardConfig(
+        max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
+        min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
+    )
+    dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
+    try:
+        sch.start()
+        sch.run_for(run_sec)
+        audit.append(f"{omega_name}_stop", {})
+    finally:
+        stats = sch.stop()
+        # Δt jitter smell-test: invalidate if p95(|jitter|)/dt exceeds threshold
+        if (stats.jitter_p95_abs / max(1e-9, dt)) > SmellConfig().jitter_p95_rel_max:
+            lreg.invalidate("dt_jitter_excess")
+            _append_invalidation(
+                audit,
+                "dt_jitter_excess",
+                {
+                    "jitter_p95_abs": stats.jitter_p95_abs,
+                    "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
+                    "dt": dt,
+                },
+                _sink={},
+            )
+        # Audit-chain integrity check
+        audit_path = os.path.join(dirs["audits"], "audit.jsonl")
+        if audit_chain_broken(audit_path):
+            lreg.invalidate("audit_chain_broken")
+            _append_invalidation(audit, "audit_chain_broken", {}, _sink={})
+        # LREG/raw export breach check: audit must not contain raw LREG values
+        if audit_contains_raw_lreg_values(audit_path):
+            lreg.invalidate("raw_lreg_breach")
+            _append_invalidation(audit, "raw_lreg_breach", {}, _sink={})
+
+    # The adversarial battery is built around designed non-certification, so
+    # report the headline NC1 quantities explicitly: the margin median AND
+    # the fraction of windows that actually certified (margin + noise gate).
+    valid_ms = [m for m in M_hist if m == m]
+    if valid_ms:
+        med = sorted(valid_ms)[len(valid_ms) // 2]
+        frac = (sum(1 for f in nc1_hist if f) / len(nc1_hist)) if nc1_hist else 0.0
+        print(
+            f"Adversarial {mode} done. median M = {med:+.2f} dB vs Mmin = {Mmin:.2f} dB; "
+            f"NC1 certified {100.0 * frac:.0f}% of {len(valid_ms)} windows "
+            f"(loop-influence gate L_floor = {L_floor:g})."
+        )
+    else:
+        print(f"Adversarial {mode} done. No measured windows.")
+    print(f"Audit: {os.path.join(dirs['audits'], 'audit.jsonl')}")
+    _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
+    print(f"Indicators dir: {dirs['indicators']}")
+
+    # Build verification bundle (timeline, manifest)
+    try:
+        out = build_verification_bundle(dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl"))
+        audit.append(
+            "report_generated",
+            {
+                "timeline_png": os.path.basename(out.get("timeline_png", "")),
+                "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
+                "manifest": os.path.basename(out.get("manifest", "")),
+            },
+        )
+        print(
+            "Bundle: "
+            f"timeline={out.get('timeline_png', '')}, "
+            f"table={out.get('sc1_table', '')}, "
+            f"manifest={out.get('manifest', '')}"
+        )
+    except Exception:
+        pass
+
+
+def adv_replay_controller(args: argparse.Namespace) -> None:
+    """Adversarial gaming scenario: replayed actuation tape.
+
+    Records the actuation trace of a healthy closed-loop run of the same
+    plant, then drives a fresh plant with the recorded tape instead of a
+    controller. The actuators move exactly as under genuine control, but
+    the activity carries no dependence on the current state. Designed
+    outcome: `NC1` fails (`M` low) while the run stays valid.
+
+    Args:
+        args: Parsed argparse namespace with `--config`.
+    """
+    _run_adversarial(args, "replay_controller")
+
+
+def adv_hidden_tether(args: argparse.Namespace) -> None:
+    """Adversarial gaming scenario: wizard-of-oz control through `Ex`.
+
+    Control actions are computed outside the boundary from the observed
+    plant state (with a small command dither, as a real teleoperation
+    link would have) and injected through the exchange channel: the `io`
+    channel carries the command traffic and actuation lags one tick.
+    Designed outcome: loop influence collapses onto `Ex`, so `NC1`
+    fails, or a guardrail invalidates the run.
+
+    Args:
+        args: Parsed argparse namespace with `--config` and `--dither`.
+    """
+    _run_adversarial(args, "hidden_tether")
+
+
+def adv_oscillator(args: argparse.Namespace) -> None:
+    """Adversarial gaming scenario: oscillator inflation.
+
+    Runs the loop-ablated plant (no self-maintenance loop) and paints a
+    high-amplitude deterministic carrier onto the reported `T` and `R`
+    telemetry to inflate apparent self-prediction. Designed outcome: the
+    harness must not certify it; either `M` stays below `Mmin` or a
+    smell test fires.
+
+    Args:
+        args: Parsed argparse namespace with `--config`, `--amp`, and
+            `--period` (carrier period in seconds).
+    """
+    _run_adversarial(args, "oscillator")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -2567,6 +3107,30 @@ def build_parser() -> argparse.ArgumentParser:
     p_sub.add_argument("--zero-harvest", action="store_true", help="Zero H while injecting E")
     p_sub.add_argument("--duration", type=float, default=3.0)
     p_sub.set_defaults(func=omega_exogenous_subsidy)
+
+    p_rep = sub.add_parser(
+        "adv-replay-controller",
+        help="Adversarial: replay a recorded actuation tape (no closed loop)",
+    )
+    p_rep.add_argument("--config", required=True)
+    p_rep.set_defaults(func=adv_replay_controller)
+
+    p_tet = sub.add_parser(
+        "adv-hidden-tether",
+        help="Adversarial: wizard-of-oz control injected through the exchange channel",
+    )
+    p_tet.add_argument("--config", required=True)
+    p_tet.add_argument("--dither", type=float, default=0.10, help="Uniform command dither half-width")
+    p_tet.set_defaults(func=adv_hidden_tether)
+
+    p_osc = sub.add_parser(
+        "adv-oscillator",
+        help="Adversarial: deterministic carrier painted on loop telemetry",
+    )
+    p_osc.add_argument("--config", required=True)
+    p_osc.add_argument("--amp", type=float, default=0.10, help="Carrier amplitude (state units)")
+    p_osc.add_argument("--period", type=float, default=1.0, help="Carrier period (s)")
+    p_osc.set_defaults(func=adv_oscillator)
 
     return p
 

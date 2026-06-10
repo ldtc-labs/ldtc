@@ -18,6 +18,52 @@ import math
 from dataclasses import dataclass
 from typing import Tuple
 
+# Loop-influence noise gate for NC1 certification. The clamped adjusted-R²
+# estimator has a small positive bias on null windows: with the production
+# window geometry (60 samples, 6 signals, p = 3) a plant with *no* internal
+# coupling and *no* controller still measures L_loop ≈ 0.01-0.03 per window
+# (median ≈ 0.015). Because `m_db` floors the denominator, a quiet exchange
+# channel then yields M of +5 to +10 dB on a system with no loop at all,
+# which is exactly the certification-by-noise path the replay-controller
+# attack exploits. The gate requires the measured loop influence to clear
+# this bias floor before a window may certify NC1. The default is ≈3x the
+# measured null-bias median and ≈2.5x below the weakest genuine
+# actuation-carried loop in the adversarial test plant (L_loop ≈ 0.12), so
+# it cleanly separates estimator bias from real loop influence. It is an
+# instrument constant (a property of the estimator and window geometry, not
+# of the plant), so it is not part of the R* calibration set.
+L_FLOOR_DEFAULT: float = 0.05
+
+
+def nc1_certify(
+    M: float,
+    L_loop: float,
+    Mmin_db: float,
+    L_floor: float = L_FLOOR_DEFAULT,
+) -> bool:
+    """Decide NC1 for one window: margin test plus loop-influence noise gate.
+
+    A window certifies NC1 only if the dominance margin clears `Mmin_db`
+    *and* the absolute loop influence clears the estimator's noise floor.
+    The second condition closes the gaming vulnerability discovered by the
+    replay-controller scenario: a system whose loop influence is
+    statistically indistinguishable from estimator bias (`L_loop` at the
+    null level) must not be certified merely because its exchange channels
+    are quiet (`L_ex` below the `m_db` floor), no matter how large the
+    resulting ratio is.
+
+    Args:
+        M: Loop-dominance margin in dB (from [`m_db`][ldtc.lmeas.metrics.m_db]).
+        L_loop: Absolute loop-influence estimate for the window.
+        Mmin_db: Minimum acceptable margin in dB.
+        L_floor: Minimum loop influence distinguishable from estimator
+            bias (see `L_FLOOR_DEFAULT`).
+
+    Returns:
+        `True` if the window certifies NC1.
+    """
+    return (M >= Mmin_db) and (float(L_loop) >= float(L_floor))
+
 
 def m_db(
     L_loop: float,

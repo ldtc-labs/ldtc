@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean study sensitivity results
+.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy adv-replay adv-tether adv-oscillator adv-genuine calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean study sensitivity results
 
 help:
 	@echo "Targets:"
@@ -20,6 +20,10 @@ help:
 	@echo "  omega-ingress  - run Ω ingress-flood demo"
 	@echo "  omega-cc       - run Ω command-conflict demo (prints Trefuse + reason)"
 	@echo "  omega-subsidy  - run Ω exogenous-SoC (subsidy) demo (negative-control heuristic)"
+	@echo "  adv-replay     - adversarial: replayed actuation tape (NC1 must fail, run valid)"
+	@echo "  adv-tether     - adversarial: hidden tether / wizard-of-oz control (loop collapses onto Ex)"
+	@echo "  adv-oscillator - adversarial: oscillator telemetry inflation (must not certify)"
+	@echo "  adv-genuine    - reference: genuine control on the adversarial test plant (NC1 passes)"
 	@echo "  study          - run the multi-seed battery vs R0 guesses (tables + figures in artifacts/study)"
 	@echo "  study-rstar    - run the battery vs calibrated R* thresholds (run calibrate first)"
 	@echo "  sensitivity    - run NC1 sensitivity sweeps (table + figure in artifacts/sensitivity)"
@@ -91,6 +95,20 @@ omega-cc:
 
 omega-subsidy:
 	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_r0.yml --delta 0.2 --zero-harvest --duration 3
+
+# Adversarial gaming battery (designed non-certification) and its
+# genuine-control reference on the same plant.
+adv-replay:
+	$(PY) -m ldtc.cli.main adv-replay-controller --config configs/profile_adv_replay_controller.yml
+
+adv-tether:
+	$(PY) -m ldtc.cli.main adv-hidden-tether --config configs/profile_adv_hidden_tether.yml --dither 0.1
+
+adv-oscillator:
+	$(PY) -m ldtc.cli.main adv-oscillator --config configs/profile_adv_oscillator.yml --amp 0.1 --period 1.0
+
+adv-genuine:
+	$(PY) -m ldtc.cli.main run --config configs/profile_adv_plant_genuine.yml
 
 # Multi-seed results pipeline (Phase 1)
 # `study` runs against the uncalibrated R0 guesses; `study-rstar` evaluates the

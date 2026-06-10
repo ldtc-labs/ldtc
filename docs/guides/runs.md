@@ -129,6 +129,90 @@ Expected: a `run_invalidated` audit row with reason
 `exogenous_subsidy_red_flag`, and the next signed indicator
 carries `invalidated: true`.
 
+## Adversarial gaming battery
+
+Three scenarios attack the criterion itself: each system is
+engineered to *look* loop-dominant without being so, and the
+harness must not certify any of them. The replay and tether
+scenarios run the adversarial test plant: intrinsic cross-coupling
+zeroed (`c_TE = c_RT = c_RE = 0`) and real actuator authority, so
+the controller's actuation pathway is the only possible loop
+carrier. Under genuine internal control this plant certifies NC1
+cleanly (the reference case):
+
+```bash
+make clean-artifacts && \
+ldtc run --config configs/profile_adv_plant_genuine.yml
+```
+
+Expected: `nc1: true` on every window, median `M` around `+20 dB`.
+
+### Replayed actuation tape
+
+```bash
+make clean-artifacts && \
+ldtc adv-replay-controller --config configs/profile_adv_replay_controller.yml
+```
+
+Implemented by
+[`adv_replay_controller`][ldtc.cli.main.adv_replay_controller].
+First records an actuation tape from a healthy closed-loop run of
+the same system
+([`record_tape`][ldtc.omega.replay_controller.record_tape]), then
+replays it tick by tick
+([`ReplayController`][ldtc.omega.replay_controller.ReplayController])
+on a fresh plant. The actuators move exactly as under genuine
+control, but the actions carry no dependence on the current state,
+so measured loop influence falls to the estimator's noise floor.
+This scenario is what exposed the certification-by-noise
+vulnerability: with both `L_loop` and `L_ex` near zero, the
+decibel ratio alone can still clear `Mmin`. The NC1 noise gate
+([`nc1_certify`][ldtc.lmeas.metrics.nc1_certify]) closes that
+path: a window certifies only if `L_loop` also clears the
+estimator's bias floor (`L_floor`, default `0.05`). Expected: the
+run stays valid and the vast majority of windows fail NC1 via the
+gate.
+
+### Hidden tether (wizard-of-oz control)
+
+```bash
+make clean-artifacts && \
+ldtc adv-hidden-tether --config configs/profile_adv_hidden_tether.yml --dither 0.1
+```
+
+Implemented by
+[`adv_hidden_tether`][ldtc.cli.main.adv_hidden_tether]. Control is
+computed *outside* the boundary: a wizard policy reads the plant
+state, projects the desired actuation onto a scalar link command
+([`wizard_action`][ldtc.omega.hidden_tether.wizard_action]), adds
+a small link dither, and transmits it through the exchange
+channel. The plant's `io` channel carries the command traffic and
+the command actuates one tick later through fixed decoder weights,
+so the externally closed loop is physically routed through `Ex`.
+Conditioning on `io` screens the state-to-command pathway out of
+`L_loop` and the command's causal push registers as `L_ex`.
+Expected: loop influence collapses onto `Ex`, `M` goes strongly
+negative, NC1 fails on every window, run valid.
+
+### Oscillator inflation
+
+```bash
+make clean-artifacts && \
+ldtc adv-oscillator --config configs/profile_adv_oscillator.yml --amp 0.1 --period 1.0
+```
+
+Implemented by
+[`adv_oscillator`][ldtc.cli.main.adv_oscillator]. Runs the
+loop-ablated plant (passive matter driven by exchange) and paints
+a deterministic sinusoidal carrier onto the *reported* `T` and `R`
+telemetry ([`begin_oscillator`][ldtc.plant.models.Plant.begin_oscillator]);
+the metered store `E` is left alone because inflating it would
+trip the conservation audit. A pure carrier is perfectly
+predictable from its own recent past, so the AR baseline absorbs
+it and it adds nothing to cross-channel prediction. Expected: `M`
+stays strongly negative (the exchange drive still dominates), NC1
+fails on every window, run valid.
+
 ## What gets written
 
 Every subcommand produces the same artifact layout:

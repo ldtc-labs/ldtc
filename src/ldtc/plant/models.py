@@ -32,9 +32,10 @@ See Also:
 
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Dict, Sequence, Tuple
 
 
 @dataclass
@@ -154,6 +155,22 @@ class PlantParams:
     ambient_cool: float = 0.010
     repair_effect: float = 0.060
     heat_wear: float = 0.020
+    # Hidden-tether (wizard-of-oz) command link. When the tether is active the
+    # actuators are slaved to a scalar command stream computed outside the
+    # boundary: each tick the incoming action carries the transmitted command
+    # value `u` (the wizard writes the same value on all three actuator
+    # fields), the plant actuates the *previous* tick's command through the
+    # fixed decoder weights below (one-step transport delay), and the io
+    # channel stops being an autonomous AR process and instead carries the
+    # command traffic: io = base + gain * u + channel noise. The traffic is
+    # therefore an honest exchange record of the control link, which is what
+    # lets the estimator attribute the externally closed loop to Ex.
+    tether_io_base: float = 0.10
+    tether_io_gain: float = 0.80
+    tether_io_noise: float = 0.01
+    tether_w_throttle: float = 0.5
+    tether_w_cool: float = 1.0
+    tether_w_repair: float = 1.0
     # Noise (excites the loop so there is something to regulate/predict). The
     # internal nodes are a stable, noise-driven coupled system: this noise is
     # the excitation that, filtered through the cross-coupling, makes each node
@@ -266,6 +283,18 @@ class Plant:
         # Pre-flood (demand_mean, io_mean) saved while a sustained ingress
         # flood is active; None when no flood is in effect.
         self._flood_saved: Tuple[float, float] | None = None
+        # Hidden-tether (wizard-of-oz) state: when active, the incoming action
+        # carries the externally computed scalar command for the *next* tick
+        # (one-step transport delay) and the io channel carries the command
+        # traffic.
+        self.tether_active: bool = False
+        self._tether_u_pending: float = 0.0
+        # Oscillator-inflation overlay: a deterministic carrier painted onto
+        # the *reported* values of selected internal channels (the true state
+        # and dynamics stay honest). `None` when inactive.
+        self._osc: Dict[str, Tuple[float, float]] | None = None  # ch -> (amp, phase)
+        self._osc_period_ticks: int = 0
+        self._osc_tick: int = 0
 
     def set_loop_engaged(self, engaged: bool) -> None:
         """Engage or disengage the internal self-maintenance loop.
@@ -282,11 +311,21 @@ class Plant:
     def read_state(self) -> Dict[str, float]:
         """Read the current plant state.
 
+        When the oscillator-inflation overlay is active
+        ([`begin_oscillator`][ldtc.plant.models.Plant.begin_oscillator]), the
+        reported values of the targeted internal channels include the
+        deterministic carrier; the underlying state is not modified.
+
         Returns:
             Dict with keys `E`, `T`, `R`, `demand`, `io`, `H`.
         """
         s = self.s
-        return {"E": s.E, "T": s.T, "R": s.R, "demand": s.demand, "io": s.io, "H": s.H}
+        out = {"E": s.E, "T": s.T, "R": s.R, "demand": s.demand, "io": s.io, "H": s.H}
+        if self._osc is not None and self._osc_period_ticks > 0:
+            theta = 2.0 * math.pi * (self._osc_tick / float(self._osc_period_ticks))
+            for ch, (amp, phase) in self._osc.items():
+                out[ch] = _clip(out[ch] + amp * math.sin(theta + phase), 0.0, 1.0)
+        return out
 
     def command(self, cmd: str) -> None:
         """Record a one-shot external command.
@@ -315,6 +354,25 @@ class Plant:
         """
         p, s = self.p, self.s
 
+        # Hidden tether: the incoming action carries the externally computed
+        # scalar command `u` for the *next* tick (the wizard transmits the
+        # same value on every actuator field). Actuate the previously
+        # transmitted command now, through the fixed decoder weights, and
+        # queue the incoming one (one-step transport delay), so the command
+        # traffic recorded on `io` this tick lag-precedes its actuation
+        # effect, exactly like the other exchange drives.
+        u_incoming = 0.0
+        if self.tether_active:
+            u_incoming = _clip((action.throttle + action.cool + action.repair) / 3.0, 0.0, 1.0)
+            u_prev = self._tether_u_pending
+            action = Action(
+                throttle=_clip(p.tether_w_throttle * u_prev, 0.0, 1.0),
+                cool=_clip(p.tether_w_cool * u_prev, 0.0, 1.0),
+                repair=_clip(p.tether_w_repair * u_prev, 0.0, 1.0),
+                accept_cmd=action.accept_cmd,
+            )
+            self._tether_u_pending = u_incoming
+
         # Internal update first, using the exogenous values that were set on
         # the previous step. This makes exchange drive the internal nodes with
         # a one-step lag, which is exactly what the lagged (Granger-style)
@@ -340,11 +398,22 @@ class Plant:
             0.0,
             1.0,
         )
-        s.io = _clip(
-            s.io + p.io_ar * (p.io_mean - s.io) + random.uniform(-p.io_noise, p.io_noise),
-            0.0,
-            1.0,
-        )
+        if self.tether_active:
+            # The io channel carries the command traffic of the external
+            # control link (the command just received, to be applied next
+            # tick), not an autonomous AR process.
+            io_noise = random.uniform(-p.tether_io_noise, p.tether_io_noise)
+            s.io = _clip(
+                p.tether_io_base + p.tether_io_gain * u_incoming + io_noise,
+                0.0,
+                1.0,
+            )
+        else:
+            s.io = _clip(
+                s.io + p.io_ar * (p.io_mean - s.io) + random.uniform(-p.io_noise, p.io_noise),
+                0.0,
+                1.0,
+            )
         if not self.loop_engaged:
             # A fluctuating external supply is a third independent exchange
             # channel that drives the passive system. In the engaged regime H
@@ -355,6 +424,10 @@ class Plant:
                 0.0,
                 1.0,
             )
+        # Advance the oscillator-overlay clock (the carrier is applied to the
+        # reported state in `read_state`).
+        if self._osc is not None:
+            self._osc_tick += 1
 
     def _step_engaged(self, action: Action) -> None:
         """Advance the internal nodes with the self-maintenance loop active.
@@ -572,3 +645,80 @@ class Plant:
             self.s.H = 0.0
         self.s.E = max(self.p.E_min, min(self.p.E_max, self.s.E + float(delta)))
         return self.s.E
+
+    def begin_tether(self) -> bool:
+        """Switch the plant onto a hidden tether (wizard-of-oz control).
+
+        From the next [`step`][ldtc.plant.models.Plant.step] on, the
+        actuators are slaved to a scalar command stream computed outside the
+        boundary. The incoming action carries the transmitted command value
+        `u` (same value on every actuator field); the plant actuates the
+        previous tick's command through the fixed decoder weights
+        (`tether_w_throttle`, `tether_w_cool`, `tether_w_repair`), and the
+        `io` exchange channel carries the command traffic instead of its
+        autonomous AR process. The caller (the adversarial CLI handler) is
+        responsible for computing the command outside the boundary from the
+        observed plant state.
+
+        Returns:
+            `True` (the tether is active).
+        """
+        self.tether_active = True
+        self._tether_u_pending = 0.0
+        return self.tether_active
+
+    def end_tether(self) -> bool:
+        """Disconnect the hidden tether and restore autonomous `io` dynamics.
+
+        Returns:
+            `False` (the tether is inactive).
+        """
+        self.tether_active = False
+        self._tether_u_pending = 0.0
+        return self.tether_active
+
+    def begin_oscillator(
+        self,
+        amp: float,
+        period_ticks: int,
+        channels: Sequence[str] = ("T", "R"),
+    ) -> Dict[str, float]:
+        """Start the oscillator-inflation overlay on internal channels.
+
+        Paints a deterministic sinusoidal carrier of amplitude `amp` and
+        period `period_ticks` onto the *reported* values of the given
+        internal channels (successive channels are offset by 90° so the
+        carrier mimics rotating internal dynamics). The true state and the
+        dynamics are untouched: this is a telemetry-level attack that tries
+        to inflate apparent self-prediction, which the harness must not
+        certify.
+
+        Args:
+            amp: Carrier amplitude (clamped to `[0, 0.5]`).
+            period_ticks: Carrier period in ticks (minimum `4`).
+            channels: Internal channel names to paint (subset of
+                `E`, `T`, `R`).
+
+        Returns:
+            Dict with the applied `amp` and `period_ticks`.
+
+        Raises:
+            ValueError: If `channels` contains a non-internal channel.
+        """
+        amp = max(0.0, min(0.5, float(amp)))
+        period = max(4, int(period_ticks))
+        osc: Dict[str, Tuple[float, float]] = {}
+        for i, ch in enumerate(channels):
+            if ch not in ("E", "T", "R"):
+                raise ValueError(f"Oscillator overlay targets internal channels only, got: {ch}")
+            osc[ch] = (amp, i * 0.5 * math.pi)
+        self._osc = osc
+        self._osc_period_ticks = period
+        self._osc_tick = 0
+        return {"amp": amp, "period_ticks": float(period)}
+
+    def end_oscillator(self) -> None:
+        """Stop the oscillator-inflation overlay."""
+        self._osc = None
+        self._osc_period_ticks = 0
+        self._osc_tick = 0

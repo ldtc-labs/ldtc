@@ -126,7 +126,7 @@ class IndicatorExporter:
         # Guard: ensure nothing slipped into the signed bundle either
         _assert_no_raw_lreg(bundle)
         # write side-by-side
-        base = os.path.join(self.out_dir, f"ind_{int(now*1000)}")
+        base = os.path.join(self.out_dir, f"ind_{int(now * 1000)}")
         with open(base + ".jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(bundle, sort_keys=True) + "\n")
         with open(base + ".cbor", "wb") as f:
