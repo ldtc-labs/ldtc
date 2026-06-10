@@ -189,7 +189,7 @@ def _dir_influence_linear(x: np.ndarray, p: int, sources: Sequence[int], targets
     return _dir_influence_linear_conditional(x=x, p=p, add_sources=sources, base_sources=[], targets=targets)
 
 
-def _dir_influence_mi(x: np.ndarray, sources: Sequence[int], targets: Sequence[int], lag: int = 1) -> float:
+def _dir_influence_mi(x: np.ndarray, sources: Sequence[int], targets: Sequence[int], lag: int = 1, k: int = 5) -> float:
     """Average pairwise mutual information from sources to targets.
 
     Computes MI between `sources` at time `t-lag` and `targets` at time `t`
@@ -200,6 +200,9 @@ def _dir_influence_mi(x: np.ndarray, sources: Sequence[int], targets: Sequence[i
         sources: Indices of source signals.
         targets: Indices of target signals.
         lag: Positive lag between sources and targets (default 1 sample).
+        k: Number of neighbors for the kNN MI estimator (kept consistent
+            with the `mi_k` profile knob so all MI variants use the same
+            `k`).
 
     Returns:
         Mean mutual information across all source-target pairs.
@@ -215,7 +218,7 @@ def _dir_influence_mi(x: np.ndarray, sources: Sequence[int], targets: Sequence[i
                 continue
             xs = x[:-lag, s]
             # sklearn MI expects 2D X
-            mi = mutual_info_regression(xs.reshape(-1, 1), y, discrete_features=False)
+            mi = mutual_info_regression(xs.reshape(-1, 1), y, discrete_features=False, n_neighbors=int(k))
             vals.append(float(mi[0]))
     return float(np.mean(vals)) if vals else 0.0
 
@@ -426,7 +429,8 @@ def estimate_L(
         p: VAR order for the linear estimator.
         lag_mi: Lag between sources and targets for MI, TE, and DI methods.
         n_boot: Number of bootstrap draws for CI estimation.
-        mi_k: k-NN parameter for Kraskov MI.
+        mi_k: k-NN neighbor count shared by all MI-based methods
+            (scikit-learn MI, Kraskov KSG, and the TE/DI proxies).
 
     Returns:
         An [`LResult`][ldtc.lmeas.estimators.LResult] with point estimates and
@@ -472,10 +476,10 @@ def estimate_L(
     elif method == "mi":
 
         def Lloop_fn(arr: np.ndarray) -> float:
-            return _dir_influence_mi(arr, sources=C, targets=C, lag=lag_mi)
+            return _dir_influence_mi(arr, sources=C, targets=C, lag=lag_mi, k=mi_k)
 
         def Lex_fn(arr: np.ndarray) -> float:
-            return _dir_influence_mi(arr, sources=Ex, targets=C, lag=lag_mi)
+            return _dir_influence_mi(arr, sources=Ex, targets=C, lag=lag_mi, k=mi_k)
 
     elif method == "mi_kraskov":
 

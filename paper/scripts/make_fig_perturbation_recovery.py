@@ -2,7 +2,8 @@
 """Generate the empirical perturbation-recovery (SC1) figure.
 
 Renders the seed-aggregated loop-dominance trajectory ``M(t)`` for the SC1
-perturbation battery (power sag and ingress flood) into
+perturbation battery (power sag, sustained ingress flood, and the
+designed-fail control outage) into
 ``paper/figures/fig_perturbation_recovery.{pdf,png,svg}``.
 
 The figure is built from the canonical multi-seed study
@@ -38,7 +39,7 @@ def main() -> None:
         print("No canonical study found; keeping committed fig_perturbation_recovery.pdf")
         return
 
-    sc1 = ["sc1_power_sag", "sc1_ingress_flood"]
+    sc1 = ["sc1_power_sag", "sc1_ingress_flood", "sc1_control_outage"]
     seeds = [int(os.environ.get("LDTC_FIG_SEED_BASE", "70000")) + i for i in range(3)]
     data = study.data_for_paper(
         canonical_dir=str(canonical_dir),

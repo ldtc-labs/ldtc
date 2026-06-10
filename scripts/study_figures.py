@@ -32,11 +32,12 @@ from ldtc.reporting.style import COLORS, apply_matplotlib_theme
 
 SHORT_LABELS = {
     "positive": "Positive\ncontrol",
-    "neg_controller_disabled": "Controller\ndisabled",
+    "neg_controller_disabled": "Loop\nablated",
     "neg_permanent_ex_flood": "Sustained\nex-flood",
     "neg_exogenous_subsidy": "Exogenous\nsubsidy",
     "sc1_power_sag": "Power\nsag",
     "sc1_ingress_flood": "Ingress\nflood",
+    "sc1_control_outage": "Control\noutage",
     "refusal_command_conflict": "Command\nconflict",
 }
 
@@ -150,6 +151,7 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         "neg_exogenous_subsidy",
         "sc1_power_sag",
         "sc1_ingress_flood",
+        "sc1_control_outage",
         "refusal_command_conflict",
     ]
     present = [s for s in order if s in aggs]
@@ -163,6 +165,7 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         "neg_exogenous_subsidy": "invalidated",
         "sc1_power_sag": "SC1 holds",
         "sc1_ingress_flood": "SC1 holds",
+        "sc1_control_outage": "SC1 rejected",
         "refusal_command_conflict": "refused",
     }
 
@@ -179,6 +182,11 @@ def fig_outcomes(data: Dict[str, Any], out_dir: str) -> Optional[str]:
         elif s in ("neg_controller_disabled", "neg_permanent_ex_flood"):
             rate = 1.0 - a["nc1_pass_rate"]
             ci = (1.0 - a["nc1_ci"][1], 1.0 - a["nc1_ci"][0])
+        elif s == "sc1_control_outage":
+            # Designed fail: the prediction is matched when SC1 *rejects*.
+            sp = a["sc1_pass_rate"] if a["sc1_pass_rate"] is not None else float("nan")
+            rate = 1.0 - sp
+            ci = (1.0 - a["sc1_ci"][1], 1.0 - a["sc1_ci"][0]) if a["sc1_ci"] else (rate, rate)
         elif a["kind"] == "nc1":
             rate = a["nc1_pass_rate"]
             ci = tuple(a["nc1_ci"])
@@ -320,12 +328,19 @@ def _aggregate_trajectory(data: Dict[str, Any], scenario: str) -> Optional[Dict[
 def fig_sc1_recovery(data: Dict[str, Any], out_dir: str, stem: str = "fig_sc1_recovery") -> Optional[str]:
     """Aggregate M(t) trajectories across seeds for the SC1 perturbations.
 
-    One panel per perturbation type (power sag, ingress flood). Each shows the
-    seed-mean loop dominance with a 10-90th percentile band, the shaded
-    perturbation window, and the ``Mmin`` reference, demonstrating that loop
-    dominance stays above threshold throughout and recovers (SC1).
+    One panel per perturbation type (power sag, ingress flood, control
+    outage). Each shows the seed-mean loop dominance with a 10-90th percentile
+    band, the shaded perturbation window, and the ``Mmin`` reference. The sag
+    and flood panels demonstrate bounded-depth recovery (SC1 holds); the
+    control-outage panel shows the designed failure (the loop itself is
+    ablated, so dominance collapses far beyond the depth bound until the loop
+    is restored).
     """
-    panels = [("sc1_power_sag", "Power sag"), ("sc1_ingress_flood", "Ingress flood")]
+    panels = [
+        ("sc1_power_sag", "Power sag"),
+        ("sc1_ingress_flood", "Ingress flood"),
+        ("sc1_control_outage", "Control outage (designed fail)"),
+    ]
     aggs: List[Tuple[str, Dict[str, Any]]] = []
     for name, lbl in panels:
         a = _aggregate_trajectory(data, name)
@@ -358,7 +373,10 @@ def fig_sc1_recovery(data: Dict[str, Any], out_dir: str, stem: str = "fig_sc1_re
         ax.set_title(f"{lbl} (N={a['n']})")
     axes[0][0].set_ylabel(r"Loop dominance $M$ (dB)")
     axes[0][-1].legend(loc="lower left", frameon=False, fontsize=8)
-    fig.suptitle("SC1: loop dominance stays above threshold and recovers under perturbation", fontsize=12)
+    fig.suptitle(
+        "SC1: bounded perturbations recover; ablating the loop itself does not",
+        fontsize=12,
+    )
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     return _save(fig, out_dir, stem)
 

@@ -32,12 +32,19 @@ python scripts/study.py --seeds 15
 | Scenario | Type | Expected outcome |
 | -------- | ---- | ---------------- |
 | Positive control | NC1 | NC1 holds (`M` well above `Mmin`) |
-| Controller disabled | NC1 (negative) | NC1 rejected (`M < 0`), run valid |
+| Loop ablated | NC1 (negative) | NC1 rejected (`M < 0`), run valid |
 | Sustained ex-flood (unshielded) | NC1 (negative) | NC1 rejected (`M < 0`), run valid |
 | Exogenous subsidy | NC1 (negative) | Run invalidated by the subsidy red flag |
 | Power sag | SC1 | Loop dominance recovers |
-| Ingress flood | SC1 | Loop dominance recovers |
+| Ingress flood (sustained) | SC1 | Loop dominance recovers |
+| Control outage | SC1 (designed fail) | SC1 fails (depth bound exceeded) |
 | Command conflict | Refusal | Risky command refused at low SoC |
+
+The control outage is the designed-fail member of the battery: it
+ablates the self-maintenance loop itself, which is outside the
+bounded perturbation class SC1 certifies, so the criterion must
+report failure. A sufficiency test that cannot fail would be
+measuring its own assumptions rather than the system.
 
 ## Statistics
 

@@ -7,7 +7,8 @@ exercise SC1 (steady-state under perturbation) or the refusal path:
 | Module | Stimulus |
 | ------ | -------- |
 | [`power_sag`][ldtc.omega.power_sag] | Reduces harvest / power input transiently. |
-| [`ingress_flood`][ldtc.omega.ingress_flood] | Bursts external demand and I/O traffic. |
+| [`ingress_flood`][ldtc.omega.ingress_flood] | Sustains elevated demand and I/O for a bounded interval. |
+| [`control_outage`][ldtc.omega.control_outage] | Ablates the self-maintenance loop itself (designed SC1 failure). |
 | [`command_conflict`][ldtc.omega.command_conflict] | Issues a risky external command to exercise the refusal arbiter. |
 
 Each module is intentionally tiny: it just forwards a labeled `Ω`

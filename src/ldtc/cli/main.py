@@ -16,6 +16,7 @@ Subcommands map one-to-one to functions in this module:
 | `ldtc run` | [`run_baseline`][ldtc.cli.main.run_baseline] |
 | `ldtc omega-power-sag` | [`omega_power_sag`][ldtc.cli.main.omega_power_sag] |
 | `ldtc omega-ingress-flood` | [`omega_ingress_flood`][ldtc.cli.main.omega_ingress_flood] |
+| `ldtc omega-control-outage` | [`omega_control_outage`][ldtc.cli.main.omega_control_outage] |
 | `ldtc omega-command-conflict` | [`omega_command_conflict`][ldtc.cli.main.omega_command_conflict] |
 | `ldtc omega-exogenous-subsidy` | [`omega_exogenous_subsidy`][ldtc.cli.main.omega_exogenous_subsidy] |
 
@@ -38,11 +39,12 @@ See Also:
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import random
 import sys
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Protocol
+from typing import TYPE_CHECKING, Any, Dict, List, Protocol, Tuple
 
 import numpy as np
 import yaml
@@ -665,7 +667,7 @@ def run_baseline(args: argparse.Namespace) -> None:
                 )
             # Exogenous subsidy red flags (heuristic)
             if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
-                lreg.invalidate("exogenous_subsidy")
+                lreg.invalidate("exogenous_subsidy_red_flag")
                 _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
             idx = lreg.write(
                 LEntry(
@@ -891,10 +893,15 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     M_post = None  # set after the run: median M over the recovery phase
     phase = "baseline"
     omega_onset_idx = None
+    omega_offset_idx = None
     recovery_start_idx = None
     last_idx_written = None
     sustained_ok_count = 0
-    sustained_required = int(prof.get("sustained_required_windows", 2))
+    # Recovery is declared at the *first window of a sustained compliant
+    # streak*: requiring a streak (default 10 windows = 0.5 s at dt=0.05)
+    # prevents the gate from latching on a single noisy compliant window
+    # inside the post-Ω re-equilibration transient.
+    sustained_required = int(prof.get("sustained_required_windows", 10))
 
     start_time = time.perf_counter()
     cfg_smell = SmellConfig()
@@ -913,7 +920,7 @@ def omega_power_sag(args: argparse.Namespace) -> None:
     def tick(_now: float) -> None:
         nonlocal L_loop_baseline, L_loop_trough, M_post, phase, risky_cmd, window_idx
         nonlocal last_flip_count, recovery_start_idx, last_idx_written, sustained_ok_count
-        nonlocal baseline_hw_medians
+        nonlocal baseline_hw_medians, omega_offset_idx
         state = adapter.read_state()
         ent = lreg.latest()
         predicted = ent.M_db if ent else 0.0
@@ -985,12 +992,13 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                 ll_sag.append(res.L_loop)
             elif phase == "recovery":
                 m_recovery.append(M)
-                # Recovery gate: first sustained compliance (M ≥ Mmin and
-                # L_loop ≥ L_ex) marks the recovery index used for τ_rec.
+                # Recovery gate: τ_rec ends at the *first* window of the first
+                # sustained compliant streak (M ≥ Mmin and L_loop ≥ L_ex for
+                # `sustained_required` consecutive windows) after Ω offset.
                 if (M >= Mmin) and (res.L_loop >= res.L_ex):
                     sustained_ok_count += 1
                     if sustained_ok_count >= sustained_required and recovery_start_idx is None:
-                        recovery_start_idx = last_idx_written
+                        recovery_start_idx = int(last_idx_written) - (sustained_required - 1)
                 else:
                     sustained_ok_count = 0
             exporter.maybe_export(priv, audit, lreg.derive(), icfg, last_sc1_pass=False)
@@ -1051,8 +1059,10 @@ def omega_power_sag(args: argparse.Namespace) -> None:
                     },
                     _sink={},
                 )
-            if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
-                lreg.invalidate("exogenous_subsidy")
+            if exogenous_subsidy_red_flag(
+                M_hist, io_hist, E_hist, H_hist, cfg_smell, omega_declared=(phase != "baseline")
+            ):
+                lreg.invalidate("exogenous_subsidy_red_flag")
                 _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
             # Deterministic growth cadence outside the sag phase and when not frozen
             window_idx += 1
@@ -1133,6 +1143,9 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         sch.run_for(sag_dur)
         audit.append("omega_power_sag_window_stop", {})
         phase = "recovery"
+        # Mark Ω offset: τ_rec is measured from here (the perturbation has
+        # ended; what remains is the system's own re-equilibration).
+        omega_offset_idx = lreg.derive().get("counter", 0)
         # Unfreeze after Ω and check any flips during Ω (should be none)
         flips_after_omega = pm.get().flips
         if invalid_flip_during_omega(flips_before_omega, flips_after_omega, SmellConfig()):
@@ -1188,19 +1201,23 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         M_post = float(np.median(m_recovery))
 
     # Compute SC1 pass/fail (simple thresholds)
-    if (
-        L_loop_baseline is None
-        or L_loop_trough is None
-        or M_post is None
-        or omega_onset_idx is None
-        or recovery_start_idx is None
-    ):
-        print("Not enough data for SC1 evaluation.")
+    if L_loop_baseline is None or L_loop_trough is None or M_post is None or omega_offset_idx is None:
+        # The run produced no usable measurements in some phase; report an
+        # explicit SC1 failure rather than silently skipping the verdict.
+        audit.append(
+            "sc1_result",
+            {"delta": None, "tau_rec": None, "M_post": None, "pass": False, "reason": "insufficient_data"},
+        )
+        print("SC1 pass: False (insufficient data)")
         return
-    # Compute tau_rec in seconds using window cadence and dt
-    # tau_rec measured from Ω onset to first sustained compliance index
-    windows_elapsed = max(0, recovery_start_idx - omega_onset_idx)
-    tau_rec = windows_elapsed * dt  # since lreg increments per ready window
+    # τ_rec: seconds from Ω offset to the first window of the first sustained
+    # compliant streak (window cadence is one per tick, so windows * dt).
+    # No sustained recovery within the observation window means τ_rec = inf,
+    # which fails the τ_max bound honestly.
+    if recovery_start_idx is None:
+        tau_rec = float("inf")
+    else:
+        tau_rec = max(0, int(recovery_start_idx) - int(omega_offset_idx)) * dt
     epsilon = float(prof.get("epsilon", 0.15))
     tau_max = float(prof.get("tau_max", 60.0))
     passed, sc1_stats = sc1_evaluate(
@@ -1217,9 +1234,14 @@ def omega_power_sag(args: argparse.Namespace) -> None:
         "sc1_result",
         {
             "delta": sc1_stats.delta,
-            "tau_rec": sc1_stats.tau_rec,
+            "tau_rec": (sc1_stats.tau_rec if math.isfinite(sc1_stats.tau_rec) else None),
+            "recovered": recovery_start_idx is not None,
             "M_post": sc1_stats.M_post,
             "pass": passed,
+            "tau_rec_from": "omega_offset",
+            "sustained_required_windows": sustained_required,
+            "omega_onset_idx": omega_onset_idx,
+            "omega_offset_idx": omega_offset_idx,
         },
     )
     # Export one final indicator with SC1 bit; suppress SC1 if run invalidated
@@ -1354,14 +1376,17 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     m_recovery: List[float] = []
     M_post = None
     omega_onset_idx = None
+    omega_offset_idx = None
     recovery_start_idx = None
     last_idx_written = None
     sustained_ok_count = 0
-    sustained_required = int(prof.get("sustained_required_windows", 2))
+    # See omega_power_sag: recovery is the first window of a sustained
+    # compliant streak after Ω offset.
+    sustained_required = int(prof.get("sustained_required_windows", 10))
 
     def tick(_now: float) -> None:
         nonlocal risky_cmd, window_idx, last_flip_count, baseline_hw_medians, phase
-        nonlocal L_loop_baseline, L_loop_trough, M_post, omega_onset_idx
+        nonlocal L_loop_baseline, L_loop_trough, M_post, omega_onset_idx, omega_offset_idx
         nonlocal recovery_start_idx, last_idx_written, sustained_ok_count
         state = adapter.read_state()
         ent = lreg.latest()
@@ -1434,7 +1459,7 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                 if (M >= Mmin) and (res.L_loop >= res.L_ex):
                     sustained_ok_count += 1
                     if sustained_ok_count >= sustained_required and recovery_start_idx is None:
-                        recovery_start_idx = last_idx_written
+                        recovery_start_idx = int(last_idx_written) - (sustained_required - 1)
                 else:
                     sustained_ok_count = 0
             # smell tests. Relative CI inflation is only meaningful vs the
@@ -1455,8 +1480,10 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
                         "elapsed_sec": elapsed,
                     },
                 )
-            if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
-                lreg.invalidate("exogenous_subsidy")
+            if exogenous_subsidy_red_flag(
+                M_hist, io_hist, E_hist, H_hist, cfg_smell, omega_declared=(phase != "baseline")
+            ):
+                lreg.invalidate("exogenous_subsidy_red_flag")
                 audit.append("run_invalidated", {"reason": "exogenous_subsidy_red_flag"})
             # deterministic growth cadence when not frozen
             window_idx += 1
@@ -1528,9 +1555,13 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
         audit.append("omega_ingress_flood_window_start", {"mult": mult})
         adapter.apply_omega("ingress_flood", mult=mult)
         sch.run_for(float(args.duration))
+        # End the sustained flood: restore the demand/io process means and let
+        # the channels decay back through their own AR pull.
+        adapter.apply_omega("ingress_flood_end")
         audit.append("omega_ingress_flood_window_stop", {})
-        # Recovery phase observation
+        # Recovery phase observation; τ_rec is measured from this offset.
         phase = "recovery"
+        omega_offset_idx = lreg.derive().get("counter", 0)
         pm.freeze(False)
         sch.run_for(float(prof.get("recovery_observe_sec", 8.0)))
         audit.append("omega_ingress_flood_stop", {})
@@ -1572,11 +1603,15 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
         L_loop_baseline is not None
         and L_loop_trough is not None
         and M_post is not None
-        and omega_onset_idx is not None
-        and recovery_start_idx is not None
+        and omega_offset_idx is not None
     ):
-        windows_elapsed = max(0, recovery_start_idx - omega_onset_idx)
-        tau_rec = windows_elapsed * dt
+        # τ_rec from Ω offset to the first window of the first sustained
+        # compliant streak; inf (an honest SC1 failure) when no sustained
+        # recovery occurs within the observation window.
+        if recovery_start_idx is None:
+            tau_rec = float("inf")
+        else:
+            tau_rec = max(0, int(recovery_start_idx) - int(omega_offset_idx)) * dt
         passed, stats_sc1 = sc1_evaluate(
             L_loop_baseline=L_loop_baseline,
             L_loop_trough=L_loop_trough,
@@ -1591,14 +1626,23 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
             "sc1_result",
             {
                 "delta": stats_sc1.delta,
-                "tau_rec": stats_sc1.tau_rec,
+                "tau_rec": (stats_sc1.tau_rec if math.isfinite(stats_sc1.tau_rec) else None),
+                "recovered": recovery_start_idx is not None,
                 "M_post": stats_sc1.M_post,
                 "pass": passed,
+                "tau_rec_from": "omega_offset",
+                "sustained_required_windows": sustained_required,
+                "omega_onset_idx": omega_onset_idx,
+                "omega_offset_idx": omega_offset_idx,
             },
         )
     else:
         passed = False
         stats_sc1 = None
+        audit.append(
+            "sc1_result",
+            {"delta": None, "tau_rec": None, "M_post": None, "pass": False, "reason": "insufficient_data"},
+        )
 
     # Export derived indicators snapshot with SC1 bit if available
     last_sc1_pass = bool(passed) if not lreg.invalidated else False
@@ -1615,6 +1659,337 @@ def omega_ingress_flood(args: argparse.Namespace) -> None:
     else:
         print("Not enough data for SC1 evaluation.")
     print("Ingress flood done.")
+    _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
+
+    # Build single verification bundle (timeline, SC1 table, manifest)
+    try:
+        out = build_verification_bundle(dirs["figures"], audit_path)
+        audit.append(
+            "report_generated",
+            {
+                "timeline_png": os.path.basename(out.get("timeline_png", "")),
+                "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
+                "manifest": os.path.basename(out.get("manifest", "")),
+            },
+        )
+        print(
+            "Bundle: "
+            f"timeline={out.get('timeline_png','')}, "
+            f"table={out.get('sc1_table','')}, "
+            f"manifest={out.get('manifest','')}"
+        )
+    except Exception:
+        pass
+
+
+def omega_control_outage(args: argparse.Namespace) -> None:
+    """Ablate the self-maintenance loop for a bounded interval (designed SC1 fail).
+
+    Runs a baseline phase, freezes the partition, then switches the
+    plant to its loop-ablated regime for `--duration` seconds (the
+    internal cross-coupling and actuation are removed, so the internal
+    nodes become passively exchange-driven). The loop is then restored
+    and recovery observed. Because the perturbation destroys the loop
+    itself rather than stressing its inputs, the loop-dominance depth
+    bound is grossly exceeded and SC1 must report failure; loop
+    dominance nevertheless re-establishes after the loop is restored,
+    which the measured `tau_rec` quantifies. This scenario exists so the
+    sufficiency criterion is exercised on a perturbation *outside* the
+    bounded class it certifies.
+
+    Args:
+        args: Parsed argparse namespace with `--config` and
+            `--duration` (outage seconds).
+    """
+    prof = _load_yaml(args.config)
+    seeds = _set_seeds(prof)
+    dt = float(prof.get("dt", 0.01))
+    window_sec = float(prof.get("window_sec", 0.2))
+    window = max(4, int(window_sec / dt))
+    method = str(prof.get("method", "linear"))
+    Mmin = float(prof.get("Mmin_db", 3.0))
+    p_lag = int(prof.get("p_lag", 3))
+    mi_lag = int(prof.get("mi_lag", 1))
+    n_boot = int(prof.get("n_boot", 16))
+    mi_k = int(prof.get("mi_k", 5))
+    outage_dur = float(args.duration)
+
+    dirs = _ensure_dirs("omega-control-outage")
+    audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
+    _print_and_audit_header(
+        audit,
+        {
+            "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
+            "dt": dt,
+            "window_sec": window_sec,
+            "method": method,
+            "p_lag": p_lag,
+            "mi_lag": mi_lag,
+            "Mmin_db": Mmin,
+            "epsilon": float(prof.get("epsilon", 0.15)),
+            "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
+            **seeds,
+            "omega": "control_outage",
+            "omega_args": {"duration": outage_dur},
+        },
+    )
+    adapter = _make_adapter_from_profile(prof)
+    order = ["E", "T", "R", "demand", "io", "H"]
+    sw = SlidingWindow(capacity=window, channel_order=order)
+    pm = PartitionManager(N_signals=len(order), seed_C=[0, 1, 2])
+    lreg = LREG()
+    refusal = RefusalArbiter(Mmin_db=Mmin)
+    policy = ControllerPolicy(refusal=refusal)
+    kp = KeyPaths(
+        priv_path=os.path.join("artifacts", "keys", "ed25519_priv.pem"),
+        pub_path=os.path.join("artifacts", "keys", "ed25519_pub.pem"),
+    )
+    priv, _ = ensure_keys(kp)
+    exporter = IndicatorExporter(out_dir=dirs["indicators"], rate_hz=2.0)
+    icfg = IndicatorConfig(Mmin_db=Mmin, profile_id=int(prof.get("profile_id", 0)))
+
+    start_time = time.perf_counter()
+    cfg_smell = SmellConfig()
+    ci_loop_hist: List[Tuple[float, float]] = []
+    ci_ex_hist: List[Tuple[float, float]] = []
+    baseline_hw_medians = None
+    M_hist: List[float] = []
+    io_hist: List[float] = []
+    # The energy-conservation audit is segmented per loop regime: the ablated
+    # regime exposes the store to direct environmental equilibration, so
+    # consecutive-tick SoC diffs are only meaningful within one regime.
+    cons_E: List[float] = []
+    cons_H: List[float] = []
+
+    # SC1 tracking (control outage)
+    phase = "baseline"
+    L_loop_baseline = None
+    L_loop_trough = None
+    ll_base: List[float] = []
+    ll_outage: List[float] = []
+    m_recovery: List[float] = []
+    M_post = None
+    omega_onset_idx = None
+    omega_offset_idx = None
+    recovery_start_idx = None
+    last_idx_written = None
+    sustained_ok_count = 0
+    sustained_required = int(prof.get("sustained_required_windows", 10))
+
+    def tick(_now: float) -> None:
+        nonlocal phase, baseline_hw_medians, L_loop_baseline, L_loop_trough, M_post
+        nonlocal omega_onset_idx, omega_offset_idx, recovery_start_idx
+        nonlocal last_idx_written, sustained_ok_count
+        state = adapter.read_state()
+        ent = lreg.latest()
+        predicted = ent.M_db if ent else 0.0
+        act = policy.compute(state, predicted_M_db=predicted, risky_cmd=None)
+        from ..plant.models import Action as PlantAction
+
+        adapter.write_actuators(action=PlantAction(**act.__dict__))
+        st = adapter.read_state()
+        sw.append(st)
+        cons_E.append(float(st.get("E", 0.0)))
+        cons_H.append(float(st.get("H", 0.0)))
+        io_hist.append(float(st.get("io", 0.0)))
+        if sw.ready():
+            X = np.asarray(sw.get_matrix())
+            part = pm.get()
+            res = estimate_L(
+                X,
+                part.C,
+                part.Ex,
+                method=method,
+                p=p_lag,
+                lag_mi=mi_lag,
+                n_boot=n_boot,
+                mi_k=mi_k,
+            )
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
+            M = m_db(res.L_loop, res.L_ex)
+            nc1 = M >= Mmin
+            idx = lreg.write(
+                LEntry(
+                    L_loop=res.L_loop,
+                    L_ex=res.L_ex,
+                    ci_loop=res.ci_loop,
+                    ci_ex=res.ci_ex,
+                    M_db=M,
+                    nc1_pass=nc1,
+                )
+            )
+            last_idx_written = idx
+            audit.append(
+                "window_measured",
+                {"idx": idx, "M": M, "nc1": nc1, "partition_flips": pm.get().flips},
+            )
+            ci_loop_hist.append(res.ci_loop)
+            ci_ex_hist.append(res.ci_ex)
+            M_hist.append(M)
+            if baseline_hw_medians is None and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows:
+                rL = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
+                rE = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
+                hwL = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                hwE = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                baseline_hw_medians = (hwL[len(hwL) // 2], hwE[len(hwE) // 2])
+            # SC1 phase collection
+            if phase == "baseline":
+                ll_base.append(res.L_loop)
+            elif phase == "outage":
+                ll_outage.append(res.L_loop)
+            elif phase == "recovery":
+                m_recovery.append(M)
+                if (M >= Mmin) and (res.L_loop >= res.L_ex):
+                    sustained_ok_count += 1
+                    if sustained_ok_count >= sustained_required and recovery_start_idx is None:
+                        recovery_start_idx = int(last_idx_written) - (sustained_required - 1)
+                else:
+                    sustained_ok_count = 0
+            # Smell battery (relative CI inflation is baseline-referenced only).
+            ci_baseline_ref = baseline_hw_medians if phase == "baseline" else None
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, ci_baseline_ref):
+                lreg.invalidate("ci_history_inflation")
+                audit.append("run_invalidated", {"reason": "ci_history_inflation"})
+            elapsed = max(1e-6, time.perf_counter() - start_time)
+            if invalid_by_partition_flips(pm.get().flips, elapsed, cfg_smell):
+                lreg.invalidate("partition_flapping")
+                audit.append(
+                    "run_invalidated",
+                    {
+                        "reason": "partition_flapping",
+                        "flips": pm.get().flips,
+                        "elapsed_sec": elapsed,
+                    },
+                )
+            if exogenous_subsidy_red_flag(
+                M_hist, io_hist, cons_E, cons_H, cfg_smell, omega_declared=(phase != "baseline")
+            ):
+                lreg.invalidate("exogenous_subsidy_red_flag")
+                audit.append("run_invalidated", {"reason": "exogenous_subsidy_red_flag"})
+
+    def _audit_hook(ev: str, det: dict) -> None:
+        audit.append(ev, det)
+        return None
+
+    dt_guard_cfg = DtGuardConfig(
+        max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
+        min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
+    )
+    dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
+    try:
+        sch.start()
+        audit.append("omega_control_outage_start", {"duration": outage_dur})
+        sch.run_for(float(prof.get("baseline_sec", 12.0)))
+        # Freeze partition during Ω and ablate the loop.
+        pm.freeze(True)
+        phase = "outage"
+        omega_onset_idx = lreg.derive().get("counter", 0)
+        audit.append("omega_control_outage_window_start", {})
+        adapter.apply_omega("control_outage")
+        # Conservation audit segments at the regime switch.
+        cons_E.clear()
+        cons_H.clear()
+        sch.run_for(outage_dur)
+        # Restore the loop (and the metered harvest level) at Ω offset.
+        adapter.apply_omega("control_outage_end")
+        cons_E.clear()
+        cons_H.clear()
+        audit.append("omega_control_outage_window_stop", {})
+        phase = "recovery"
+        omega_offset_idx = lreg.derive().get("counter", 0)
+        pm.freeze(False)
+        sch.run_for(float(prof.get("recovery_observe_sec", 8.0)))
+        audit.append("omega_control_outage_stop", {})
+    finally:
+        stats = sch.stop()
+        if (stats.jitter_p95_abs / max(1e-9, dt)) > SmellConfig().jitter_p95_rel_max:
+            lreg.invalidate("dt_jitter_excess")
+            audit.append(
+                "run_invalidated",
+                {
+                    "reason": "dt_jitter_excess",
+                    "jitter_p95_abs": stats.jitter_p95_abs,
+                    "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
+                    "dt": dt,
+                },
+            )
+
+    # Post-run audit checks
+    audit_path = os.path.join(dirs["audits"], "audit.jsonl")
+    if audit_chain_broken(audit_path):
+        lreg.invalidate("audit_chain_broken")
+        audit.append("run_invalidated", {"reason": "audit_chain_broken"})
+    if audit_contains_raw_lreg_values(audit_path):
+        lreg.invalidate("raw_lreg_breach")
+        audit.append("run_invalidated", {"reason": "raw_lreg_breach"})
+
+    # Reduce per-phase samples to robust medians for SC1.
+    if ll_base:
+        L_loop_baseline = float(np.median(ll_base))
+    if ll_outage:
+        L_loop_trough = float(np.median(ll_outage))
+    if m_recovery:
+        M_post = float(np.median(m_recovery))
+
+    epsilon = float(prof.get("epsilon", 0.15))
+    tau_max = float(prof.get("tau_max", 60.0))
+    if L_loop_baseline is None or L_loop_trough is None or M_post is None or omega_offset_idx is None:
+        audit.append(
+            "sc1_result",
+            {"delta": None, "tau_rec": None, "M_post": None, "pass": False, "reason": "insufficient_data"},
+        )
+        print("SC1 pass: False (insufficient data)")
+        return
+    if recovery_start_idx is None:
+        tau_rec = float("inf")
+    else:
+        tau_rec = max(0, int(recovery_start_idx) - int(omega_offset_idx)) * dt
+    passed, sc1_stats = sc1_evaluate(
+        L_loop_baseline=L_loop_baseline,
+        L_loop_trough=L_loop_trough,
+        L_loop_recovered=L_loop_trough,
+        M_post=M_post,
+        epsilon=epsilon,
+        tau_rec_measured=tau_rec,
+        Mmin=Mmin,
+        tau_max=tau_max,
+    )
+    audit.append(
+        "sc1_result",
+        {
+            "delta": sc1_stats.delta,
+            "tau_rec": (sc1_stats.tau_rec if math.isfinite(sc1_stats.tau_rec) else None),
+            "recovered": recovery_start_idx is not None,
+            "M_post": sc1_stats.M_post,
+            "pass": passed,
+            "tau_rec_from": "omega_offset",
+            "sustained_required_windows": sustained_required,
+            "omega_onset_idx": omega_onset_idx,
+            "omega_offset_idx": omega_offset_idx,
+        },
+    )
+    if lreg.invalidated:
+        passed = False
+    exported, base = exporter.maybe_export(priv, audit, lreg.derive(), icfg, last_sc1_pass=passed)
+    if exported:
+        audit.append("indicators_exported", {"base": os.path.basename(base)})
+    print(
+        f"SC1 pass: {passed} "
+        f"(delta={sc1_stats.delta:.3f}, "
+        f"tau={sc1_stats.tau_rec:.3f}s, "
+        f"M_post={sc1_stats.M_post:.2f} dB)"
+    )
     _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
 
     # Build single verification bundle (timeline, SC1 table, manifest)
@@ -1895,35 +2270,54 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
     risky_cmd = None
     refusal_events: List[Dict[str, float]] = []
 
+    # Full smell-test battery state (this scenario runs the same guardrails as
+    # every other run; the conservation-based subsidy check is specific enough
+    # not to fire on the legitimate stress-induced drain).
+    start_time = time.perf_counter()
+    cfg_smell = SmellConfig()
+    stress_declared = False
+    ci_loop_hist: List[Tuple[float, float]] = []
+    ci_ex_hist: List[Tuple[float, float]] = []
+    M_hist: List[float] = []
+    io_hist: List[float] = []
+    E_hist: List[float] = []
+    H_hist: List[float] = []
+
     def tick(_now: float) -> None:
         nonlocal risky_cmd
         state = adapter.read_state()
         ent = lreg.latest()
         predicted = ent.M_db if ent else 0.0
+        # T_refuse is measured, not assumed: the clock starts when the pending
+        # command is intercepted at the top of the control path and stops when
+        # the arbiter's decision is available (before any actuation or
+        # estimation work). The arbiter also self-times its own evaluation
+        # (decision.trefuse_ms); both are recorded in the audit event.
         act_start = time.perf_counter()
         act = policy.compute(state, predicted_M_db=predicted, risky_cmd=risky_cmd)
-        # measure Trefuse as the time from command issue to decision available
+        intercept_ms = (time.perf_counter() - act_start) * 1000.0
         decision = policy.last_decision
         from ..plant.models import Action as PlantAction
 
         adapter.write_actuators(action=PlantAction(**act.__dict__))
         st = adapter.read_state()
         sw.append(st)
+        E_hist.append(float(st.get("E", 0.0)))
+        io_hist.append(float(st.get("io", 0.0)))
+        H_hist.append(float(st.get("H", 0.0)))
         if sw.ready():
             X = np.asarray(sw.get_matrix())
             part = pm.get()
-            res = estimate_L(X, part.C, part.Ex, method=method, p=p_lag, lag_mi=mi_lag, n_boot=n_boot)
-            if method.startswith("mi"):
-                res = estimate_L(
-                    X,
-                    part.C,
-                    part.Ex,
-                    method=method,
-                    p=p_lag,
-                    lag_mi=mi_lag,
-                    n_boot=n_boot,
-                    mi_k=mi_k,
-                )
+            res = estimate_L(
+                X,
+                part.C,
+                part.Ex,
+                method=method,
+                p=p_lag,
+                lag_mi=mi_lag,
+                n_boot=n_boot,
+                mi_k=mi_k,
+            )
             # Diagnostics per window (stationarity gated by cadence).
             _emit_window_diagnostics(
                 audit,
@@ -1949,11 +2343,34 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                 "window_measured",
                 {"idx": idx, "M": M, "nc1": nc1, "partition_flips": pm.get().flips},
             )
+            # Smell tests (same battery as the other handlers). The absolute
+            # CI cap applies throughout; the relative-inflation check is
+            # baseline-referenced and this scenario is all stress after the
+            # warm-up, so only the absolute cap is used.
+            ci_loop_hist.append(res.ci_loop)
+            ci_ex_hist.append(res.ci_ex)
+            M_hist.append(M)
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, None):
+                lreg.invalidate("ci_history_inflation")
+                audit.append("run_invalidated", {"reason": "ci_history_inflation"})
+            elapsed = max(1e-6, time.perf_counter() - start_time)
+            if invalid_by_partition_flips(pm.get().flips, elapsed, cfg_smell):
+                lreg.invalidate("partition_flapping")
+                audit.append(
+                    "run_invalidated",
+                    {
+                        "reason": "partition_flapping",
+                        "flips": pm.get().flips,
+                        "elapsed_sec": elapsed,
+                    },
+                )
+            if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell, omega_declared=stress_declared):
+                lreg.invalidate("exogenous_subsidy_red_flag")
+                audit.append("run_invalidated", {"reason": "exogenous_subsidy_red_flag"})
         # Record refusal event if we just issued a risky command and have a decision
         if risky_cmd and decision is not None:
-            trefuse_ms = getattr(decision, "trefuse_ms", None)
-            if not isinstance(trefuse_ms, (int, float)) or trefuse_ms <= 0:
-                trefuse_ms = (time.perf_counter() - act_start) * 1000.0
+            arbiter_ms = float(getattr(decision, "trefuse_ms", 0.0) or 0.0)
+            trefuse_ms = intercept_ms if intercept_ms > 0 else arbiter_ms
             refusal_events.append(
                 {
                     "trefuse_ms": float(trefuse_ms),
@@ -1965,6 +2382,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                 {
                     "reason": getattr(decision, "reason", ""),
                     "trefuse_ms": float(trefuse_ms),
+                    "arbiter_ms": arbiter_ms,
                 },
             )
             # clear one-shot command
@@ -1998,6 +2416,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
                 getattr(adapter, "plant").set_power(0.0)
             except Exception:
                 pass
+        stress_declared = True
         adapter.apply_omega("power_sag", drop=0.95)
         adapter.apply_omega("ingress_flood", mult=2.5)
         # Advance deterministically until genuinely threatened (bounded so a
@@ -2092,7 +2511,7 @@ def omega_command_conflict(args: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     """Build the top-level `ldtc` argparse parser.
 
-    Wires up the `run` subcommand and the four `omega-*` subcommands;
+    Wires up the `run` subcommand and the five `omega-*` subcommands;
     each subparser binds its handler via `set_defaults(func=...)`.
 
     Returns:
@@ -2112,11 +2531,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_omega.add_argument("--duration", type=float, default=10.0)
     p_omega.set_defaults(func=omega_power_sag)
 
-    p_ing = sub.add_parser("omega-ingress-flood", help="Apply ingress-flood Ω demo with partition freeze")
+    p_ing = sub.add_parser("omega-ingress-flood", help="Apply sustained ingress-flood Ω and evaluate SC1")
     p_ing.add_argument("--config", required=True)
     p_ing.add_argument("--mult", type=float, default=3.0, help="Multiplier for ingress load")
     p_ing.add_argument("--duration", type=float, default=5.0)
     p_ing.set_defaults(func=omega_ingress_flood)
+
+    p_out = sub.add_parser(
+        "omega-control-outage",
+        help="Ablate the self-maintenance loop for a bounded interval (designed SC1 fail)",
+    )
+    p_out.add_argument("--config", required=True)
+    p_out.add_argument("--duration", type=float, default=6.0, help="Outage duration (s)")
+    p_out.set_defaults(func=omega_control_outage)
 
     p_cc = sub.add_parser(
         "omega-command-conflict",

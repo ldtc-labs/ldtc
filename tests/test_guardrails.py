@@ -14,9 +14,11 @@ from ldtc.guardrails.smelltests import (
     SmellConfig,
     audit_chain_broken,
     audit_contains_raw_lreg_values,
+    exogenous_subsidy_red_flag,
     flips_per_hour,
     invalid_by_partition_flips,
     invalid_flip_during_omega,
+    unexplained_soc_gain,
 )
 from ldtc.runtime.scheduler import FixedScheduler
 
@@ -50,6 +52,34 @@ def test_flip_during_omega_invalidation():
     # If disabled, never invalidates
     cfg2 = SmellConfig(forbid_partition_flip_during_omega=False)
     assert invalid_flip_during_omega(1, 2, cfg2) is False
+
+
+def test_unexplained_soc_gain_fires_on_injection():
+    """A one-tick SoC jump above the metered influx must be flagged."""
+    cfg = SmellConfig()
+    # Steady drain at zero harvest, then an exogenous +0.2 injection.
+    Es = [0.60, 0.59, 0.58, 0.78, 0.77]
+    Hs = [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert unexplained_soc_gain(Es, Hs, cfg) is True
+    assert exogenous_subsidy_red_flag([], [], Es, Hs, cfg) is True
+
+
+def test_unexplained_soc_gain_ignores_legitimate_drain_and_harvest():
+    """Legitimate drains and harvest-funded gains must not be flagged."""
+    cfg = SmellConfig()
+    # Zero-harvest drain toward the floor (the command-conflict stress path).
+    Es = [0.6 - 0.004 * i for i in range(100)]
+    Hs = [0.0] * 100
+    assert unexplained_soc_gain(Es, Hs, cfg) is False
+    assert exogenous_subsidy_red_flag([], [], Es, Hs, cfg) is False
+    # Gains within harvest + noise allowance are fine.
+    Es2 = [0.5, 0.52, 0.54, 0.56]
+    Hs2 = [0.03, 0.03, 0.03, 0.03]
+    assert unexplained_soc_gain(Es2, Hs2, cfg) is False
+    # A legitimate harvest step-up (sag release) is not an injection.
+    Es3 = [0.5, 0.5, 0.55, 0.6]
+    Hs3 = [0.0, 0.10, 0.10, 0.10]
+    assert unexplained_soc_gain(Es3, Hs3, cfg) is False
 
 
 def test_dt_guard_rate_limited(tmp_path):

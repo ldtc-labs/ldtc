@@ -110,7 +110,7 @@ results: calibrate study-rstar sensitivity
 	@echo "Results written to artifacts/study, artifacts/calibration, artifacts/sensitivity"
 
 calibrate:
-	$(PY) scripts/calibrate_rstar.py --baseline-seeds 6 --sag-seeds 6
+	$(PY) scripts/calibrate_rstar.py --baseline-seeds 6 --sag-seeds 6 --flood-seeds 6
 
 run-rstar:
 	$(PY) -m ldtc.cli.main run --config configs/profile_rstar.yml

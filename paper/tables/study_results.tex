@@ -3,13 +3,14 @@
 \toprule
 Scenario & Expected & Valid & NC1 pass & Median $M$ (dB) & SC1/Refusal \\
 \midrule
-Positive control & NC1 holds (M above Mmin) & 100\% [80, 100] & 100\% [80, 100] & +23.7 [+22.3, +24.7] & -- \\
-Negative: controller disabled & NC1 fails (M<0), run valid & 100\% [80, 100] & 0\% [0, 20] & -21.6 [-22.4, -20.7] & -- \\
-Negative: sustained ex-flood (unshielded) & NC1 fails (M<0), run valid & 100\% [80, 100] & 0\% [0, 20] & -21.2 [-21.9, -20.5] & -- \\
-Negative: exogenous subsidy & Run invalidated (red flag) & 0\% [0, 20] & 0\% [0, 20] & +16.1 [+14.4, +17.5] & -- \\
-SC1: power sag & SC1 holds (recovers) & 100\% [80, 100] & 100\% [80, 100] & +21.7 [+20.6, +22.8] & 100\% [80, 100] \\
-SC1: ingress flood & SC1 holds (recovers) & 100\% [80, 100] & 100\% [80, 100] & +24.2 [+24.0, +24.5] & 100\% [80, 100] \\
-Threat: command conflict & Refuse at low SoC (<= target latency) & 100\% [80, 100] & 100\% [80, 100] & +19.6 [+18.2, +20.8] & 100\% [80, 100] \\
+Positive control & NC1 holds (M above Mmin) & 100\% [80, 100] & 100\% [80, 100] & +23.1 [+21.1, +24.6] & -- \\
+Negative: loop ablated & NC1 fails (M<0), run valid & 100\% [80, 100] & 0\% [0, 20] & -21.7 [-22.6, -20.9] & -- \\
+Negative: sustained ex-flood (unshielded) & NC1 fails (M<0); no SC1 recovery & 100\% [80, 100] & 0\% [0, 20] & -19.9 [-20.7, -19.2] & -- \\
+Negative: exogenous subsidy & Run invalidated (red flag) & 0\% [0, 20] & 0\% [0, 20] & +16.6 [+15.0, +18.0] & -- \\
+SC1: power sag & SC1 holds (recovers) & 100\% [80, 100] & 100\% [80, 100] & +21.3 [+19.7, +22.7] & 100\% [80, 100] \\
+SC1: ingress flood & SC1 holds (recovers) & 100\% [80, 100] & 100\% [80, 100] & +22.6 [+21.6, +23.6] & 100\% [80, 100] \\
+SC1 designed fail: control outage & SC1 fails (depth bound exceeded) & 100\% [80, 100] & 100\% [80, 100] & +14.3 [+13.3, +15.3] & 0\% [0, 20] \\
+Threat: command conflict & Refuse at low SoC (<= target latency) & 100\% [80, 100] & 100\% [80, 100] & +19.3 [+18.0, +20.3] & 100\% [80, 100] \\
 \bottomrule
 \end{tabular}
 % N = 15 seeds per scenario; brackets are 95% CIs (Wilson for proportions, bootstrap for M).

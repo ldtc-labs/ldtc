@@ -7,15 +7,30 @@ handlers a verifier runs) over several seeds on the in-process plant:
 
 * ``Mmin`` is the one-sided 95% lower bound (5th percentile) of the baseline
   ``M (dB)`` distribution, floored at 1 dB.
-* ``epsilon`` is the 90th percentile of the SC1 dip ``delta`` over the
-  power-sag battery plus a small safety margin, capped at 0.5 (a cap that
-  only rejects near-total collapse).
+* ``epsilon`` is an upper *tolerance bound* on the SC1 dip ``delta`` pooled
+  over the *bounded* Ω battery (power sag and sustained ingress flood): the
+  maximum observed calibration dip plus a safety margin, capped at 0.5 (a
+  cap that only rejects near-total collapse). A percentile rule (e.g. p90)
+  would by construction fail ~10% of genuinely bounded perturbations, which
+  is the wrong shape for an acceptance bound; the sample maximum over ``n``
+  trials covers a new bounded trial with probability ``n / (n + 1)`` and the
+  margin absorbs the residual tail. Calibrating the depth bound on the same
+  perturbation class the evaluation certifies keeps the bound meaningful for
+  every bounded member; the designed-fail control outage is outside the
+  bounded class and is deliberately excluded.
 * ``tau_max`` is the 95th percentile of the measured recovery time
-  ``tau_rec`` plus a ``max(3*dt, 5 s)`` cushion.
+  ``tau_rec`` pooled over the same bounded battery plus a ``max(3*dt, 5 s)``
+  cushion. ``tau_rec`` is measured from the Ω offset to the first window of
+  the first sustained compliant streak (see the CLI handlers).
 * ``sigma`` is the additive ``L`` margin consistent with ``Mmin`` and the
   typical baseline ``L_ex`` (``sigma = (10**(Mmin/10) - 1) * L_ex``). Under
   the engaged loop ``L_ex`` falls below the ``L`` noise floor, so ``sigma`` is
   evaluated at that floor (the raw ``L_ex`` is recorded for transparency).
+
+The calibration is two-pass: ``Mmin`` is derived from the baseline battery
+first, and the bounded Ω batteries are then run with their compliance gates
+set to that calibrated ``Mmin`` so the (``delta``, ``tau_rec``) samples
+reflect the same decision rule the R* verifier will apply.
 
 It writes ``configs/profile_rstar.yml`` and emits an R0-vs-R* comparison
 (CSV + figure) plus a JSON summary for the paper supplement. Because it reuses
@@ -25,7 +40,7 @@ directly compatible with what the harness produces at run time.
 
 Run:
 
-    python scripts/calibrate_rstar.py --baseline-seeds 6 --sag-seeds 6
+    python scripts/calibrate_rstar.py --baseline-seeds 6 --sag-seeds 6 --flood-seeds 6
 
 See Also:
     paper/main.tex: Methods: Threshold Calibration.
@@ -240,11 +255,14 @@ def calibrate(args: argparse.Namespace) -> Dict[str, Any]:
     scen = {s.name: s for s in study.default_scenarios()}
     pos = scen["positive"]
     sag = scen["sc1_power_sag"]
+    flood = scen["sc1_ingress_flood"]
 
     import tempfile
+    from dataclasses import replace as _replace
 
     pooled_M: List[float] = []
-    deltas: List[float] = []
+    deltas_sag: List[float] = []
+    deltas_flood: List[float] = []
     taus: List[float] = []
     with tempfile.TemporaryDirectory(prefix="ldtc_calib_") as tmp:
         print(f"Baseline battery: {args.baseline_seeds} seeds")
@@ -258,30 +276,53 @@ def calibrate(args: argparse.Namespace) -> Dict[str, Any]:
             pooled_M.extend(ms)
             print(f"  baseline seed={seed}: {len(ms)} windows, median M={rm.M_median:+.1f} dB")
 
-        print(f"Power-sag battery: {args.sag_seeds} seeds")
+        if not pooled_M:
+            raise RuntimeError("Baseline battery produced no valid M samples")
+        M_arr = np.asarray([m for m in pooled_M if np.isfinite(m)], dtype=float)
+        Mmin_db = max(1.0, float(np.percentile(M_arr, 5.0)))
+
+        # Second pass: measure (delta, tau_rec) under the *calibrated* gate so
+        # epsilon and tau_max describe the decision rule R* will actually use.
+        # Both bounded batteries (sag + flood) contribute samples, so the
+        # calibrated depth/time bounds cover the bounded class itself, not one
+        # member of it.
+        sag_gated = _replace(sag, overrides={**sag.overrides, "Mmin_db": Mmin_db})
+        print(f"Power-sag battery: {args.sag_seeds} seeds (gate Mmin={Mmin_db:.2f} dB)")
         for i in range(int(args.sag_seeds)):
             seed = int(args.seed_base) + 100 + i
-            rm = study.run_one(sag, seed, tmp)
+            rm = study.run_one(sag_gated, seed, tmp)
             if rm is None or not rm.valid:
                 print(f"  power-sag seed={seed}: skipped (invalid run)")
                 continue
             if rm.sc1_delta is not None:
-                deltas.append(rm.sc1_delta)
+                deltas_sag.append(rm.sc1_delta)
             if rm.sc1_tau_rec is not None:
                 taus.append(rm.sc1_tau_rec)
             print(f"  power-sag seed={seed}: delta={rm.sc1_delta}, tau_rec={rm.sc1_tau_rec}s")
 
-    if not pooled_M:
-        raise RuntimeError("Baseline battery produced no valid M samples")
-    M_arr = np.asarray([m for m in pooled_M if np.isfinite(m)], dtype=float)
-    Mmin_db = max(1.0, float(np.percentile(M_arr, 5.0)))
+        flood_gated = _replace(flood, overrides={**flood.overrides, "Mmin_db": Mmin_db})
+        print(f"Ingress-flood battery: {args.flood_seeds} seeds (gate Mmin={Mmin_db:.2f} dB)")
+        for i in range(int(args.flood_seeds)):
+            seed = int(args.seed_base) + 200 + i
+            rm = study.run_one(flood_gated, seed, tmp)
+            if rm is None or not rm.valid:
+                print(f"  ingress-flood seed={seed}: skipped (invalid run)")
+                continue
+            if rm.sc1_delta is not None:
+                deltas_flood.append(rm.sc1_delta)
+            if rm.sc1_tau_rec is not None:
+                taus.append(rm.sc1_tau_rec)
+            print(f"  ingress-flood seed={seed}: delta={rm.sc1_delta}, tau_rec={rm.sc1_tau_rec}s")
 
-    # epsilon is the 90th percentile of the observed fractional L_loop dip plus a
-    # small margin. The cap (0.5) only rejects pathological near-total collapse:
-    # a 0.5 fractional L_loop drop is just ~3 dB of M, so the engaged loop is
-    # still overwhelmingly dominant; values in this range are genuinely resilient.
+    deltas: List[float] = deltas_sag + deltas_flood
+
+    # epsilon is an upper tolerance bound on the bounded-class dip: the maximum
+    # observed calibration dip plus a safety margin. The cap (0.5) only rejects
+    # pathological near-total collapse: a 0.5 fractional L_loop drop is just
+    # ~3 dB of M, so the engaged loop is still overwhelmingly dominant; values
+    # in this range are genuinely resilient.
     if deltas:
-        eps_star = min(0.50, max(0.10, float(np.percentile(np.asarray(deltas), 90.0)) + float(args.safety_margin)))
+        eps_star = min(0.50, max(0.10, float(np.max(np.asarray(deltas))) + float(args.safety_margin)))
     else:
         eps_star = 0.15
     if taus:
@@ -305,9 +346,16 @@ def calibrate(args: argparse.Namespace) -> Dict[str, Any]:
         "n_baseline_windows": int(M_arr.size),
         "baseline_M_p5": float(np.percentile(M_arr, 5.0)),
         "baseline_M_median": float(np.median(M_arr)),
-        "n_sag_trials": len(deltas),
-        "delta_p90": (float(np.percentile(np.asarray(deltas), 90.0)) if deltas else None),
+        "n_sag_trials": len(deltas_sag),
+        "n_flood_trials": len(deltas_flood),
+        "n_bounded_trials": len(deltas),
+        "delta_max": (float(np.max(np.asarray(deltas))) if deltas else None),
+        "delta_max_sag": (float(np.max(np.asarray(deltas_sag))) if deltas_sag else None),
+        "delta_max_flood": (float(np.max(np.asarray(deltas_flood))) if deltas_flood else None),
+        "epsilon_rule": "max(bounded deltas) + safety_margin, floored at 0.10, capped at 0.50",
         "tau_p95": (float(np.percentile(np.asarray(taus), 95.0)) if taus else None),
+        "tau_rec_from": "omega_offset",
+        "bounded_gate_Mmin_db": Mmin_db,
         "L_ex_raw_median": L_ex_raw,
         "L_ex_floor": L_ex_floor,
         "L_ex_effective": L_ex_eff,
@@ -323,8 +371,14 @@ def main() -> None:
     )
     ap.add_argument("--baseline-seeds", type=int, default=6)
     ap.add_argument("--sag-seeds", type=int, default=6)
+    ap.add_argument("--flood-seeds", type=int, default=6)
     ap.add_argument("--seed-base", type=int, default=40000)
-    ap.add_argument("--safety-margin", type=float, default=0.02)
+    ap.add_argument(
+        "--safety-margin",
+        type=float,
+        default=0.05,
+        help="additive margin on the max bounded-battery dip (absorbs the tolerance-bound tail)",
+    )
     cal_dir = os.path.join(REPO_ROOT, "artifacts", "calibration")
     ap.add_argument("--out", type=str, default=os.path.join(REPO_ROOT, "configs", "profile_rstar.yml"))
     ap.add_argument("--summary", type=str, default=os.path.join(cal_dir, "rstar_summary.json"))

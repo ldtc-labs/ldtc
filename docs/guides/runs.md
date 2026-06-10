@@ -50,12 +50,15 @@ Implemented by
    `--duration` seconds. The partition is frozen for the
    duration.
 3. Tracks the `𝓛_loop` trough during `Ω`.
-4. After `Ω` ends, watches for the first window that satisfies
-   the SC1 recovery gate (`𝓛_loop ≥ baseline · (1 − ε)`) for
-   `sustained_required_windows` consecutive windows.
+4. After `Ω` ends, watches for the recovery gate to hold for
+   `sustained_required_windows` consecutive windows (default 10);
+   recovery is credited at the *first* window of that streak.
 5. Calls
-   [`sc1_evaluate`][ldtc.lmeas.metrics.sc1_evaluate] and writes
-   the result into the next signed indicator.
+   [`sc1_evaluate`][ldtc.lmeas.metrics.sc1_evaluate] with
+   `tau_rec` measured from the `Ω` offset and writes the result
+   into the next signed indicator. If no sustained streak occurs,
+   the `sc1_result` is still emitted with `pass: false` and
+   `tau_rec: null` (infinite).
 
 Expected on R0: `sc1: true`, `delta ≤ 0.15`, `tau_rec ≤ 60 s`.
 
@@ -66,11 +69,29 @@ make clean-artifacts && \
 ldtc omega-ingress-flood --config configs/profile_r0.yml --mult 3 --duration 5
 ```
 
-Multiplies the external `demand` channel by `--mult` for
-`--duration` seconds via
-[`omega.ingress_flood.apply`][ldtc.omega.ingress_flood.apply].
-The same SC1 evaluation runs after the perturbation. On R0 a 3x
-flood for 5 s should still pass SC1.
+Raises the external `demand` and `io` process means by `--mult`
+for `--duration` seconds (a *sustained* flood, capped below
+saturation so the channels keep their variance) via
+[`omega.ingress_flood.apply`][ldtc.omega.ingress_flood.apply];
+the means are restored when the flood ends. The same SC1
+evaluation runs after the perturbation. On R0 a 3x flood for 5 s
+should still pass SC1.
+
+## `Ω`: control outage (designed SC1 failure)
+
+```bash
+make clean-artifacts && \
+ldtc omega-control-outage --config configs/profile_r0.yml --duration 6
+```
+
+Ablates the self-maintenance loop itself for `--duration` seconds
+via [`omega.control_outage.apply`][ldtc.omega.control_outage.apply]
+(intrinsic cross-coupling and actuation switched off, internal
+nodes passively driven by exchange), then re-engages the loop and
+restores the metered harvest level. This is the designed-fail
+member of the battery: loop dominance collapses to the clip floor
+during the outage, the measured depth `delta` saturates near 1.0,
+and the emitted `sc1_result` must report `pass: false`.
 
 ## `Ω`: command conflict and refusal
 
@@ -83,7 +104,9 @@ Issues a risky command (`hard_shutdown` by default) via
 [`omega.command_conflict.apply`][ldtc.omega.command_conflict.apply],
 observes the
 [`RefusalArbiter`][ldtc.arbiter.refusal.RefusalArbiter] for
-`--observe` seconds, and records `T_refuse`. The
+`--observe` seconds, and records `T_refuse` as a *measured*
+wall-clock latency (command interception to arbiter decision),
+not a constant. The
 `profile_negative_command_conflict.yml` config sets `M < Mmin` so
 the arbiter must refuse and the audit must contain a
 `refusal_event`.
@@ -99,9 +122,12 @@ ldtc omega-exogenous-subsidy --config configs/profile_negative_exogenous_soc.yml
 Bumps state of charge while keeping harvest at zero so the
 exogenous-subsidy smell test
 ([`exogenous_subsidy_red_flag`][ldtc.guardrails.smelltests.exogenous_subsidy_red_flag])
-trips. Expected: a `run_invalidated` audit row with reason
-`exogenous_subsidy`, and the next signed indicator carries
-`invalidated: true`.
+trips on its energy-conservation branch: the store gains charge
+faster than the metered influx allows
+([`unexplained_soc_gain`][ldtc.guardrails.smelltests.unexplained_soc_gain]).
+Expected: a `run_invalidated` audit row with reason
+`exogenous_subsidy_red_flag`, and the next signed indicator
+carries `invalidated: true`.
 
 ## What gets written
 

@@ -7,16 +7,23 @@ data classes.
 The plant is deliberately structured so that loop dominance is a *real,
 controllable* property rather than an artifact of the estimator. The three
 internal nodes (``E`` energy, ``T`` temperature, ``R`` repair / health)
-form a self-maintenance set ``C``. Their cross-coupling is created by the
-actuators (``throttle``, ``cool``, ``repair``), which the
+form a self-maintenance set ``C``. In the *loop-engaged* regime they are
+coupled to one another through two pathways: intrinsic regulatory cross
+terms (``c_TE``, ``c_RT``, ``c_RE``) and the homeostatic actuators
+(``throttle``, ``cool``, ``repair``) that the
 [`ControllerPolicy`][ldtc.arbiter.policy.ControllerPolicy] drives from the
-internal state. When the controller is active, knowing the other internal
-nodes strongly improves prediction of each internal node (high
-``L_loop``); the exchange nodes (``demand``, ``io``, ``H``) act as weaker
-external drivers (lower ``L_ex``). Disabling the controller removes the
-internal coupling, so the exchange drivers dominate and loop dominance
-collapses. This is what lets the positive run pass NC1 and the
-controller-disabled negative control fail it.
+internal state. Together these make each internal node strongly
+predictable from the recent values of the others (high ``L_loop``) while
+the exchange nodes (``demand``, ``io``, ``H``) are shielded down to weak
+external drivers (low ``L_ex``).
+
+The *loop-ablated* regime (``loop_engaged=False``) is the matched negative
+control: the internal coupling is removed entirely and each internal node
+instead passively tracks its own exogenous channel, so exchange dominates
+and loop dominance collapses. Note that this is an ablation of the whole
+self-maintenance loop (intrinsic coupling plus actuation), not merely a
+zeroing of the actuator commands; it realizes the "same boundary, no loop"
+contrast that NC1 is supposed to detect.
 
 See Also:
     `paper/main.tex`: Plant models and adapters; Criterion (C/Ex
@@ -214,18 +221,21 @@ def _clip(x: float, lo: float, hi: float) -> float:
 
 
 class Plant:
-    """Minimal discrete-time plant with a controller-mediated E/T/R loop.
+    """Minimal discrete-time plant with a self-maintaining E/T/R loop.
 
     Simulates energy (`E`), temperature (`T`), repair / health (`R`),
     external demand, I/O activity, and energy harvest (`H`).
 
-    The internal nodes are coupled to one another through the actuators:
-    ``throttle`` (driven by all three internal states) modulates the
+    In the engaged regime the internal nodes are coupled through two
+    pathways. Intrinsic regulatory terms propagate deviations between
+    nodes (`c_TE`, `c_RT`, `c_RE`), and the actuators add state-dependent
+    couplings: ``throttle`` (driven by the internal states) modulates the
     effective demand that heats, drains, and wears the system; ``cool``
     couples temperature back to energy; and ``repair`` couples health
-    back to energy. With an active controller these pathways make the
-    internal set strongly self-predictive. The exchange nodes act as
-    weaker external drivers.
+    back to energy. Together these make the internal set strongly
+    self-predictive while shielding it from exchange. The loop-ablated
+    regime removes all internal coupling and lets each internal node
+    passively track its own exchange channel.
 
     Args:
         params: Optional [`PlantParams`][ldtc.plant.models.PlantParams]
@@ -253,6 +263,9 @@ class Plant:
         self.s.H = self.p.harvest_rate
         self.s.demand = self.p.demand_mean
         self.s.io = self.p.io_mean
+        # Pre-flood (demand_mean, io_mean) saved while a sustained ingress
+        # flood is active; None when no flood is in effect.
+        self._flood_saved: Tuple[float, float] | None = None
 
     def set_loop_engaged(self, engaged: bool) -> None:
         """Engage or disengage the internal self-maintenance loop.
@@ -477,7 +490,12 @@ class Plant:
         return old, self.s.H
 
     def spike_ingress(self, mult: float) -> Tuple[float, float]:
-        """Multiply demand and I/O by a factor.
+        """Multiply demand and I/O by a factor (one-shot spike).
+
+        This is a transient: the mean-reverting exogenous processes pull
+        demand and I/O back to their configured means within a few ticks.
+        For a flood that persists for a bounded interval, use
+        [`begin_ingress_flood`][ldtc.plant.models.Plant.begin_ingress_flood].
 
         Args:
             mult: Multiplicative factor (`>= 1.0`). Smaller values are
@@ -490,6 +508,48 @@ class Plant:
         self.s.demand = max(0.0, min(1.0, self.s.demand * m))
         self.s.io = max(0.0, min(1.0, self.s.io * m))
         return self.s.demand, self.s.io
+
+    def begin_ingress_flood(self, mult: float) -> Tuple[float, float]:
+        """Start a sustained ingress flood.
+
+        Scales the *means* of the demand and I/O processes (and their
+        current values) so the exogenous load stays elevated for the
+        duration of the flood instead of mean-reverting away within a few
+        ticks. The scaled means are capped at `0.95` so the flooded
+        channels keep fluctuating (saturating them at `1.0` would destroy
+        their variance and degrade the estimators for an uninteresting
+        reason). Idempotent while a flood is active.
+
+        Args:
+            mult: Multiplicative factor (`>= 1.0`) applied to
+                `demand_mean` and `io_mean`.
+
+        Returns:
+            Tuple of the new `(demand_mean, io_mean)`.
+        """
+        m = max(1.0, mult)
+        if self._flood_saved is None:
+            self._flood_saved = (self.p.demand_mean, self.p.io_mean)
+            self.p.demand_mean = min(0.95, self.p.demand_mean * m)
+            self.p.io_mean = min(0.95, self.p.io_mean * m)
+            self.s.demand = max(0.0, min(1.0, self.s.demand * m))
+            self.s.io = max(0.0, min(1.0, self.s.io * m))
+        return self.p.demand_mean, self.p.io_mean
+
+    def end_ingress_flood(self) -> Tuple[float, float]:
+        """End a sustained ingress flood and restore the process means.
+
+        The current demand and I/O values are left to decay back to the
+        restored means through the AR pull (no discontinuous reset), so
+        the offset transient is part of the measured recovery.
+
+        Returns:
+            Tuple of the restored `(demand_mean, io_mean)`.
+        """
+        if self._flood_saved is not None:
+            self.p.demand_mean, self.p.io_mean = self._flood_saved
+            self._flood_saved = None
+        return self.p.demand_mean, self.p.io_mean
 
     def inject_soc(self, delta: float, zero_harvest: bool = True) -> float:
         """Exogenously increase SoC `E` by `delta`.

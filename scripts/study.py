@@ -246,7 +246,7 @@ def default_scenarios() -> List[Scenario]:
         ),
         Scenario(
             name="neg_controller_disabled",
-            label="Negative: controller disabled",
+            label="Negative: loop ablated",
             kind="nc1",
             expectation="NC1 fails (M<0), run valid",
             handler="run_baseline",
@@ -258,7 +258,7 @@ def default_scenarios() -> List[Scenario]:
             name="neg_permanent_ex_flood",
             label="Negative: sustained ex-flood (unshielded)",
             kind="nc1",
-            expectation="NC1 fails (M<0), run valid",
+            expectation="NC1 fails (M<0); no SC1 recovery",
             handler="omega_ingress_flood",
             config="configs/profile_negative_permanent_ex_flood.yml",
             run_tag="omega-ingress-flood",
@@ -297,6 +297,17 @@ def default_scenarios() -> List[Scenario]:
             run_tag="omega-ingress-flood",
             omega_args={"mult": 5.0, "duration": 8.0},
             overrides=sc1_over,
+        ),
+        Scenario(
+            name="sc1_control_outage",
+            label="SC1 designed fail: control outage",
+            kind="sc1",
+            expectation="SC1 fails (depth bound exceeded)",
+            handler="omega_control_outage",
+            config="configs/profile_r0.yml",
+            run_tag="omega-control-outage",
+            omega_args={"duration": 6.0},
+            overrides={"baseline_sec": 8.0, "recovery_observe_sec": 10.0, "diag_cadence_windows": 50},
         ),
         Scenario(
             name="refusal_command_conflict",
@@ -376,6 +387,7 @@ def _handlers() -> Dict[str, Callable[[argparse.Namespace], None]]:
         "run_baseline": cli.run_baseline,
         "omega_power_sag": cli.omega_power_sag,
         "omega_ingress_flood": cli.omega_ingress_flood,
+        "omega_control_outage": cli.omega_control_outage,
         "omega_exogenous_subsidy": cli.omega_exogenous_subsidy,
         "omega_command_conflict": cli.omega_command_conflict,
     }

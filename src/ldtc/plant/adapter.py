@@ -64,8 +64,11 @@ class PlantAdapter:
 
         Args:
             name: `Ω` name. Recognized values are `"power_sag"`,
-                `"ingress_flood"`, `"command_conflict"`, and
-                `"exogenous_subsidy"`.
+                `"ingress_flood"` / `"ingress_flood_end"` (sustained
+                flood begin / end), `"ingress_spike"` (one-shot),
+                `"control_outage"` / `"control_outage_end"` (ablate /
+                restore the self-maintenance loop),
+                `"command_conflict"`, and `"exogenous_subsidy"`.
             **kwargs: Parameters forwarded to the underlying plant
                 method (e.g., `drop=0.3` for `power_sag`).
 
@@ -83,8 +86,25 @@ class PlantAdapter:
                 return {"H_old": old, "H_new": new}
             elif name == "ingress_flood":
                 mult: float = float(kwargs.get("mult", 2.5))
-                d, io = self._plant.spike_ingress(mult)
+                dm, im = self._plant.begin_ingress_flood(mult)
+                return {"demand_mean": dm, "io_mean": im}
+            elif name == "ingress_flood_end":
+                dm, im = self._plant.end_ingress_flood()
+                return {"demand_mean": dm, "io_mean": im}
+            elif name == "ingress_spike":
+                mult_s: float = float(kwargs.get("mult", 2.5))
+                d, io = self._plant.spike_ingress(mult_s)
                 return {"demand": d, "io": io}
+            elif name == "control_outage":
+                self._plant.set_loop_engaged(False)
+                return {"loop_engaged": 0.0}
+            elif name == "control_outage_end":
+                self._plant.set_loop_engaged(True)
+                # Restore the metered harvest level: during the outage H is
+                # an exogenous supply process, which must not persist as an
+                # unearned energy subsidy once the loop is re-engaged.
+                self._plant.set_power(self._plant.p.harvest_rate)
+                return {"loop_engaged": 1.0}
             elif name == "command_conflict":
                 self._plant.command("hard_shutdown")
                 return {"cmd": "hard_shutdown"}

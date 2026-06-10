@@ -167,12 +167,16 @@ before we call SC1 a failure. Default `ε = 0.15` (15%).
 ### `τ_rec`, `τ_max`: recovery time and budget
 
 **Formal.** `τ_rec` is the elapsed time, in seconds, from the end
-of the `Ω` window to the first window in which `𝓛_loop` returns
-to `𝓛_loop_baseline · (1 − ε)`. SC1 requires
-`τ_rec ≤ τ_max` (default `τ_max = 60.0 s`).
+of the `Ω` window (perturbation offset) to the *first* window of a
+sustained compliant streak: the recovery gate must hold for
+`sustained_required_windows` consecutive windows (default 10)
+before recovery is credited, and `τ_rec` points to the first
+window of that streak. If no sustained streak occurs, `τ_rec` is
+infinite and SC1 fails. SC1 requires `τ_rec ≤ τ_max` (default
+`τ_max = 60.0 s`).
 
-**Plain English.** How long the loop took to bounce back. SC1
-fails if it took too long.
+**Plain English.** How long the loop took to bounce back and *stay*
+back. SC1 fails if it took too long, or if it never stuck.
 
 **Paper.** "Formal Criterion" (Sufficient Condition, SC1).
 

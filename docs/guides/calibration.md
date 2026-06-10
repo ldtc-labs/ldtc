@@ -13,8 +13,8 @@ process the manuscript's "Simulation Study: Methods" section
 | Threshold | Meaning | Calibration rule |
 | --------- | ------- | ---------------- |
 | `Mmin (dB)` | NC1 acceptance margin. | One-sided 95% lower bound of `M (dB)` over the quiescent baseline, floored at `1 dB`. |
-| `ε` | SC1 dip tolerance. | 90th percentile of `δ` across `Ω` trials plus a small safety margin (`0.02`), floored at `0.10` and capped at `0.50`. |
-| `τ_max` | SC1 recovery budget. | 95th percentile of measured `τ_rec` plus `max(3 · Δt, 5 s)` cushion. |
+| `ε` | SC1 dip tolerance. | Upper tolerance bound on `δ` pooled across the bounded `Ω` batteries (sag + flood): the maximum observed dip plus a safety margin (`0.05`), floored at `0.10` and capped at `0.50`. A percentile rule would fail a fixed fraction of genuinely bounded trials by construction. |
+| `τ_max` | SC1 recovery budget. | 95th percentile of measured `τ_rec` over the same batteries plus `max(3 · Δt, 5 s)` cushion. |
 | `σ` | Additive margin on `𝓛`. | Derived from `Mmin` and the typical `𝓛_ex` so that `𝓛_loop ≥ 𝓛_ex + σ` and `𝓛_loop ≥ 𝓛_ex × 10^(Mmin / 10)` agree. |
 
 `Mmin (dB)` and `σ` encode the same idea in different units:
@@ -33,7 +33,8 @@ reporting.
 ```bash
 python scripts/calibrate_rstar.py \
   --baseline-seeds 6 \
-  --sag-seeds 6
+  --sag-seeds 6 \
+  --flood-seeds 6
 ```
 
 The calibrator reuses the validated `R0` profile
@@ -45,11 +46,19 @@ handlers a verifier runs:
 
 1. Runs the positive baseline across `--baseline-seeds` seeds on
    the in-process plant and pools every per-window `M (dB)`.
-2. Runs the power-sag `Ω` battery across `--sag-seeds` seeds and
-   records `δ` and `τ_rec` from each run's `sc1_result`.
-3. Computes the four thresholds above (`Mmin` is the 5th
-   percentile of the pooled baseline `M`, floored at `1 dB`).
-4. Recomputes a representative baseline `L_ex` directly (the one
+2. Computes `Mmin` first (the 5th percentile of the pooled
+   baseline `M`, floored at `1 dB`).
+3. Runs the *bounded* `Ω` batteries (power sag across
+   `--sag-seeds` seeds and sustained ingress flood across
+   `--flood-seeds` seeds) with the recovery gate set to the
+   *calibrated* `Mmin` (a second pass), so the recorded `δ` and
+   `τ_rec` samples are measured against the same standard the
+   evaluation will use. `τ_rec` is measured from the `Ω` offset to
+   the first window of a sustained compliant streak. The
+   designed-fail control outage is excluded: it is outside the
+   bounded class the criterion certifies.
+4. Computes `ε` and `τ_max` from the pooled samples, and
+   recomputes a representative baseline `L_ex` directly (the one
    quantity the harness does not export) to express `Mmin` as the
    additive margin `σ`.
 5. Writes the calibrated profile to `configs/profile_rstar.yml`
@@ -86,7 +95,7 @@ You should re-run the calibrator whenever:
 
 Calibration runs the full harness over several seeds, so budget a
 few minutes on the in-process plant (six baseline seeds plus six
-power-sag seeds at the `R0` run lengths).
+seeds per bounded `Ω` member at the `R0` run lengths).
 
 ## Notes
 
