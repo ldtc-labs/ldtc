@@ -37,6 +37,7 @@ LDTC is a minimal, substrate-agnostic verification harness for the Loop-Dominanc
 - **Device-signed indicators:** Ed25519-signed derived indicators (NC1, SC1, Mq, counters); raw LREG values are never exported.
 - **Ω perturbation battery:** Power sag, sustained ingress flood, control outage (designed SC1 failure), command conflict, and exogenous subsidy trials.
 - **Adversarial gaming battery:** Replayed actuation tapes, hidden-tether (wizard-of-oz) control, and oscillator telemetry inflation; the harness must refuse to certify all three (NC1 fails or the run is invalidated).
+- **Emergence under learning:** A policy network trained from scratch (survival, service, and homeostasis reward; no loop-dominance term) whose checkpoints are measured by the production harness, with matched state-independent ablations of the trained policy.
 - **Refusal semantics:** An arbiter refuses risky commands when M is below threshold and measures refusal latency.
 - **Reporting and figures:** Timeline plots, SC1 tables, and verification bundles under `artifacts/`.
 - **Reproducible configs:** R₀ defaults, negative controls, and example R* profiles for calibration.

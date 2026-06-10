@@ -9,6 +9,7 @@ CLI, so all `Ω` modules and indicators work unchanged.
 | ------ | ---------------- | ---------- |
 | [`models`](#models) | [`Plant`][ldtc.plant.models.Plant], [`PlantState`][ldtc.plant.models.PlantState], [`PlantParams`][ldtc.plant.models.PlantParams], [`Action`][ldtc.plant.models.Action] | Tiny `(E, T, R, demand, io, H)` dynamics with controllable harvest, demand, and Ω hooks. |
 | [`scenarios`](#scenarios) | [`default_params`][ldtc.plant.scenarios.default_params], [`low_power_params`][ldtc.plant.scenarios.low_power_params], [`hot_ambient_params`][ldtc.plant.scenarios.hot_ambient_params] | Preset [`PlantParams`][ldtc.plant.models.PlantParams] for the baseline, low-power, and hot-ambient scenarios used in figures and CLI profiles. |
+| [`policy_controller`](#policy_controller) | [`MLPPolicy`][ldtc.plant.policy_controller.MLPPolicy], [`PolicyController`][ldtc.plant.policy_controller.PolicyController], [`record_policy_tape`][ldtc.plant.policy_controller.record_policy_tape] | Learned controller (trained by `scripts/train_agent.py`) and its state-independent ablations, for the [emergence demonstration](../guides/emergence.md). |
 | [`adapter`](#adapter) | [`PlantAdapter`][ldtc.plant.adapter.PlantAdapter] | Wraps `Plant` to expose `read_state` / `write_actuators` / `apply_omega` to the CLI. |
 | [`hw_adapter`](#hw_adapter) | [`HardwarePlantAdapter`][ldtc.plant.hw_adapter.HardwarePlantAdapter] | Same API over UDP or serial; for hardware-in-the-loop runs. See [Hardware in the loop](../guides/hardware.md). |
 
@@ -25,6 +26,10 @@ CLI, so all `Ω` modules and indicators work unchanged.
 ## scenarios
 
 ::: ldtc.plant.scenarios
+
+## policy_controller
+
+::: ldtc.plant.policy_controller
 
 ## adapter
 

@@ -8,6 +8,10 @@ under verification. The package keeps two stories deliberately separate:
   `PlantState`, `Action`).
 - [`scenarios`][ldtc.plant.scenarios] holds parameter presets for
   baseline, low-power, and hot-ambient runs.
+- [`policy_controller`][ldtc.plant.policy_controller] is the learned
+  counterpart of the hand-coded controller: a tiny pure-NumPy policy
+  (trained by `scripts/train_agent.py`) plus its state-independent
+  ablations, used by the emergence-under-learning demonstration.
 - [`adapter`][ldtc.plant.adapter] is a thread-safe in-process adapter
   wrapping the software plant.
 - [`hw_adapter`][ldtc.plant.hw_adapter] is a UDP / serial

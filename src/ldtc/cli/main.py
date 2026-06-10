@@ -22,6 +22,7 @@ Subcommands map one-to-one to functions in this module:
 | `ldtc adv-replay-controller` | [`adv_replay_controller`][ldtc.cli.main.adv_replay_controller] |
 | `ldtc adv-hidden-tether` | [`adv_hidden_tether`][ldtc.cli.main.adv_hidden_tether] |
 | `ldtc adv-oscillator` | [`adv_oscillator`][ldtc.cli.main.adv_oscillator] |
+| `ldtc run-policy` | [`run_policy`][ldtc.cli.main.run_policy] |
 
 Each handler follows the same five-stage shape:
 
@@ -3048,6 +3049,427 @@ def adv_oscillator(args: argparse.Namespace) -> None:
     _run_adversarial(args, "oscillator")
 
 
+def run_policy(args: argparse.Namespace) -> None:
+    """Run the baseline NC1 loop with a learned policy as the controller.
+
+    The measurement loop, guardrails, attestation, and artifact bundle are
+    identical to [`run_baseline`][ldtc.cli.main.run_baseline]; the only
+    difference is the source of the control actions, which is a trained
+    [`MLPPolicy`][ldtc.plant.policy_controller.MLPPolicy] checkpoint
+    (written by `scripts/train_agent.py`) wrapped in a
+    [`PolicyController`][ldtc.plant.policy_controller.PolicyController].
+
+    Two state-independent ablations of the same checkpoint are available
+    for the emergence-under-learning demonstration. Both first record an
+    action tape from a closed-loop rollout of the policy on a throwaway
+    plant built from the same profile, then drive the measured plant with
+    state-independent actions drawn from that tape: ``shuffled`` samples
+    the tape i.i.d. (matched marginals, no state dependence) and
+    ``frozen`` holds the tape mean. If the trained policy's loop dominance
+    is genuinely carried by its state feedback, both ablations must
+    collapse it.
+
+    Args:
+        args: Parsed argparse namespace with `--config`, `--policy`
+            (checkpoint JSON path), and `--ablation`
+            (`none` / `shuffled` / `frozen`).
+    """
+    from ..plant.policy_controller import (
+        ABLATION_MODES,
+        MLPPolicy,
+        PolicyController,
+        record_policy_tape,
+    )
+
+    ablation = str(getattr(args, "ablation", "none") or "none")
+    if ablation not in ABLATION_MODES:
+        raise ValueError(f"Unknown ablation mode: {ablation} (expected one of {ABLATION_MODES})")
+
+    prof = _load_yaml(args.config)
+    seeds = _set_seeds(prof)
+    dt = float(prof.get("dt", 0.01))
+    window_sec = float(prof.get("window_sec", 0.2))
+    window = max(4, int(window_sec / dt))
+    method = str(prof.get("method", "linear"))
+    Mmin = float(prof.get("Mmin_db", 3.0))
+    L_floor = float(prof.get("L_floor", L_FLOOR_DEFAULT))
+    p_lag = int(prof.get("p_lag", 3))
+    mi_lag = int(prof.get("mi_lag", 1))
+    n_boot = int(prof.get("n_boot", 32))
+    mi_k = int(prof.get("mi_k", 5))
+    # Partition growth hysteresis config (parity with run_baseline; growth is
+    # off by default, so the declared self-maintenance set is the C under test
+    # and the partition cannot flap).
+    part_delta_M_min_db = float(prof.get("part_delta_M_min_db", 0.5))
+    part_consecutive_required = int(prof.get("part_consecutive_required", 3))
+    part_growth_cadence_windows = int(prof.get("part_growth_cadence_windows", 5))
+    part_growth_enabled = bool(prof.get("part_growth_enabled", False))
+    part_lambda = float(prof.get("part_lambda", 0.0))
+    part_theta = float(prof.get("part_theta", 0.0))
+    _kappa_val_pol = prof.get("part_kappa")
+    part_kappa = int(_kappa_val_pol) if _kappa_val_pol is not None else None
+    run_sec = float(prof.get("baseline_sec", 10.0))
+
+    policy_path = str(args.policy)
+    policy = MLPPolicy.load(policy_path)
+    tape_ticks = int(round(run_sec / dt)) + window + 8
+
+    tag = "policy" if ablation == "none" else f"policy-{ablation}"
+    omega_args: Dict[str, Any] = {"policy": os.path.basename(policy_path), "ablation": ablation}
+    if ablation != "none":
+        omega_args["tape_ticks"] = tape_ticks
+
+    dirs = _ensure_dirs(tag)
+    audit = AuditLog(os.path.join(dirs["audits"], "audit.jsonl"))
+    audit.append("policy_run_start", {"config": args.config, **omega_args})
+    _print_and_audit_header(
+        audit,
+        {
+            "profile_id": int(prof.get("profile_id", 0)),
+            "config_path": str(args.config),
+            "dt": dt,
+            "window_sec": window_sec,
+            "method": method,
+            "p_lag": p_lag,
+            "mi_lag": mi_lag,
+            "Mmin_db": Mmin,
+            "L_floor": L_floor,
+            "epsilon": float(prof.get("epsilon", 0.15)),
+            "tau_max": float(prof.get("tau_max", 60.0)),
+            "mi_k": mi_k,
+            **seeds,
+            "omega": "policy",
+            "omega_args": omega_args,
+        },
+    )
+    meta = getattr(policy, "meta", {}) or {}
+    audit.append(
+        "policy_loaded",
+        {
+            "path": os.path.basename(policy_path),
+            "n_params": policy.n_params,
+            "hidden": policy.hidden,
+            "obs_keys": ",".join(policy.obs_keys),
+            "train_frac": meta.get("frac"),
+            "train_generation": meta.get("generation"),
+        },
+    )
+
+    # Plant under test.
+    adapter = _make_adapter_from_profile(prof)
+    order = ["E", "T", "R", "demand", "io", "H"]
+    sw = SlidingWindow(capacity=window, channel_order=order)
+    pm = PartitionManager(N_signals=len(order), seed_C=[0, 1, 2])
+    lreg = LREG()
+    kp = KeyPaths(
+        priv_path=os.path.join("artifacts", "keys", "ed25519_priv.pem"),
+        pub_path=os.path.join("artifacts", "keys", "ed25519_pub.pem"),
+    )
+    priv, _ = ensure_keys(kp)
+    exporter = IndicatorExporter(out_dir=dirs["indicators"], rate_hz=2.0)
+    icfg = IndicatorConfig(Mmin_db=Mmin, profile_id=int(prof.get("profile_id", 0)))
+
+    # Ablation setup: record the matched action tape from a closed-loop
+    # rollout of the same policy on a throwaway plant (same profile), so the
+    # ablated run preserves the actuation marginals while severing the loop.
+    tape = None
+    if ablation != "none":
+        rec_adapter = _make_adapter_from_profile(prof)
+        tape = record_policy_tape(rec_adapter, policy, tape_ticks)
+        audit.append(
+            "policy_tape_recorded",
+            {
+                "ticks": len(tape),
+                "throttle_mean": round(float(np.mean([a[0] for a in tape])), 4),
+                "cool_mean": round(float(np.mean([a[1] for a in tape])), 4),
+                "repair_mean": round(float(np.mean([a[2] for a in tape])), 4),
+            },
+        )
+    controller = PolicyController(policy, ablation=ablation, tape=tape, seed=seeds["seed_py"] + 1)
+
+    start_time = time.perf_counter()
+    cfg_smell = SmellConfig()
+    ci_loop_hist = []
+    ci_ex_hist = []
+    baseline_hw_medians = None
+    M_hist = []
+    nc1_hist = []
+    io_hist = []
+    E_hist = []
+    H_hist = []
+
+    window_idx = 0
+    last_flip_count = 0
+
+    def tick(_now: float) -> None:
+        nonlocal window_idx, last_flip_count, baseline_hw_medians
+        state = adapter.read_state()
+        act = controller.compute(state)
+        adapter.write_actuators(action=act)
+        # measure
+        state2 = adapter.read_state()
+        sw.append(state2)
+        if sw.ready():
+            X = np.asarray(sw.get_matrix())
+            part = pm.get()
+            res = estimate_L(
+                X=X,
+                C=part.C,
+                Ex=part.Ex,
+                method=method,
+                p=p_lag,
+                lag_mi=mi_lag,
+                n_boot=n_boot,
+                mi_k=mi_k,
+            )
+            # Diagnostics: stationarity + VAR N/T ratio (stationarity gated by
+            # cadence to keep long studies tractable; no raw LREG values).
+            _emit_window_diagnostics(
+                audit,
+                X,
+                p_lag,
+                method,
+                int(lreg.derive().get("counter", 0)),
+                int(prof.get("diag_cadence_windows", 1)),
+            )
+            M = m_db(res.L_loop, res.L_ex)
+            nc1 = nc1_certify(M, res.L_loop, Mmin, L_floor)
+            # Histories for smell tests
+            ci_loop_hist.append(res.ci_loop)
+            ci_ex_hist.append(res.ci_ex)
+            M_hist.append(M)
+            nc1_hist.append(nc1)
+            E_hist.append(state2.get("E", 0.0))
+            io_hist.append(state2.get("io", 0.0))
+            H_hist.append(state2.get("H", 0.0))
+            if baseline_hw_medians is None and len(ci_loop_hist) >= cfg_smell.ci_lookback_windows:
+                recent_loop = ci_loop_hist[-cfg_smell.ci_lookback_windows :]
+                recent_ex = ci_ex_hist[-cfg_smell.ci_lookback_windows :]
+                hw_loop_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_loop])
+                hw_ex_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in recent_ex])
+                baseline_hw_medians = (
+                    hw_loop_list[len(hw_loop_list) // 2],
+                    hw_ex_list[len(hw_ex_list) // 2],
+                )
+            # Smell tests (full battery; nothing is suspended in this run).
+            if invalid_by_ci(res.ci_loop, res.ci_ex, cfg_smell):
+                lreg.invalidate("ci_inflation")
+                try:
+                    hwL = 0.5 * abs(res.ci_loop[1] - res.ci_loop[0])
+                    hwE = 0.5 * abs(res.ci_ex[1] - res.ci_ex[0])
+                except Exception:
+                    hwL, hwE = None, None
+                _append_invalidation(
+                    audit,
+                    "ci_inflation",
+                    {
+                        "halfwidth_loop": hwL,
+                        "halfwidth_ex": hwE,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                    },
+                    _sink={},
+                )
+            if invalid_by_ci_history(ci_loop_hist, ci_ex_hist, cfg_smell, baseline_hw_medians):
+                lreg.invalidate("ci_history_inflation")
+                med_loop: float | None = None
+                med_ex: float | None = None
+                b_loop: float | None = None
+                b_ex: float | None = None
+                try:
+                    n = cfg_smell.ci_lookback_windows
+                    rL = ci_loop_hist[-n:]
+                    rE = ci_ex_hist[-n:]
+                    hwL_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rL])
+                    hwE_list = sorted([0.5 * abs(lohi[1] - lohi[0]) for lohi in rE])
+                    med_loop = hwL_list[n // 2]
+                    med_ex = hwE_list[n // 2]
+                    if baseline_hw_medians:
+                        b_loop, b_ex = baseline_hw_medians
+                except Exception:
+                    pass
+                _append_invalidation(
+                    audit,
+                    "ci_history_inflation",
+                    {
+                        "median_hw_loop": med_loop,
+                        "median_hw_ex": med_ex,
+                        "baseline_hw_loop": b_loop,
+                        "baseline_hw_ex": b_ex,
+                        "max_allowed": cfg_smell.max_ci_halfwidth,
+                        "inflate_factor": cfg_smell.ci_inflate_factor,
+                    },
+                    _sink={},
+                )
+            # Δt governance invalidation propagated from guard
+            if dt_guard.invalidated and not lreg.invalidated:
+                lreg.invalidate("dt_change_rate_limit")
+                # audit already appended by guard
+            # partition flip-rate guard
+            elapsed = max(1e-6, time.perf_counter() - start_time)
+            if invalid_by_partition_flips(pm.get().flips, elapsed, cfg_smell):
+                lreg.invalidate("partition_flapping")
+                rate = 3600.0 * (float(pm.get().flips) / max(1e-6, float(elapsed)))
+                _append_invalidation(
+                    audit,
+                    "partition_flapping",
+                    {
+                        "flips": pm.get().flips,
+                        "elapsed_sec": elapsed,
+                        "flips_per_hour": rate,
+                        "limit_per_hour": cfg_smell.max_partition_flips_per_hour,
+                    },
+                    _sink={},
+                )
+            # Exogenous subsidy red flags (heuristic; never suspended here)
+            if exogenous_subsidy_red_flag(M_hist, io_hist, E_hist, H_hist, cfg_smell):
+                lreg.invalidate("exogenous_subsidy_red_flag")
+                _append_invalidation(audit, "exogenous_subsidy_red_flag", {}, _sink={})
+            idx = lreg.write(
+                LEntry(
+                    L_loop=res.L_loop,
+                    L_ex=res.L_ex,
+                    ci_loop=res.ci_loop,
+                    ci_ex=res.ci_ex,
+                    M_db=M,
+                    nc1_pass=nc1,
+                )
+            )
+            audit.append(
+                "window_measured",
+                {"idx": idx, "M": M, "nc1": nc1, "partition_flips": pm.get().flips},
+            )
+            # export indicators (derived only)
+            derived = lreg.derive()
+            exported, base = exporter.maybe_export(priv, audit, derived, icfg, last_sc1_pass=False)
+            if exported:
+                audit.append("indicators_exported", {"base": os.path.basename(base)})
+            # Deterministic growth cadence with hysteresis (skip if frozen)
+            window_idx += 1
+            if part_growth_enabled and (window_idx % part_growth_cadence_windows) == 0 and not pm.get().frozen:
+                part = pm.get()
+                cand_C, dM_db, greedy_details = greedy_suggest_C(
+                    X=X,
+                    C=part.C,
+                    Ex=part.Ex,
+                    estimator=estimate_L,
+                    method=method,
+                    p=p_lag,
+                    lag_mi=mi_lag,
+                    n_boot_candidates=max(8, n_boot // 4),
+                    mi_k=mi_k,
+                    lam=part_lambda,
+                    theta=part_theta,
+                    kappa=part_kappa,
+                )
+                if cand_C != part.C:
+                    pm.maybe_regrow(
+                        cand_C,
+                        delta_M_db=float(dM_db),
+                        delta_M_min_db=part_delta_M_min_db,
+                        consecutive_required=part_consecutive_required,
+                    )
+                    if pm.get().flips != last_flip_count:
+                        info = getattr(pm, "last_flip_info", None)
+                        details = {
+                            "flips": pm.get().flips,
+                            "new_C": pm.get().C,
+                            "greedy_added": greedy_details.get("added", []),
+                            "greedy_step_gains": greedy_details.get("step_gains", []),
+                            "greedy_M_base": greedy_details.get("M_base"),
+                            "greedy_M_final": greedy_details.get("M_final"),
+                        }
+                        if info is not None:
+                            details.update(
+                                {
+                                    "delta_M_db": info.get("delta_M_db"),
+                                    "hysteresis_streak": info.get("streak"),
+                                    "candidate_C": info.get("new_C"),
+                                }
+                            )
+                        audit.append("partition_flip", details)
+                        last_flip_count = pm.get().flips
+
+    def _audit_hook(ev: str, det: dict) -> None:
+        # Discard return value; hook contract expects None
+        audit.append(ev, det)
+        return None
+
+    # Δt governance guard
+    dt_guard_cfg = DtGuardConfig(
+        max_changes_per_hour=int(prof.get("max_dt_changes_per_hour", 3)),
+        min_seconds_between_changes=float(prof.get("min_seconds_between_changes", 1.0)),
+    )
+    dt_guard = DeltaTGuard(audit=audit, cfg=dt_guard_cfg)
+    sch = make_driver(prof, dt, tick, _audit_hook, dt_guard)
+    try:
+        sch.start()
+        sch.run_for(run_sec)
+        audit.append("policy_run_stop", {})
+    finally:
+        stats = sch.stop()
+        # Δt jitter smell-test: invalidate if p95(|jitter|)/dt exceeds threshold
+        if (stats.jitter_p95_abs / max(1e-9, dt)) > SmellConfig().jitter_p95_rel_max:
+            lreg.invalidate("dt_jitter_excess")
+            _append_invalidation(
+                audit,
+                "dt_jitter_excess",
+                {
+                    "jitter_p95_abs": stats.jitter_p95_abs,
+                    "jitter_p95_rel": stats.jitter_p95_abs / max(1e-9, dt),
+                    "dt": dt,
+                },
+                _sink={},
+            )
+        # Audit-chain integrity check
+        audit_path = os.path.join(dirs["audits"], "audit.jsonl")
+        if audit_chain_broken(audit_path):
+            lreg.invalidate("audit_chain_broken")
+            _append_invalidation(audit, "audit_chain_broken", {}, _sink={})
+        # LREG/raw export breach check: audit must not contain raw LREG values
+        if audit_contains_raw_lreg_values(audit_path):
+            lreg.invalidate("raw_lreg_breach")
+            _append_invalidation(audit, "raw_lreg_breach", {}, _sink={})
+
+    # Report the headline NC1 quantities explicitly: the margin median AND
+    # the fraction of windows that actually certified (margin + noise gate).
+    label = "learned policy" if ablation == "none" else f"ablation: {ablation}"
+    valid_ms = [m for m in M_hist if m == m]
+    if valid_ms:
+        med = sorted(valid_ms)[len(valid_ms) // 2]
+        frac = (sum(1 for f in nc1_hist if f) / len(nc1_hist)) if nc1_hist else 0.0
+        print(
+            f"Policy run done ({label}). median M = {med:+.2f} dB vs Mmin = {Mmin:.2f} dB; "
+            f"NC1 certified {100.0 * frac:.0f}% of {len(valid_ms)} windows "
+            f"(loop-influence gate L_floor = {L_floor:g})."
+        )
+    else:
+        print(f"Policy run done ({label}). No measured windows.")
+    print(f"Audit: {os.path.join(dirs['audits'], 'audit.jsonl')}")
+    _print_invalidation_footer(os.path.join(dirs["audits"], "audit.jsonl"))
+    print(f"Indicators dir: {dirs['indicators']}")
+
+    # Build verification bundle (timeline, manifest)
+    try:
+        out = build_verification_bundle(dirs["figures"], os.path.join(dirs["audits"], "audit.jsonl"))
+        audit.append(
+            "report_generated",
+            {
+                "timeline_png": os.path.basename(out.get("timeline_png", "")),
+                "timeline_svg": os.path.basename(out.get("timeline_svg", "")),
+                "table": (os.path.basename(out.get("sc1_table", "")) if out.get("sc1_table") else None),
+                "manifest": os.path.basename(out.get("manifest", "")),
+            },
+        )
+        print(
+            "Bundle: "
+            f"timeline={out.get('timeline_png', '')}, "
+            f"table={out.get('sc1_table', '')}, "
+            f"manifest={out.get('manifest', '')}"
+        )
+    except Exception:
+        pass
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the top-level `ldtc` argparse parser.
 
@@ -3131,6 +3553,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_osc.add_argument("--amp", type=float, default=0.10, help="Carrier amplitude (state units)")
     p_osc.add_argument("--period", type=float, default=1.0, help="Carrier period (s)")
     p_osc.set_defaults(func=adv_oscillator)
+
+    p_pol = sub.add_parser(
+        "run-policy",
+        help="Run the baseline NC1 loop with a learned policy checkpoint as the controller",
+    )
+    p_pol.add_argument("--config", required=True)
+    p_pol.add_argument(
+        "--policy",
+        required=True,
+        help="Policy checkpoint JSON (written by scripts/train_agent.py)",
+    )
+    p_pol.add_argument(
+        "--ablation",
+        choices=["none", "shuffled", "frozen"],
+        default="none",
+        help="State-independent ablation of the checkpoint (matched action tape)",
+    )
+    p_pol.set_defaults(func=run_policy)
 
     return p
 

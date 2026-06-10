@@ -1,0 +1,70 @@
+# Emergence under learning: a learned policy closes the loop.
+#
+# The plant is the adversarial test plant (the same one the replayed-actuation
+# and hidden-tether scenarios use): the intrinsic internal cross-couplings are
+# zeroed and the actuators are given real authority, so the controller's
+# state-to-actuation pathway is the only loop-carrying pathway in the system.
+# On this plant, measured loop dominance is a property of the *controller*,
+# which is exactly what the emergence demonstration needs: train a policy from
+# scratch (scripts/train_agent.py), measure each checkpoint with the
+# production harness (scripts/emergence.py or `ldtc run-policy`), and any rise
+# of M across training is carried by the learned loop, not by designed
+# coupling.
+#
+# Run (single checkpoint):
+#   python -m ldtc.cli.main run-policy \
+#     --config configs/profile_emergence.yml \
+#     --policy artifacts/emergence/checkpoints/ckpt_100.json
+profile_id: 0
+realtime: false
+dt: 0.05
+window_sec: 3.0
+method: linear
+p_lag: 3
+n_boot: 32
+mi_lag: 1
+mi_k: 5
+Mmin_db: 3.0
+epsilon: 0.15
+tau_max: 60.0
+baseline_sec: 18.0
+diag_cadence_windows: 25
+plant:
+  adapter: sim
+  params:
+    # No intrinsic internal couplings: the loop, if any, is the controller.
+    c_TE: 0.0
+    c_RT: 0.0
+    c_RE: 0.0
+    # Nearly no self-damping: the plant must not stabilize itself, or a
+    # do-nothing policy would survive on the plant's own mean reversion
+    # and nothing state-coupled would need to be learned. With weak
+    # damping, unregulated heat and wear genuinely run away.
+    damp_engaged: 0.15
+    # Real operating costs: serving load is what heats the system and
+    # wears it down (heat_per_demand and wear_per_demand act on *served*
+    # demand), so a policy that serves demand (the reward asks it to)
+    # must also cool and repair, must budget those actions against the
+    # harvested energy, and can shed load when heat or energy make
+    # serving untenable. Each actuator therefore has a state-coupled
+    # role: cooling tracks temperature and spare energy, repair tracks
+    # health and spare energy, throttle sheds load on heat or energy
+    # distress. act_heat is kept moderate: actuator effort has a real,
+    # estimator-visible heat cost without making load shedding
+    # thermally self-defeating.
+    act_heat: 0.10
+    heat_per_demand: 0.12
+    cool_effect: 0.50
+    wear_per_demand: 0.028
+    repair_effect: 0.30
+    cool_gain: 0.04
+    repair_gain: 0.05
+    io_cost: 0.002
+    harvest_rate: 0.020
+    noise_energy: 0.030
+    noise_temp: 0.030
+    noise_wear: 0.025
+# Reproducible seeds (the emergence study overrides these per run)
+seed: 33
+seed_py: 33
+seed_np: 33

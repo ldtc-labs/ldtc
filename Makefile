@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy adv-replay adv-tether adv-oscillator adv-genuine calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean study sensitivity results
+.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy adv-replay adv-tether adv-oscillator adv-genuine calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean study sensitivity results train-agent emergence
 
 help:
 	@echo "Targets:"
@@ -28,6 +28,8 @@ help:
 	@echo "  study-rstar    - run the battery vs calibrated R* thresholds (run calibrate first)"
 	@echo "  sensitivity    - run NC1 sensitivity sweeps (table + figure in artifacts/sensitivity)"
 	@echo "  results        - calibrate + study-rstar + sensitivity (full headline pipeline)"
+	@echo "  train-agent    - train the emergence policy from scratch (checkpoints in artifacts/emergence)"
+	@echo "  emergence      - measure all policy checkpoints + ablations with the production harness"
 	@echo "  calibrate      - calibrate R* thresholds and write configs/profile_rstar.yml"
 	@echo "  run-rstar      - run baseline loop with R* profile"
 	@echo "  omega-rstar    - run Ω power-sag with R* profile"
@@ -121,6 +123,15 @@ study-rstar:
 
 sensitivity:
 	$(PY) scripts/sensitivity.py --seeds 4
+
+# Emergence under learning (Phase 1, circularity rebuttal): train a policy
+# from scratch on the emergence plant, then measure every checkpoint (and the
+# state-independent ablations of the final policy) with the production harness.
+train-agent:
+	$(PY) scripts/train_agent.py --out artifacts/emergence
+
+emergence:
+	$(PY) scripts/emergence.py --seeds 15
 
 # Full headline pipeline: calibrate R* on a disjoint seed range, evaluate the
 # battery against those calibrated thresholds, then run the NC1 sensitivity sweeps.

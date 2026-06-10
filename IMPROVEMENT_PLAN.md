@@ -92,7 +92,7 @@ on 15/15 seeds (or a documented vulnerability fix), tests green, docs updated.
 
 Effort: 2 to 4 days. Impact: +0.3.
 
-### Task 1.2: emergence-under-learning demo `[ ]`
+### Task 1.2: emergence-under-learning demo `[x]`
 
 The single best in-paper upgrade. Replace the hand-coded controller with a
 learned policy and show loop dominance emerging through training rather than

@@ -70,6 +70,7 @@ nav:
     - Paper to Code: concepts/paper-to-code.md
   - Guides:
     - Study and Results: guides/study.md
+    - Emergence under Learning: guides/emergence.md
     - Calibration (R*): guides/calibration.md
     - Reporting and Figures: guides/reporting.md
     - Runs and Ω Battery: guides/runs.md

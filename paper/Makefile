@@ -16,6 +16,7 @@ sync-results:
 	@[ -f ../artifacts/sensitivity/sensitivity_results.tex ] && cp -p ../artifacts/sensitivity/sensitivity_results.tex tables/sensitivity_results.tex || true
 	@[ -f ../artifacts/sensitivity/fig_sensitivity.pdf ] && cp -p ../artifacts/sensitivity/fig_sensitivity.pdf figures/fig_sensitivity.pdf || true
 	@[ -f ../artifacts/calibration/r0_vs_rstar.pdf ] && cp -p ../artifacts/calibration/r0_vs_rstar.pdf figures/fig_calibration.pdf || true
+	@[ -f ../artifacts/emergence/figures/fig_emergence.pdf ] && cp -p ../artifacts/emergence/figures/fig_emergence.pdf figures/fig_emergence.pdf || true
 
 figs: sync-results
 	MPLBACKEND=Agg $(PY) scripts/make_fig_hello.py
