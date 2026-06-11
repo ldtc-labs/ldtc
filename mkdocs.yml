@@ -64,6 +64,7 @@ nav:
     - Mental Model: concepts/mental-model.md
     - Architecture: concepts/architecture.md
     - Definitions: concepts/definitions.md
+    - Differential Predictions: concepts/differential-predictions.md
     - Indicators: concepts/indicators.md
     - Lifecycle of a Run: concepts/lifecycle.md
     - Guardrails and Invalidations: concepts/guardrails.md

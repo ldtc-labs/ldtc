@@ -138,7 +138,7 @@ paper.
 Effort: 1 to 2 weeks. Impact: +0.7 to +1.0. Decision: worth delaying
 submission for; skip only if training proves unstable past the first week.
 
-### Task 1.3: competing-predictions table and the thermostat objection `[ ]`
+### Task 1.3: competing-predictions table and the thermostat objection `[x]`
 
 Add a subsection (likely in the discussion or after `sec:ai_fails`) with a
 compact table of cases where LDTC, IIT, GNW, and FEP make divergent or

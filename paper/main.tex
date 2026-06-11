@@ -80,7 +80,7 @@ The central contribution of this paper is that these conditions are no longer on
 
 The framework grew out of a larger question about the physical conditions for consciousness, and we retain that motivation because it sharpens the engineering targets: energetic autonomy, self-prioritization, and boundary defense. We are careful, however, to separate what is demonstrated from what is conjectured. What we demonstrate is a measurable, falsifiable property of dynamical systems together with an instrument for measuring it. Whether loop dominance is necessary or sufficient for consciousness is an interpretive question that we deliberately leave open (\Sref{sec:metaphysics}).
 
-The paper proceeds as follows. \Sref{sec:clues} states the observations that motivate the criterion. \Sref{sec:postulates} sets out the working assumptions, separating the operational ones the paper uses from the optional metaphysical reading. \Sref{sec:criterion} defines $\mathcal{L}$, the $C/\text{Ex}$ partition, \NC, \SC, the measurement guardrails, and the refusal path. \Sref{sec:ai_fails} explains why current AI fails the criterion. \SSref{sec:sim_methods}{sec:results} describe the simulation study and report results: the headline battery, the $\Rzero \rightarrow \Rstar$ calibration, and the sensitivity analysis. \Sref{sec:limitations} states limitations and failure modes, \Sref{sec:outlook} summarizes the engineering outlook (the full roadmap, predicted hardware signatures, and phased physical program are \Apprefrange{sec:blueprint}{sec:experimental}), and \SSref{sec:metaphysics}{sec:conclusion} discuss interpretation, scope, and conclusions.
+The paper proceeds as follows. \Sref{sec:clues} states the observations that motivate the criterion. \Sref{sec:postulates} sets out the working assumptions, separating the operational ones the paper uses from the optional metaphysical reading. \Sref{sec:criterion} defines $\mathcal{L}$, the $C/\text{Ex}$ partition, \NC, \SC, the measurement guardrails, and the refusal path. \Sref{sec:ai_fails} explains why current AI fails the criterion. \SSref{sec:sim_methods}{sec:results} describe the simulation study and report results: the headline battery, the $\Rzero \rightarrow \Rstar$ calibration, and the sensitivity analysis. \Sref{sec:differential} sets LDTC's calls against the major competing theories and answers the thermostat objection. \Sref{sec:limitations} states limitations and failure modes, \Sref{sec:outlook} summarizes the engineering outlook (the full roadmap, predicted hardware signatures, and phased physical program are \Apprefrange{sec:blueprint}{sec:experimental}), and \SSref{sec:metaphysics}{sec:conclusion} discuss interpretation, scope, and conclusions.
 
 \subsection{Related Work}
 
@@ -564,6 +564,72 @@ The ablations close the argument. Replaying the same trained policy's action sta
 \end{table}
 
 \fig[0.92\linewidth]{figures/fig_sensitivity.pdf}{Necessary-condition contrast across measurement and modeling choices (VAR lag, window length, estimator, internal-coupling scale). The positive control (above) and loop-ablated negative (below) are separated by the dominance boundary $M=0$ in every cell; the contrast does not depend on a particular setting. Magnitudes differ between the linear and mutual-information estimators because they use different numerical scales, so we do not draw a single $\Mmin$ here.}{fig:sensitivity}
+
+\section{Differential Predictions and the Thermostat Objection}
+\label{sec:differential}
+
+The criterion is deliberately narrow, but it is not alone in the field, and a fair reading has to say where it agrees with the major theories of consciousness, where it diverges, and what it does not claim at all. \Cref{tab:differential} places LDTC beside integrated information theory (IIT), the global neuronal workspace (GNW), and the free-energy principle with active inference (FEP) on a set of cases that range from the textbook to the deliberately awkward. Two cautions govern the whole table. First, the LDTC column reports a \emph{loop-dominance} verdict, an \NC/\SC call on measurable self-maintenance, not a verdict on phenomenal experience; LDTC treats the latter as an open interpretive question (\Sref{sec:metaphysics}). Second, an LDTC verdict is defined only relative to a declared $C/\text{Ex}$ partition fixed before measurement, and the partition sets the question being asked: a whole-organism metabolic partition asks whether the organism sustains itself, whereas a cortical recurrent partition asks whether a fronto-parietal self-maintenance loop dominates sensory-driven exchange. Because the consciousness literature is about brains, we report LDTC under the cortical partition so that the comparison is like for like.
+
+{\footnotesize
+\begin{longtable}{p{0.12\textwidth}p{0.235\textwidth}p{0.19\textwidth}p{0.155\textwidth}p{0.155\textwidth}}
+\caption{LDTC beside IIT, GNW, and FEP on cases from the clear to the deliberately awkward. Each LDTC cell is a loop-dominance (\NC/\SC) verdict under a brain-appropriate cortical partition, not a claim about phenomenal experience (\Sref{sec:metaphysics}). Cells are either citable claims from the named theory's literature or marked ``our reading'' where we extrapolate. PCI is the perturbational complexity index~\cite{casali2013pci}, an IIT-inspired empirical measure.}\label{tab:differential}\\
+\toprule
+\textbf{Case} & \textbf{LDTC (\NC/\SC, $M$)} & \textbf{IIT ($\Phi$)} & \textbf{GNW} & \textbf{FEP / active inference} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Case} & \textbf{LDTC (\NC/\SC, $M$)} & \textbf{IIT ($\Phi$)} & \textbf{GNW} & \textbf{FEP / active inference} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+Dreamless sleep (NREM N3) &
+Cortical loop weakens; $M$ predicted to fall (our reading) &
+Reduced; effective connectivity breaks down~\cite{massimini2005breakdown}; PCI low~\cite{casali2013pci} &
+Absent; global ignition lost~\cite{dehaene2014consciousness} &
+Reduced hierarchical inference (our reading)~\cite{friston2010free} \\
+\midrule
+Propofol anesthesia &
+$M$ predicted low; recurrent loop suppressed (our reading) &
+Low; PCI drops across sedation~\cite{casali2013pci} &
+Absent; ignition lost~\cite{dehaene2014consciousness} &
+Reduced precision / self-evidencing (our reading)~\cite{seth2016active} \\
+\midrule
+Split-brain &
+One or two loops is partition-dependent and measurable (our reading) &
+Two complexes, possibly two centers (our reading of IIT)~\cite{oizumi2014phenomenology} &
+Reportability splits; unity contested~\cite{gazzaniga2005split,pinto2017split} &
+Ambiguous; one or two Markov blankets (our reading) \\
+\midrule
+Cerebral organoid &
+Metabolic \NC may hold; no demonstrated cognitive loop (our reading) &
+Minimal but nonzero; PCI proposed as an assay~\cite{lavazza2018organoids} &
+Absent; no workspace (our reading) &
+Minimal (our reading) \\
+\midrule
+LLM serving stack (autoscaled) &
+\NC fails; self-maintenance is external (\Sref{sec:ai_fails}) &
+Near-zero $\Phi$ for feedforward inference~\cite{tononikoch2015here} &
+No global workspace (our reading)~\cite{dehaene2014consciousness} &
+Not self-evidencing; no own boundary (our reading)~\cite{seth2016active} \\
+\midrule
+Thermostat with battery backup &
+\NC can pass; loop is real but \NC is necessary, not sufficient (this paper) &
+Tiny nonzero $\Phi$; a ``modicum of experience''~\cite{tononikoch2015here,chalmers1996conscious} &
+No; no workspace (our reading) &
+Rudimentary active inference; has a Markov blanket (our reading)~\cite{friston2010free} \\
+\midrule
+Simulation plant (this paper) &
+Passes \NC ($M\approx+23$ dB) and \SC; loop dominance certified, no consciousness claim (\Sref{sec:results}) &
+Low $\Phi$; near-linear six-channel plant (our reading) &
+No (our reading) &
+A homeostat doing crude active inference (our reading) \\
+\end{longtable}
+}
+
+Read this way, the theories converge on the easy cases and separate on the instructive ones. On dreamless NREM sleep and propofol anesthesia all four lower their estimate of the relevant quantity: IIT and its perturbational complexity index (PCI) fall~\cite{massimini2005breakdown,casali2013pci}, GNW loses global ignition~\cite{dehaene2014consciousness}, FEP reduces hierarchical self-evidencing~\cite{friston2010free}, and LDTC, under the cortical partition, predicts a drop in $M$ as recurrent influence gives way to exchange. That within-subject prediction, $M(\text{wake}) > M(\text{deep anesthesia or N3})$, is one the framework makes but this paper does not test; validating it on neural recordings is the natural next application of the instrument. The split-brain and organoid rows are where the calls fork. IIT's reading is that a callosotomy yields two maximally irreducible complexes, hence potentially two centers~\cite{oizumi2014phenomenology}, while the behavioral evidence is genuinely contested~\cite{gazzaniga2005split,pinto2017split}; an organoid has cellular self-maintenance but, as far as anyone can show, no cognitive loop~\cite{lavazza2018organoids}. LDTC's distinctive move on these cases is to make the dividing question measurable rather than to settle it by intuition: whether interhemispheric coupling is strong enough to constitute one loop or two, and whether an organoid's regulatory coupling ever exceeds its exchange coupling, are quantities the harness estimates. The LLM serving stack is the case the theories agree to reject for different reasons: IIT because feedforward inference carries little integrated information~\cite{tononikoch2015here}, GNW because there is no ignition of a global workspace, FEP because the stack does not evidence its own boundary~\cite{seth2016active}, and LDTC because the self-maintenance loop is carried by external orchestration, so \NC fails (\Sref{sec:ai_fails}). The reasons differ, and LDTC's is the one already implemented as a measurement.
+
+\textbf{Biting the thermostat bullet.} The plant we validate on is, structurally, a fancy thermostat: a low-dimensional controller that regulates a handful of internal states. A high $M$ in such a system is not an embarrassment to be explained away; it is exactly what \NC, taken alone, is meant to permit. \NC is a \emph{necessary} condition for self-prioritizing loop dominance, not a sufficient condition for anything further, and certainly not for consciousness. A thermostat with battery backup that managed its own power could in principle clear $\Mmin$, and under IIT such a device would carry a tiny nonzero $\Phi$, a ``modicum of experience'' on that theory's own terms~\cite{tononikoch2015here,chalmers1996conscious}; LDTC declines to follow IIT there, and equally declines GNW's flat denial, because LDTC's claim is only that the loop dominance is real and measurable. What \SC adds is resilience: a system passes only if loop dominance recovers, within a calibrated depth and time, after every member of a pre-registered perturbation battery that includes a designed-fail member the criterion must reject (\Sref{sec:sc1}). A battery-backed thermostat might survive a single power sag and still fail a battery that probes the breadth of its self-maintenance, so \SC raises the bar; but we are explicit that it does not convert a necessary condition into a sufficient one for phenomenology. Three conditions a landmark account would need remain open and unaddressed by either rule: the \emph{richness} of the loop (a one-state regulator and a brain can both be loop-dominant while differing by every measure that matters), the absolute \emph{magnitude} of $\mathcal{L}$ rather than only the ratio $M$ (the loop-influence noise gate of \Sref{sec:meas_config} is a first, crude floor on this), and the \emph{substrate} questions any physical theory of experience must eventually face. What a high-$M$ thermostat does imply under LDTC is precise and modest: the device has a genuine, self-prioritizing maintenance loop that an auditor can certify and an adversary cannot easily fake (\Sref{sec:results_adversarial}). What it does not imply is that the thermostat is conscious, that loop dominance is sufficient for experience, or that the criterion has measured anything beyond the organization of causal influence it was built to measure. Stating this plainly is the point: the criterion earns its narrowness, and the most obvious dismissal of the paper, that we measured a thermostat, is answered by agreeing that we did, and by showing why that is the right first test of an instrument whose job is to separate self-maintaining organization from its absence.
 
 \section{Limitations and Failure Modes}
 \label{sec:limitations}
