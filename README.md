@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <em>A verification harness for the Loop-Dominance Theory of Consciousness.</em>
+  <em>A falsifiable criterion and open verification harness for measuring self-maintenance.</em>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ## Overview
 
-LDTC is a minimal, substrate-agnostic verification harness for the Loop-Dominance Theory of Consciousness. It measures loop-dominance (Lloop versus Lexchange) at fixed Δt, enforces guardrails through an enclave-protected LREG with hash-chained audit and Δt governance, runs Ω-perturbation trials, and evaluates NC1/SC1 with device-signed indicators. The toolkit includes a CLI, reproducible configuration profiles (R₀ through R*), and an optional hardware adapter for ingesting real telemetry.
+LDTC is a minimal, substrate-agnostic verification harness for measuring loop dominance: the degree to which a system's predictive dependence is concentrated in a closed self-maintenance loop (Lloop) rather than in its open exchanges (Lexchange), summarized by the loop-dominance margin M in decibels. It evaluates the falsifiable NC1/SC1 criterion at fixed Δt, enforces guardrails through an enclave-protected LREG with hash-chained audit and Δt governance, and runs Ω-perturbation trials with device-signed indicators. The criterion originated in the Loop-Dominance Theory of Consciousness, which motivates the instrument and gives it its name; adopting the measure commits you to no position on consciousness. The toolkit includes a CLI, reproducible configuration profiles (R₀ through R*), and an optional hardware adapter for ingesting real telemetry.
 
 ## Features
 

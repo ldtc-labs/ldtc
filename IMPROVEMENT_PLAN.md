@@ -163,7 +163,7 @@ paragraph answers the objection without overclaiming.
 
 Effort: 1 to 2 days. Impact: +0.3.
 
-### Task 1.4: instrument-first repositioning pass `[ ]`
+### Task 1.4: instrument-first repositioning pass `[x]`
 
 Reframe the contribution so the headline is the falsifiable verification
 methodology and open instrument, with the consciousness theory as motivation
