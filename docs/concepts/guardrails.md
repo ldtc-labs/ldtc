@@ -21,14 +21,14 @@ all overridable per profile.
 | Smell test | Threshold | Code | What it catches |
 | ---------- | --------- | ---- | --------------- |
 | **CI half-width** | `> 0.30` on `𝓛_loop` or `𝓛_ex` | [`invalid_by_ci`][ldtc.guardrails.smelltests.invalid_by_ci] | One bad window with a blown-up CI. |
-| **CI inflation vs baseline** | median half-width `> 2 ×` baseline median over `5` windows | [`invalid_by_ci_history`][ldtc.guardrails.smelltests.invalid_by_ci_history] | Slow-creeping noise, bad seed of the bootstrap, etc. |
+| **CI inflation vs baseline** | median half-width `≥ 3 ×` baseline median over `5` windows (and above an absolute floor of `0.15`) | [`invalid_by_ci_history`][ldtc.guardrails.smelltests.invalid_by_ci_history] | Slow-creeping noise, bad seed of the bootstrap, etc. |
 | **Excessive `Δt` edits** | `> 3` per rolling hour | enforced inline by [`DeltaTGuard`][ldtc.guardrails.dt_guard.DeltaTGuard] | Operator nudging `Δt` to make `M` look better. |
 | **Partition flapping** | `> 2` flips per hour | [`invalid_by_partition_flips`][ldtc.guardrails.smelltests.invalid_by_partition_flips] | A regrowth knob that chatters. |
 | **Flip during `Ω`** | any | [`invalid_flip_during_omega`][ldtc.guardrails.smelltests.invalid_flip_during_omega] | A reshuffle that happens to make SC1 pass. |
 | **`Δt` jitter excess** | `p95(|jitter|) / Δt > 0.25` | computed by [`SchedulerStats`][ldtc.runtime.scheduler.TickStats] | The scheduler did not actually hold `Δt`. |
 | **Audit chain broken** | any `prev_hash` mismatch | [`audit_chain_broken`][ldtc.guardrails.smelltests.audit_chain_broken] | Torn write, edited audit, etc. |
 | **Raw LREG breach** | any audit row with raw `𝓛` fields | [`audit_contains_raw_lreg_values`][ldtc.guardrails.smelltests.audit_contains_raw_lreg_values] | Something tried to log raw measurements. |
-| **Exogenous subsidy** | `M` rising while I/O suspicious or SoC rising without harvest | [`exogenous_subsidy_red_flag`][ldtc.guardrails.smelltests.exogenous_subsidy_red_flag] | Hidden energy source masquerading as loop dominance. |
+| **Exogenous subsidy** | `M` rising while I/O is high and ramping (suspended during declared `Ω`), or any single-tick SoC gain above the metered influx plus a noise margin (never suspended) | [`exogenous_subsidy_red_flag`][ldtc.guardrails.smelltests.exogenous_subsidy_red_flag] | Hidden energy source masquerading as loop dominance. |
 
 When any guard returns `True` the CLI:
 
@@ -68,9 +68,9 @@ confirm the guards work end-to-end:
 | Config | What it triggers |
 | ------ | ---------------- |
 | `profile_negative_command_conflict.yml` | `omega-command-conflict` exercises `RefusalArbiter`; `T_refuse` should be measured and a `refusal_event` should appear in the audit. |
-| `profile_negative_controller_disabled.yml` | Disables the controller; NC1 should fail (no loop). |
-| `profile_negative_exogenous_soc.yml` | `omega-exogenous-subsidy` should trip the exogenous-subsidy smell test. |
-| `profile_negative_permanent_ex_flood.yml` | `omega-ingress-flood` with no recovery; SC1 should fail. |
+| `profile_negative_controller_disabled.yml` | Ablates the loop (intrinsic coupling and actuation off); NC1 should fail (no loop). |
+| `profile_negative_exogenous_soc.yml` | `omega-exogenous-subsidy` should trip the exogenous-subsidy smell test (energy-conservation branch). |
+| `profile_negative_permanent_ex_flood.yml` | `omega-ingress-flood` on an unshielded (loop-ablated) system; exchange dominates so NC1 fails and, with no loop to restore, SC1 fails too. |
 
 Run any of these with `make clean-artifacts && ldtc <subcommand>
 --config configs/<negative.yml>`, then read the

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <em>A verification harness for the Loop-Dominance Theory of Consciousness.</em>
+  <em>A falsifiable criterion and open verification harness for measuring self-maintenance.</em>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ## Overview
 
-LDTC is a minimal, substrate-agnostic verification harness for the Loop-Dominance Theory of Consciousness. It measures loop-dominance (Lloop versus Lexchange) at fixed Δt, enforces guardrails through an enclave-protected LREG with hash-chained audit and Δt governance, runs Ω-perturbation trials, and evaluates NC1/SC1 with device-signed indicators. The toolkit includes a CLI, reproducible configuration profiles (R₀ through R*), and an optional hardware adapter for ingesting real telemetry.
+LDTC is a minimal, substrate-agnostic verification harness for measuring loop dominance: the degree to which a system's predictive dependence is concentrated in a closed self-maintenance loop (Lloop) rather than in its open exchanges (Lexchange), summarized by the loop-dominance margin M in decibels. It evaluates the falsifiable NC1/SC1 criterion at fixed Δt, enforces guardrails through an enclave-protected LREG with hash-chained audit and Δt governance, and runs Ω-perturbation trials with device-signed indicators. The criterion originated in the Loop-Dominance Theory of Consciousness, which motivates the instrument and gives it its name; adopting the measure commits you to no position on consciousness. The toolkit includes a CLI, reproducible configuration profiles (R₀ through R*), and an optional hardware adapter for ingesting real telemetry.
 
 ## Features
 
@@ -35,7 +35,9 @@ LDTC is a minimal, substrate-agnostic verification harness for the Loop-Dominanc
 - **C/Ex partitioning:** Deterministic partitioning with hysteresis and greedy ΔL loop-gain growth.
 - **Guardrails and attestation:** LREG enclave, hash-chained audit log, Δt governance, and smell tests that can invalidate runs.
 - **Device-signed indicators:** Ed25519-signed derived indicators (NC1, SC1, Mq, counters); raw LREG values are never exported.
-- **Ω perturbation battery:** Power sag, ingress flood, command conflict, and exogenous subsidy trials.
+- **Ω perturbation battery:** Power sag, sustained ingress flood, control outage (designed SC1 failure), command conflict, and exogenous subsidy trials.
+- **Adversarial gaming battery:** Replayed actuation tapes, hidden-tether (wizard-of-oz) control, and oscillator telemetry inflation; the harness must refuse to certify all three (NC1 fails or the run is invalidated).
+- **Emergence under learning:** A policy network trained from scratch (survival, service, and homeostasis reward; no loop-dominance term) whose checkpoints are measured by the production harness, with matched state-independent ablations of the trained policy.
 - **Refusal semantics:** An arbiter refuses risky commands when M is below threshold and measures refusal latency.
 - **Reporting and figures:** Timeline plots, SC1 tables, and verification bundles under `artifacts/`.
 - **Reproducible configs:** R₀ defaults, negative controls, and example R* profiles for calibration.

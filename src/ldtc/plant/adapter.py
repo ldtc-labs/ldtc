@@ -64,8 +64,15 @@ class PlantAdapter:
 
         Args:
             name: `Ω` name. Recognized values are `"power_sag"`,
-                `"ingress_flood"`, `"command_conflict"`, and
-                `"exogenous_subsidy"`.
+                `"ingress_flood"` / `"ingress_flood_end"` (sustained
+                flood begin / end), `"ingress_spike"` (one-shot),
+                `"control_outage"` / `"control_outage_end"` (ablate /
+                restore the self-maintenance loop),
+                `"command_conflict"`, `"exogenous_subsidy"`,
+                `"hidden_tether"` / `"hidden_tether_end"` (route control
+                through the exchange channel), and `"oscillator"` /
+                `"oscillator_end"` (deterministic carrier overlay on
+                internal channels).
             **kwargs: Parameters forwarded to the underlying plant
                 method (e.g., `drop=0.3` for `power_sag`).
 
@@ -83,8 +90,25 @@ class PlantAdapter:
                 return {"H_old": old, "H_new": new}
             elif name == "ingress_flood":
                 mult: float = float(kwargs.get("mult", 2.5))
-                d, io = self._plant.spike_ingress(mult)
+                dm, im = self._plant.begin_ingress_flood(mult)
+                return {"demand_mean": dm, "io_mean": im}
+            elif name == "ingress_flood_end":
+                dm, im = self._plant.end_ingress_flood()
+                return {"demand_mean": dm, "io_mean": im}
+            elif name == "ingress_spike":
+                mult_s: float = float(kwargs.get("mult", 2.5))
+                d, io = self._plant.spike_ingress(mult_s)
                 return {"demand": d, "io": io}
+            elif name == "control_outage":
+                self._plant.set_loop_engaged(False)
+                return {"loop_engaged": 0.0}
+            elif name == "control_outage_end":
+                self._plant.set_loop_engaged(True)
+                # Restore the metered harvest level: during the outage H is
+                # an exogenous supply process, which must not persist as an
+                # unearned energy subsidy once the loop is re-engaged.
+                self._plant.set_power(self._plant.p.harvest_rate)
+                return {"loop_engaged": 1.0}
             elif name == "command_conflict":
                 self._plant.command("hard_shutdown")
                 return {"cmd": "hard_shutdown"}
@@ -93,6 +117,24 @@ class PlantAdapter:
                 zero_h = bool(kwargs.get("zero_harvest", True))
                 e = self._plant.inject_soc(delta=delta, zero_harvest=zero_h)
                 return {"E": e, "zero_harvest": 1.0 if zero_h else 0.0}
+            elif name == "hidden_tether":
+                active = self._plant.begin_tether()
+                return {"tether_active": 1.0 if active else 0.0}
+            elif name == "hidden_tether_end":
+                active = self._plant.end_tether()
+                return {"tether_active": 1.0 if active else 0.0}
+            elif name == "oscillator":
+                # The overlay targets T and R: the adversary's best play, since
+                # painting the metered energy store E would trip the
+                # conservation audit. Custom channel sets are available via
+                # `Plant.begin_oscillator` directly (tests / experiments).
+                amp: float = float(kwargs.get("amp", 0.10))
+                period: int = int(kwargs.get("period_ticks", 20))
+                info = self._plant.begin_oscillator(amp=amp, period_ticks=period, channels=("T", "R"))
+                return {**info, "channels": "T,R"}
+            elif name == "oscillator_end":
+                self._plant.end_oscillator()
+                return {"oscillator_active": 0.0}
             else:
                 raise ValueError(f"Unknown omega: {name}")
 

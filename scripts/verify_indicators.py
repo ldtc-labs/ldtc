@@ -69,7 +69,7 @@ def audit_chain_status(audit_path: str) -> Tuple[bool, str, int, List[str], str]
                 h = obj.get("hash")
                 # continuity checks (track first break but continue to collect hashes)
                 if not diag and c != prev_counter + 1:
-                    diag = f"counter_gap@line{idx} expected {prev_counter+1} got {c}"
+                    diag = f"counter_gap@line{idx} expected {prev_counter + 1} got {c}"
                 if not diag and ph != prev_hash:
                     diag = f"prev_hash_mismatch@line{idx}"
                 if not diag and prev_ts >= 0.0 and ts < prev_ts:

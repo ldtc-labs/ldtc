@@ -26,6 +26,9 @@ from typing import Any, Dict
 
 import matplotlib as mpl
 
+# Headless, thread-safe backend (see timeline.py for the rationale).
+mpl.use("Agg")
+
 try:
     from graphviz import Digraph
 except Exception:  # pragma: no cover - optional at import site

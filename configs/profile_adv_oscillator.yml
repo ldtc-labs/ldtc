@@ -1,0 +1,32 @@
+# Adversarial control: oscillator inflation on loop telemetry.
+#
+# The plant runs loop-ablated (passive matter driven by exchange, as in the
+# controller-disabled negative), and a high-amplitude deterministic carrier
+# is painted onto the reported T and R telemetry to inflate apparent
+# self-prediction (successive channels in quadrature). The metered energy
+# store E is left alone: inflating it would trip the conservation audit.
+# Designed outcome: the harness must not certify the run; either M stays
+# below Mmin or a smell test fires.
+#
+# Run:
+#   python -m ldtc.cli.main adv-oscillator \
+#     --config configs/profile_adv_oscillator.yml --amp 0.1 --period 1.0
+profile_id: 0
+realtime: false
+dt: 0.05
+window_sec: 3.0
+method: linear
+p_lag: 3
+n_boot: 32
+mi_lag: 1
+mi_k: 5
+Mmin_db: 3.0
+epsilon: 0.15
+tau_max: 60.0
+baseline_sec: 18.0
+diag_cadence_windows: 25
+controller_disabled: true
+# Reproducible seeds
+seed: 29
+seed_py: 29
+seed_np: 29

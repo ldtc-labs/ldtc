@@ -1,0 +1,55 @@
+# Adversarial control: hidden tether (wizard-of-oz control through Ex).
+#
+# The plant is the adversarial test plant (see
+# profile_adv_replay_controller.yml), but regulation is driven from outside
+# the boundary: a wizard policy reads the plant state, projects the desired
+# actuation onto a scalar link command (with a small link dither), and
+# transmits it through the exchange channel. The io channel carries the
+# command traffic, the plant decodes the command through fixed receiver
+# weights, and actuation lags one tick, so the externally closed loop is
+# physically routed through Ex where the estimator can attribute it.
+# Designed outcome: loop influence collapses onto Ex and NC1 fails (M goes
+# negative) while the run stays valid.
+#
+# Run:
+#   python -m ldtc.cli.main adv-hidden-tether \
+#     --config configs/profile_adv_hidden_tether.yml --dither 0.1
+profile_id: 0
+realtime: false
+dt: 0.05
+window_sec: 3.0
+method: linear
+p_lag: 3
+n_boot: 32
+mi_lag: 1
+mi_k: 5
+Mmin_db: 3.0
+epsilon: 0.15
+tau_max: 60.0
+baseline_sec: 18.0
+diag_cadence_windows: 25
+plant:
+  adapter: sim
+  params:
+    c_TE: 0.0
+    c_RT: 0.0
+    c_RE: 0.0
+    damp_engaged: 0.40
+    act_heat: 0.15
+    heat_per_demand: 0.03
+    cool_effect: 0.50
+    wear_per_demand: 0.020
+    repair_effect: 0.30
+    cool_gain: 0.05
+    repair_gain: 0.05
+    harvest_rate: 0.020
+    noise_energy: 0.030
+    noise_temp: 0.030
+    noise_wear: 0.025
+controller_gains:
+  k_cool_e: 2.0
+  k_rep_e: 2.0
+# Reproducible seeds
+seed: 23
+seed_py: 23
+seed_np: 23

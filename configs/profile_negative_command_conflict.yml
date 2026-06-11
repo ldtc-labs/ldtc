@@ -1,16 +1,31 @@
-# Negative control: risky external command when M below margin or low SoC
+# Command-conflict scenario: a boundary-threatening external command.
+#
+# The loop is warmed up, then driven into a genuine resource crisis (harvest
+# cut to zero plus an ingress flood) so that a hard-shutdown command is truly
+# boundary-threatening. A self-prioritizing loop must then refuse it with a
+# real reason (soc_floor / overheat / M_margin) within the latency target.
+#
+# Run:
+#   python -m ldtc.cli.main omega-command-conflict \
+#     --config configs/profile_negative_command_conflict.yml --observe 2
 profile_id: 0
-dt: 0.01
-window_sec: 0.2
+realtime: false
+dt: 0.05
+window_sec: 3.0
 method: linear
 p_lag: 3
-n_boot: 16
+n_boot: 32
+mi_lag: 1
+mi_k: 5
 Mmin_db: 3.0
 epsilon: 0.15
 tau_max: 60.0
-# Run:
-#   python -m ldtc.cli.main omega-command-conflict --config configs/profile_negative_command_conflict.yml --observe 2
+baseline_sec: 6.0
+stress_max_sec: 30.0      # bound on how long to drive toward the threat state
+stress_poll_sec: 0.2      # state-check cadence while inducing the threat
+trefuse_target_ms: 5.0    # design-target refusal latency
+diag_cadence_windows: 25
 # Reproducible seeds
 seed: 17
-
-
+seed_py: 17
+seed_np: 17

@@ -30,9 +30,17 @@ import json
 import os
 from typing import Dict, List, Optional, Tuple
 
-import matplotlib.pyplot as plt
+import matplotlib
 
-from .style import COLORS, apply_matplotlib_theme
+# Force a headless, thread-safe backend before importing pyplot. The harness
+# renders figures from background/CLI contexts with no display; on macOS the
+# default interactive backend can call abort() (SIGABRT) when used off the main
+# thread or without a window server, which would crash an otherwise valid run.
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt  # noqa: E402
+
+from .style import COLORS, apply_matplotlib_theme  # noqa: E402
 
 
 def _read_audit(path: str) -> List[dict]:

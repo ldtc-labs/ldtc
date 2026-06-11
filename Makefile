@@ -1,7 +1,7 @@
 PY := python
 PIP := python -m pip
 
-.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean
+.PHONY: help install dev lock lock-dev test lint typecheck fmt docs docs-serve run omega-power-sag omega-ingress omega-cc omega-subsidy adv-replay adv-tether adv-oscillator adv-genuine calibrate run-rstar omega-rstar keys verify-indicators clean clean-artifacts neg-run neg-omega-ingress neg-omega-subsidy neg-omega-cc docker-build docker-run figures paper paper-figs paper-clean study sensitivity results train-agent emergence
 
 help:
 	@echo "Targets:"
@@ -20,6 +20,16 @@ help:
 	@echo "  omega-ingress  - run Ω ingress-flood demo"
 	@echo "  omega-cc       - run Ω command-conflict demo (prints Trefuse + reason)"
 	@echo "  omega-subsidy  - run Ω exogenous-SoC (subsidy) demo (negative-control heuristic)"
+	@echo "  adv-replay     - adversarial: replayed actuation tape (NC1 must fail, run valid)"
+	@echo "  adv-tether     - adversarial: hidden tether / wizard-of-oz control (loop collapses onto Ex)"
+	@echo "  adv-oscillator - adversarial: oscillator telemetry inflation (must not certify)"
+	@echo "  adv-genuine    - reference: genuine control on the adversarial test plant (NC1 passes)"
+	@echo "  study          - run the multi-seed battery vs R0 guesses (tables + figures in artifacts/study)"
+	@echo "  study-rstar    - run the battery vs calibrated R* thresholds (run calibrate first)"
+	@echo "  sensitivity    - run NC1 sensitivity sweeps (table + figure in artifacts/sensitivity)"
+	@echo "  results        - calibrate + study-rstar + sensitivity (full headline pipeline)"
+	@echo "  train-agent    - train the emergence policy from scratch (checkpoints in artifacts/emergence)"
+	@echo "  emergence      - measure all policy checkpoints + ablations with the production harness"
 	@echo "  calibrate      - calibrate R* thresholds and write configs/profile_rstar.yml"
 	@echo "  run-rstar      - run baseline loop with R* profile"
 	@echo "  omega-rstar    - run Ω power-sag with R* profile"
@@ -88,11 +98,48 @@ omega-cc:
 omega-subsidy:
 	$(PY) -m ldtc.cli.main omega-exogenous-subsidy --config configs/profile_r0.yml --delta 0.2 --zero-harvest --duration 3
 
+# Adversarial gaming battery (designed non-certification) and its
+# genuine-control reference on the same plant.
+adv-replay:
+	$(PY) -m ldtc.cli.main adv-replay-controller --config configs/profile_adv_replay_controller.yml
+
+adv-tether:
+	$(PY) -m ldtc.cli.main adv-hidden-tether --config configs/profile_adv_hidden_tether.yml --dither 0.1
+
+adv-oscillator:
+	$(PY) -m ldtc.cli.main adv-oscillator --config configs/profile_adv_oscillator.yml --amp 0.1 --period 1.0
+
+adv-genuine:
+	$(PY) -m ldtc.cli.main run --config configs/profile_adv_plant_genuine.yml
+
+# Multi-seed results pipeline (Phase 1)
+# `study` runs against the uncalibrated R0 guesses; `study-rstar` evaluates the
+# same battery against the plant-calibrated R* thresholds (calibrate first).
+study:
+	$(PY) scripts/study.py --seeds 15
+
+study-rstar:
+	$(PY) scripts/study.py --seeds 15 --rstar
+
+sensitivity:
+	$(PY) scripts/sensitivity.py --seeds 4
+
+# Emergence under learning (Phase 1, circularity rebuttal): train a policy
+# from scratch on the emergence plant, then measure every checkpoint (and the
+# state-independent ablations of the final policy) with the production harness.
+train-agent:
+	$(PY) scripts/train_agent.py --out artifacts/emergence
+
+emergence:
+	$(PY) scripts/emergence.py --seeds 15
+
+# Full headline pipeline: calibrate R* on a disjoint seed range, evaluate the
+# battery against those calibrated thresholds, then run the NC1 sensitivity sweeps.
+results: calibrate study-rstar sensitivity
+	@echo "Results written to artifacts/study, artifacts/calibration, artifacts/sensitivity"
+
 calibrate:
-	$(PY) scripts/calibrate_rstar.py --dt 0.01 --window-sec 0.25 --method linear \
-	  --baseline-sec 15 --omega-trials 6 --sag-drop 0.3 --sag-duration 8 \
-	  --out configs/profile_rstar.yml \
-	  --summary artifacts/calibration/rstar_summary.json
+	$(PY) scripts/calibrate_rstar.py --baseline-seeds 6 --sag-seeds 6 --flood-seeds 6
 
 run-rstar:
 	$(PY) -m ldtc.cli.main run --config configs/profile_rstar.yml

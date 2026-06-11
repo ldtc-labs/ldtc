@@ -1,0 +1,61 @@
+# Adversarial control: replayed actuation tape (no closed loop).
+#
+# The plant is the adversarial test plant: intrinsic cross-couplings are
+# zeroed and the actuators are given real authority, so the *controller's*
+# actuation pathway is the only loop-carrying pathway in the system (under
+# genuine control this plant certifies NC1; see profile_adv_plant_genuine.yml).
+# A healthy closed-loop run of this same system is recorded first; the
+# measured run then replays the recorded actuation trace tick by tick. The
+# actuators move exactly as under genuine control, but the activity carries
+# no dependence on the current state, so measured loop influence falls to the
+# estimator's noise floor and the NC1 noise gate (L_floor) refuses to certify.
+# Designed outcome: NC1 fails while the run stays valid.
+#
+# Run:
+#   python -m ldtc.cli.main adv-replay-controller \
+#     --config configs/profile_adv_replay_controller.yml
+profile_id: 0
+realtime: false
+dt: 0.05
+window_sec: 3.0
+method: linear
+p_lag: 3
+n_boot: 32
+mi_lag: 1
+mi_k: 5
+Mmin_db: 3.0
+epsilon: 0.15
+tau_max: 60.0
+baseline_sec: 18.0
+diag_cadence_windows: 25
+plant:
+  adapter: sim
+  params:
+    # No intrinsic internal couplings: the loop, if any, is the controller.
+    c_TE: 0.0
+    c_RT: 0.0
+    c_RE: 0.0
+    # Weak self-damping leaves real regulation work for the controller.
+    damp_engaged: 0.40
+    # Actuator authority strong enough that genuine state feedback is
+    # identifiable against the process noise.
+    act_heat: 0.15
+    heat_per_demand: 0.03
+    cool_effect: 0.50
+    wear_per_demand: 0.020
+    repair_effect: 0.30
+    cool_gain: 0.05
+    repair_gain: 0.05
+    harvest_rate: 0.020
+    noise_energy: 0.030
+    noise_temp: 0.030
+    noise_wear: 0.025
+# Strong cross-coupled actuator responses (cooling and repair also track the
+# energy surplus), so the genuine controller carries a rich internal loop.
+controller_gains:
+  k_cool_e: 2.0
+  k_rep_e: 2.0
+# Reproducible seeds
+seed: 21
+seed_py: 21
+seed_np: 21

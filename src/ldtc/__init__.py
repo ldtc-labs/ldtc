@@ -34,7 +34,7 @@ Example:
     import json
     from pathlib import Path
 
-    latest = sorted(Path("artifacts/indicators").glob("*.json"))[-1]
+    latest = sorted(Path("artifacts/runs").glob("*/indicators/*.json"))[-1]
     print(json.loads(latest.read_text())["indicators"])
     ```
 

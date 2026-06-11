@@ -121,7 +121,17 @@ jobs:
           python -m ldtc.cli.main run --config configs/profile_ci.yml
       - name: Verify indicators
         run: |
+          # Each run is isolated under artifacts/runs/<tag>-<timestamp>/ (the
+          # audit chain is per-run); verify the most recent one. Keys are
+          # shared under artifacts/keys/. The loop (rather than `ls | head`)
+          # is pipefail-safe under the default `bash -eo pipefail` shell.
+          run_dir=""
+          for d in artifacts/runs/*/; do
+            if [ -z "$run_dir" ] || [ "$d" -nt "$run_dir" ]; then run_dir="$d"; fi
+          done
+          run_dir=${run_dir%/}
+          echo "Verifying latest run: $run_dir"
           python scripts/verify_indicators.py \
-            --ind-dir artifacts/indicators \
-            --audit artifacts/audits/audit.jsonl \
+            --ind-dir "$run_dir/indicators" \
+            --audit "$run_dir/audits/audit.jsonl" \
             --pub artifacts/keys/ed25519_pub.pem

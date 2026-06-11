@@ -64,11 +64,14 @@ nav:
     - Mental Model: concepts/mental-model.md
     - Architecture: concepts/architecture.md
     - Definitions: concepts/definitions.md
+    - Differential Predictions: concepts/differential-predictions.md
     - Indicators: concepts/indicators.md
     - Lifecycle of a Run: concepts/lifecycle.md
     - Guardrails and Invalidations: concepts/guardrails.md
     - Paper to Code: concepts/paper-to-code.md
   - Guides:
+    - Study and Results: guides/study.md
+    - Emergence under Learning: guides/emergence.md
     - Calibration (R*): guides/calibration.md
     - Reporting and Figures: guides/reporting.md
     - Runs and Ω Battery: guides/runs.md

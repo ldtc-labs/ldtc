@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "LDTC: Single-Machine, Real-Time Digital Boundary Organism"
+title: "LDTC: a verification harness for the loop-dominance margin (NC1/SC1)"
 message: "If you use this software, please cite it as below."
 type: software
 authors:
@@ -17,8 +17,8 @@ version: 1.0.0
 date-released: 2025-09-07
 preferred-citation:
   type: article
-  title: "A verification harness for Loop-Dominance NC1/SC1 on a single machine"
+  title: "The Loop-Dominance Margin: A Falsifiable Criterion and Open Verification Harness for Self-Maintenance, Validated in Simulation"
   authors:
     - family-names: Carey
       given-names: Owen
-  year: 2025
+  year: 2026

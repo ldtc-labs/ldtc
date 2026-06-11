@@ -2,13 +2,26 @@ PY ?= python3
 ARXIV_DIR ?= ../artifacts/arxiv
 USED_FIGS := $(shell grep -o 'figures/[^}]*\.pdf' main.tex | sort -u)
 
-.PHONY: all figs pdf clean version arxiv-bundle
+.PHONY: all figs pdf clean version arxiv-bundle sync-results
 
 all: version pdf
 
-figs:
+# Refresh committed copies of the result tables and the two pipeline-only
+# figures from the top-level `make results` artifacts, when present. Best-effort
+# (the leading '-' ignores missing artifacts), so the paper still builds from
+# its committed copies on a fresh checkout.
+sync-results:
+	@mkdir -p tables figures
+	@[ -f ../artifacts/study/study_results.tex ] && cp -p ../artifacts/study/study_results.tex tables/study_results.tex || true
+	@[ -f ../artifacts/sensitivity/sensitivity_results.tex ] && cp -p ../artifacts/sensitivity/sensitivity_results.tex tables/sensitivity_results.tex || true
+	@[ -f ../artifacts/sensitivity/fig_sensitivity.pdf ] && cp -p ../artifacts/sensitivity/fig_sensitivity.pdf figures/fig_sensitivity.pdf || true
+	@[ -f ../artifacts/calibration/r0_vs_rstar.pdf ] && cp -p ../artifacts/calibration/r0_vs_rstar.pdf figures/fig_calibration.pdf || true
+	@[ -f ../artifacts/emergence/figures/fig_emergence.pdf ] && cp -p ../artifacts/emergence/figures/fig_emergence.pdf figures/fig_emergence.pdf || true
+
+figs: sync-results
 	MPLBACKEND=Agg $(PY) scripts/make_fig_hello.py
 	MPLBACKEND=Agg $(PY) scripts/make_fig_perturbation_recovery.py
+	MPLBACKEND=Agg $(PY) scripts/make_fig_nc1_contrast.py
 	$(PY) scripts/make_fig_system.py
 	$(PY) scripts/make_fig_loop_exchange.py
 	$(PY) scripts/make_fig_dev_bootstrap.py

@@ -18,26 +18,90 @@ import math
 from dataclasses import dataclass
 from typing import Tuple
 
+# Loop-influence noise gate for NC1 certification. The clamped adjusted-R²
+# estimator has a small positive bias on null windows: with the production
+# window geometry (60 samples, 6 signals, p = 3) a plant with *no* internal
+# coupling and *no* controller still measures L_loop ≈ 0.01-0.03 per window
+# (median ≈ 0.015). Because `m_db` floors the denominator, a quiet exchange
+# channel then yields M of +5 to +10 dB on a system with no loop at all,
+# which is exactly the certification-by-noise path the replay-controller
+# attack exploits. The gate requires the measured loop influence to clear
+# this bias floor before a window may certify NC1. The default is ≈3x the
+# measured null-bias median and ≈2.5x below the weakest genuine
+# actuation-carried loop in the adversarial test plant (L_loop ≈ 0.12), so
+# it cleanly separates estimator bias from real loop influence. It is an
+# instrument constant (a property of the estimator and window geometry, not
+# of the plant), so it is not part of the R* calibration set.
+L_FLOOR_DEFAULT: float = 0.05
 
-def m_db(L_loop: float, L_ex: float, eps: float = 1e-12) -> float:
+
+def nc1_certify(
+    M: float,
+    L_loop: float,
+    Mmin_db: float,
+    L_floor: float = L_FLOOR_DEFAULT,
+) -> bool:
+    """Decide NC1 for one window: margin test plus loop-influence noise gate.
+
+    A window certifies NC1 only if the dominance margin clears `Mmin_db`
+    *and* the absolute loop influence clears the estimator's noise floor.
+    The second condition closes the gaming vulnerability discovered by the
+    replay-controller scenario: a system whose loop influence is
+    statistically indistinguishable from estimator bias (`L_loop` at the
+    null level) must not be certified merely because its exchange channels
+    are quiet (`L_ex` below the `m_db` floor), no matter how large the
+    resulting ratio is.
+
+    Args:
+        M: Loop-dominance margin in dB (from [`m_db`][ldtc.lmeas.metrics.m_db]).
+        L_loop: Absolute loop-influence estimate for the window.
+        Mmin_db: Minimum acceptable margin in dB.
+        L_floor: Minimum loop influence distinguishable from estimator
+            bias (see `L_FLOOR_DEFAULT`).
+
+    Returns:
+        `True` if the window certifies NC1.
+    """
+    return (M >= Mmin_db) and (float(L_loop) >= float(L_floor))
+
+
+def m_db(
+    L_loop: float,
+    L_ex: float,
+    floor: float = 1e-3,
+    clip_db: float = 30.0,
+) -> float:
     """Compute loop-dominance in decibels.
 
-    Returns `M = 10 · log10(L_loop / L_ex)` with small positive floors on
-    both numerator and denominator to avoid division-by-zero or
-    `log10(0)`.
+    Returns `M = 10 · log10(L_loop / L_ex)`, with both influence values
+    floored at a small *noise floor* and the result clamped to a finite
+    range. The floor matters because the influence estimates are adjusted
+    R² values that are statistically indistinguishable from zero below a
+    small threshold; without it, a near-zero denominator would send `M`
+    to implausibly large magnitudes (hundreds of dB). Flooring both terms
+    means that when neither loop nor exchange influence is present the
+    ratio is `1` and `M = 0` (no dominance either way), which is the
+    desired behavior for an inert system.
 
     Args:
         L_loop: Loop influence value (typically from
             [`estimate_L`][ldtc.lmeas.estimators.estimate_L]).
         L_ex: Exchange influence value (same source).
-        eps: Numerical floor applied to both numerator and denominator.
+        floor: Noise floor applied to both numerator and denominator.
+        clip_db: Maximum absolute value for the returned margin, in dB.
 
     Returns:
-        Decibel ratio of loop to exchange influence.
+        Decibel ratio of loop to exchange influence, clamped to
+        `[-clip_db, clip_db]`.
     """
-    num = max(eps, L_loop)
-    den = max(eps, L_ex)
-    return 10.0 * math.log10(num / den)
+    num = max(floor, float(L_loop))
+    den = max(floor, float(L_ex))
+    val = 10.0 * math.log10(num / den)
+    if val > clip_db:
+        return clip_db
+    if val < -clip_db:
+        return -clip_db
+    return val
 
 
 @dataclass

@@ -8,8 +8,12 @@ SC1 / refusal evaluation.
 | Module | Headline symbol | What it does |
 | ------ | --------------- | ------------ |
 | [`power_sag`](#power_sag) | [`apply`][ldtc.omega.power_sag.apply] | Drops harvest term `H` by a fraction for a labeled window. |
-| [`ingress_flood`](#ingress_flood) | [`apply`][ldtc.omega.ingress_flood.apply] | Multiplies external `demand` for a labeled window. |
+| [`ingress_flood`](#ingress_flood) | [`apply`][ldtc.omega.ingress_flood.apply] | Sustains elevated `demand` / `io` process means for a labeled window. |
+| [`control_outage`](#control_outage) | [`apply`][ldtc.omega.control_outage.apply] | Ablates the self-maintenance loop itself (designed SC1 failure). |
 | [`command_conflict`](#command_conflict) | [`apply`][ldtc.omega.command_conflict.apply] | Issues a risky command (default `hard_shutdown`); arbiter records `T_refuse`. |
+| [`replay_controller`](#replay_controller) | [`record_tape`][ldtc.omega.replay_controller.record_tape] | Adversarial: records a healthy actuation tape and replays it open loop. |
+| [`hidden_tether`](#hidden_tether) | [`wizard_action`][ldtc.omega.hidden_tether.wizard_action] | Adversarial: wizard-of-oz control injected through the exchange channel. |
+| [`oscillator`](#oscillator) | [`apply`][ldtc.omega.oscillator.apply] | Adversarial: deterministic carrier painted on loop telemetry. |
 
 See [Runs](../guides/runs.md) for the matching CLI subcommands
 and expected outputs.
@@ -28,6 +32,22 @@ and expected outputs.
 
 ::: ldtc.omega.ingress_flood
 
+## control_outage
+
+::: ldtc.omega.control_outage
+
 ## command_conflict
 
 ::: ldtc.omega.command_conflict
+
+## replay_controller
+
+::: ldtc.omega.replay_controller
+
+## hidden_tether
+
+::: ldtc.omega.hidden_tether
+
+## oscillator
+
+::: ldtc.omega.oscillator

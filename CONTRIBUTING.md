@@ -32,7 +32,7 @@ make omega-power-sag   # Ω power-sag demo
   - `cli/` – command-line interface and entrypoints
   - `guardrails/` – audit, Δt guards, smell-tests
   - `lmeas/` – estimators, metrics, partitioning
-  - `omega/` – perturbation generators (power sag, ingress flood, command conflict)
+  - `omega/` – perturbation generators (power sag, ingress flood, command conflict, adversarial gaming battery)
   - `plant/` – sim/hw adapters and models
   - `reporting/` – artifacts, tables, timelines
   - `runtime/` – scheduler and windows
@@ -107,7 +107,7 @@ Recommended scopes (choose the smallest, most accurate unit; prefer module/direc
   - `cli` – command-line interface and entrypoints
   - `guardrails` – audit, Δt guards, smell-tests
   - `lmeas` – estimators, metrics, partitioning
-  - `omega` – perturbation generators (power sag, ingress flood, command conflict)
+  - `omega` – perturbation generators (power sag, ingress flood, command conflict, adversarial gaming battery)
   - `plant` – sim/hw adapters and models
   - `reporting` – artifacts, tables, timelines
   - `runtime` – scheduler and windows
